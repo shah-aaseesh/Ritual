@@ -91,7 +91,18 @@ export const TodayView: React.FC = () => {
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' })}
           </span>
           <span className="text-xs font-mono text-zinc-400 font-medium">
-            Goal: <strong className="text-white capitalize">{profile.primaryGoal.replace('_', ' ')}</strong>
+            Goal: <strong className="text-white capitalize">
+              {activePillar === 'health' 
+                ? (profile.healthGoal 
+                    ? ({
+                        hypertrophy_strength: 'Hypertrophy & Strength',
+                        fat_loss_recomp: 'Fat Loss & Recomp',
+                        athletic_conditioning: 'Athletic Conditioning',
+                        longevity_health: 'Metabolic Longevity'
+                      }[profile.healthGoal] || profile.healthGoal.replace('_', ' '))
+                    : 'Strength & Performance')
+                : profile.primaryGoal.replace('_', ' ')}
+            </strong>
           </span>
         </div>
 

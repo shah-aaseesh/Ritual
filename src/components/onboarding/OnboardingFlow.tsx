@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApp, AppPillar } from '../../context/AppContext';
 import { 
   WellnessGoal, 
+  HealthGoal,
+  TrainingExperience,
   DailyTimeCommitment
 } from '../../types';
 import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
@@ -15,9 +17,6 @@ import {
   Sparkles, 
   ShieldCheck 
 } from 'lucide-react';
-
-export type HealthGoal = 'hypertrophy_strength' | 'fat_loss_recomp' | 'athletic_conditioning' | 'longevity_health';
-export type TrainingExperience = 'beginner' | 'intermediate' | 'advanced';
 
 export const OnboardingFlow: React.FC = () => {
   const { completeOnboarding, aiSettings, updateAISettings, setActivePillar, setActiveTab } = useApp();
@@ -112,6 +111,8 @@ export const OnboardingFlow: React.FC = () => {
         name: name.trim() || 'Athlete',
         age,
         primaryGoal: 'sleep_recovery',
+        healthGoal,
+        trainingExperience: trainingExp,
         dailyTime: '10_min',
         alreadyOwnsProducts: false,
         isOnboarded: true
@@ -137,6 +138,8 @@ export const OnboardingFlow: React.FC = () => {
         name: name.trim() || 'Athlete',
         age,
         primaryGoal: 'sleep_recovery',
+        healthGoal,
+        trainingExperience: trainingExp,
         dailyTime: '10_min',
         alreadyOwnsProducts: false,
         isOnboarded: true

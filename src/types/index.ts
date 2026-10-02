@@ -3,6 +3,14 @@ export type WellnessGoal =
   | 'body_care' 
   | 'sleep_recovery';
 
+export type HealthGoal = 
+  | 'hypertrophy_strength' 
+  | 'fat_loss_recomp' 
+  | 'athletic_conditioning' 
+  | 'longevity_health';
+
+export type TrainingExperience = 'beginner' | 'intermediate' | 'advanced';
+
 export type DailyTimeCommitment = '2_min' | '5_min' | '10_min';
 
 export type EvidenceTier = 
@@ -22,6 +30,8 @@ export interface UserProfile {
   name: string;
   age?: number;
   primaryGoal: WellnessGoal;
+  healthGoal?: HealthGoal;
+  trainingExperience?: TrainingExperience;
   dailyTime: DailyTimeCommitment;
   alreadyOwnsProducts: boolean;
   isOnboarded: boolean;

@@ -148,8 +148,12 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-black text-white">Gemini Food & Calorie Vision</h3>
-                <span className="px-2 py-0.5 rounded-full bg-[#FF3B30]/20 text-[#FF3B30] text-[10px] font-mono font-bold">
-                  ⚡ Flash Vision &lt;1s
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  aiSettings.openRouterApiKey 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-[#FF3B30]/20 text-[#FF3B30]'
+                }`}>
+                  {aiSettings.openRouterApiKey ? '🟢 Live Gemini Flash' : '⚡ Local Vision AI'}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400">

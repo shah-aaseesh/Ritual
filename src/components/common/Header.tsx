@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
-import { WellnessGoal, DailyTimeCommitment } from '../../types';
+import { WellnessGoal, HealthGoal, DailyTimeCommitment } from '../../types';
 import { 
   Settings, 
   Check, 
@@ -19,6 +19,7 @@ export const Header: React.FC = () => {
   const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, shelfProducts, activePillar, setActivePillar } = useApp();
   const [showSettings, setShowSettings] = useState(false);
   const [tempGoal, setTempGoal] = useState<WellnessGoal>(profile.primaryGoal);
+  const [tempHealthGoal, setTempHealthGoal] = useState<HealthGoal>(profile.healthGoal || 'hypertrophy_strength');
   const [tempTime, setTempTime] = useState<DailyTimeCommitment>(profile.dailyTime);
   const [tempName, setTempName] = useState(profile.name);
 
@@ -26,6 +27,13 @@ export const Header: React.FC = () => {
     hair_health: { label: 'Hair Health', icon: '🌿' },
     body_care: { label: 'Body Care', icon: '💧' },
     sleep_recovery: { label: 'Sleep & Recovery', icon: '🌙' }
+  };
+
+  const healthGoalLabels: Record<HealthGoal, { label: string; icon: string }> = {
+    hypertrophy_strength: { label: 'Hypertrophy & Strength', icon: '🏋️' },
+    fat_loss_recomp: { label: 'Fat Loss & Recomp', icon: '⚡' },
+    athletic_conditioning: { label: 'Athletic Conditioning', icon: '🏃' },
+    longevity_health: { label: 'Metabolic Longevity', icon: '🧬' }
   };
 
   const wellnessTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
@@ -48,6 +56,7 @@ export const Header: React.FC = () => {
     updateProfile({
       name: tempName,
       primaryGoal: tempGoal,
+      healthGoal: tempHealthGoal,
       dailyTime: tempTime
     });
     if (tempGoal !== profile.primaryGoal) {
@@ -64,8 +73,11 @@ export const Header: React.FC = () => {
           <div className="flex items-center justify-between gap-3">
             <button 
               onClick={() => {
-                setActivePillar('wellness');
-                setActiveTab('today');
+                if (activePillar === 'health') {
+                  setActiveTab('gym');
+                } else {
+                  setActiveTab('today');
+                }
               }}
               className="flex items-center gap-2.5 text-left group focus:outline-none"
             >
@@ -155,15 +167,24 @@ export const Header: React.FC = () => {
               onClick={() => {
                 setTempName(profile.name);
                 setTempGoal(profile.primaryGoal);
+                setTempHealthGoal(profile.healthGoal || 'hypertrophy_strength');
                 setTempTime(profile.dailyTime);
                 setShowSettings(true);
               }}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-xs font-bold text-zinc-200 transition shadow-soft"
               aria-label="Profile Settings"
             >
-              <span>{goalLabels[profile.primaryGoal]?.icon}</span>
-              <span className="font-bold text-white">{goalLabels[profile.primaryGoal]?.label}</span>
-              <span className="text-zinc-500 hidden lg:inline">• {profile.dailyTime.replace('_', ' ')}</span>
+              {activePillar === 'health' ? (
+                <>
+                  <span>{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.icon}</span>
+                  <span className="font-bold text-white">{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.label}</span>
+                </>
+              ) : (
+                <>
+                  <span>{goalLabels[profile.primaryGoal]?.icon}</span>
+                  <span className="font-bold text-white">{goalLabels[profile.primaryGoal]?.label}</span>
+                </>
+              )}
               <Settings className="w-3.5 h-3.5 text-zinc-400 ml-1" />
             </button>
           </div>
@@ -179,7 +200,7 @@ export const Header: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-[#1C1C26] flex items-center justify-center text-white border border-white/10">
                   <Settings className="w-4 h-4 text-[#FF3B30]" />
                 </div>
-                <h2 className="text-base font-black text-white">Profile & Settings</h2>
+                <h2 className="text-base font-black text-white">Profile & Calibration</h2>
               </div>
               <button
                 onClick={() => setShowSettings(false)}
@@ -198,36 +219,64 @@ export const Header: React.FC = () => {
                   type="text"
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#FF3B30] text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#FF3B30] text-white font-bold"
                   placeholder="Enter your name"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-400 mb-1">
-                  Primary Wellness Goal
-                </label>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {(['hair_health', 'body_care', 'sleep_recovery'] as WellnessGoal[]).map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setTempGoal(g)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-bold transition ${
-                        tempGoal === g
-                          ? 'bg-white text-black border-white shadow-md font-extrabold'
-                          : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{goalLabels[g].icon}</span>
-                        <span>{goalLabels[g].label}</span>
-                      </span>
-                      {tempGoal === g && <Check className="w-4 h-4 text-black stroke-[3]" />}
-                    </button>
-                  ))}
+              {activePillar === 'health' ? (
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 mb-1">
+                    Athletic & Health Target
+                  </label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {(['hypertrophy_strength', 'fat_loss_recomp', 'athletic_conditioning', 'longevity_health'] as HealthGoal[]).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setTempHealthGoal(g)}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-bold transition ${
+                          tempHealthGoal === g
+                            ? 'bg-white text-black border-white shadow-md font-extrabold'
+                            : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{healthGoalLabels[g].icon}</span>
+                          <span>{healthGoalLabels[g].label}</span>
+                        </span>
+                        {tempHealthGoal === g && <Check className="w-4 h-4 text-black stroke-[3]" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 mb-1">
+                    Primary Wellness Goal
+                  </label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {(['hair_health', 'body_care', 'sleep_recovery'] as WellnessGoal[]).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setTempGoal(g)}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-bold transition ${
+                          tempGoal === g
+                            ? 'bg-white text-black border-white shadow-md font-extrabold'
+                            : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{goalLabels[g].icon}</span>
+                          <span>{goalLabels[g].label}</span>
+                        </span>
+                        {tempGoal === g && <Check className="w-4 h-4 text-black stroke-[3]" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-zinc-400 mb-1">
