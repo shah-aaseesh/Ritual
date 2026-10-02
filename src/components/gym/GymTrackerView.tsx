@@ -12,6 +12,8 @@ import {
 import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession } from '../../types';
 import { PRESET_EXERCISES, PRESET_ROUTINE_TEMPLATES, DEMO_WORKOUT_SESSIONS, ExerciseDefinition } from '../../data/gymData';
 import { useApp } from '../../context/AppContext';
+import { BodyMapHeatmap } from './BodyMapHeatmap';
+import { GamificationHub } from './GamificationHub';
 
 export const GymTrackerView: React.FC = () => {
   const { showToast } = useApp();
@@ -215,6 +217,36 @@ export const GymTrackerView: React.FC = () => {
     return matchesGroup && matchesSearch;
   });
 
+  const [gymSubTab, setGymSubTab] = useState<'all' | 'bodymap' | 'workouts' | 'quests'>('all');
+
+  // Handle start workout from muscle group in Body Map
+  const handleStartMuscleWorkout = (muscleGroup: MuscleGroup) => {
+    const exercisesForMuscle = PRESET_EXERCISES.filter(e => e.muscleGroup === muscleGroup);
+    if (exercisesForMuscle.length === 0) return;
+
+    const initialExercises: ExerciseLog[] = exercisesForMuscle.slice(0, 4).map((def, idx) => ({
+      id: `log-${Date.now()}-${idx}`,
+      exerciseId: def.id,
+      exerciseName: def.name,
+      muscleGroup: def.muscleGroup,
+      sets: Array.from({ length: def.defaultSets }).map((_, sIdx) => ({
+        id: `set-${idx}-${sIdx}`,
+        setNumber: sIdx + 1,
+        weightKg: def.defaultWeightKg,
+        reps: def.defaultReps,
+        isCompleted: false
+      }))
+    }));
+
+    setActiveWorkoutTitle(`${muscleGroup} Hypertrophy Session`);
+    setActiveExercises(initialExercises);
+    setWorkoutStartTime(Date.now());
+    setElapsedSeconds(0);
+    setIsWorkoutActive(true);
+    setGymSubTab('all');
+    showToast(`🏋️ Started ${muscleGroup} targeted workout!`, 'success');
+  };
+
   return (
     <div className="space-y-6 pb-20">
       {/* ========================================================================= */}
@@ -224,29 +256,96 @@ export const GymTrackerView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black uppercase tracking-wider font-mono">
-              HEALTH SUITE • GYM LOG
+              HEALTH SUITE • GYM & BODY MAP
             </span>
             <span className="text-xs font-bold text-charcoal-400">Hevy-Grade Strength Tracker</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
-            Workout & Strength Engine
+            Workout & Biomechanical Map
           </h1>
           <p className="text-xs sm:text-sm text-charcoal-600">
-            Log sets, reps, track progressive overload, and monitor 1RM personal records.
+            Interactive anatomical body map, set logging, rest timers, and RPG level progression.
           </p>
         </div>
 
-        {!isWorkoutActive && (
-          <button
-            type="button"
-            onClick={() => startRoutine('push-day')}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-forest-950 to-forest-900 text-cream-50 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-card hover:scale-[1.02] active:scale-95 transition"
-          >
-            <Play className="w-4 h-4 fill-current text-mint-300" />
-            <span>Start Quick Workout</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {!isWorkoutActive && (
+            <button
+              type="button"
+              onClick={() => startRoutine('push-day')}
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-forest-950 to-forest-900 text-cream-50 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-card hover:scale-[1.02] active:scale-95 transition"
+            >
+              <Play className="w-4 h-4 fill-current text-mint-300" />
+              <span>Start Quick Workout</span>
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Gym Sub-Navigation Switcher */}
+      <div className="inline-flex p-1.5 bg-cream-200/80 rounded-2xl border border-cream-300 text-xs shadow-xs gap-1">
+        <button
+          type="button"
+          onClick={() => setGymSubTab('all')}
+          className={`px-3.5 py-2 rounded-xl font-black transition ${
+            gymSubTab === 'all'
+              ? 'bg-forest-900 text-cream-50 shadow-sm'
+              : 'text-charcoal-700 hover:text-forest-950'
+          }`}
+        >
+          ⚡ Full Suite View
+        </button>
+        <button
+          type="button"
+          onClick={() => setGymSubTab('bodymap')}
+          className={`px-3.5 py-2 rounded-xl font-black transition ${
+            gymSubTab === 'bodymap'
+              ? 'bg-forest-900 text-cream-50 shadow-sm'
+              : 'text-charcoal-700 hover:text-forest-950'
+          }`}
+        >
+          🗺️ Anatomical Body Map
+        </button>
+        <button
+          type="button"
+          onClick={() => setGymSubTab('workouts')}
+          className={`px-3.5 py-2 rounded-xl font-black transition ${
+            gymSubTab === 'workouts'
+              ? 'bg-forest-900 text-cream-50 shadow-sm'
+              : 'text-charcoal-700 hover:text-forest-950'
+          }`}
+        >
+          🏋️ Workout Splits & Logs
+        </button>
+        <button
+          type="button"
+          onClick={() => setGymSubTab('quests')}
+          className={`px-3.5 py-2 rounded-xl font-black transition ${
+            gymSubTab === 'quests'
+              ? 'bg-forest-900 text-cream-50 shadow-sm'
+              : 'text-charcoal-700 hover:text-forest-950'
+          }`}
+        >
+          🏆 Level & Daily Quests
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 🗺️ INTERACTIVE ANATOMICAL BODY MAP                                       */}
+      {/* ========================================================================= */}
+      {(gymSubTab === 'all' || gymSubTab === 'bodymap') && (
+        <BodyMapHeatmap
+          onSelectExercise={(ex) => handleAddExercise(ex)}
+          onStartMuscleWorkout={(muscle) => handleStartMuscleWorkout(muscle)}
+        />
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🏆 GAMIFIED RPG LEVEL & QUESTS HUD                                        */}
+      {/* ========================================================================= */}
+      {(gymSubTab === 'all' || gymSubTab === 'quests') && (
+        <GamificationHub />
+      )}
 
       {/* ========================================================================= */}
       {/* 🔥 ACTIVE LIVE WORKOUT SESSION (IF ACTIVE)                                */}
