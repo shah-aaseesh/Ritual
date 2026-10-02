@@ -202,37 +202,84 @@ Return ONLY valid JSON matching this schema:
           try {
             parsed = JSON.parse(cleaned);
           } catch (jsonErr) {
-            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-            if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-          }
-
-          let ingText = parsed.extractedIngredientsText || '';
-          const claimText = parsed.extractedClaimsText || '';
-          const prodName = parsed.productName || 'Audited Product';
-          const brandName = parsed.brand || '';
-
-          // Merge active table composition into ingredient text if available from JSON
-          if (parsed.tableComposition && Array.isArray(parsed.tableComposition) && parsed.tableComposition.length > 0) {
-            const tableItems = parsed.tableComposition
-              .filter((item: any) => item.name && isPureIngredient(item.name.trim()))
-              .map((item: any) => `${item.name.trim()} (${item.amount || ''} ${item.unit || ''})`.trim());
-
-            if (tableItems.length > 0) {
-              const tableString = tableItems.join(', ');
-              ingText = `${tableString}, ${ingText.replace(/^ingredients?\s*[:\-]\s*/i, '')}`;
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+            if (jsonMatch) {
+              try { parsed = JSON.parse(jsonMatch[0]); } catch (e) { /* fallback */ }
             }
           }
 
-          // If JSON parsing yielded no ingredients, dynamically parse rawContent
-          if (!ingText || ingText.trim().length < 3) {
-            ingText = cleanAndNormalizeOCRText(rawContent);
-          } else {
-            const tokens = ingText.split(/[,;\n]/).map((s: string) => s.trim()).filter(Boolean);
-            const sanitized = sanitizeIngredientList(tokens);
-            if (sanitized.length > 0) {
-              ingText = sanitized.join(', ');
+          // Comprehensively harvest all ingredients across all potential JSON keys or arrays
+          const harvestedTokens: string[] = [];
+          
+          if (Array.isArray(parsed)) {
+            parsed.forEach((item: any) => {
+              if (typeof item === 'string') harvestedTokens.push(item);
+              else if (item && typeof item === 'object') {
+                const name = item.name || item.ingredient || item.active || '';
+                const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                if (name) harvestedTokens.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+              }
+            });
+          } else if (parsed && typeof parsed === 'object') {
+            const candidateKeys = [
+              'extractedIngredientsText',
+              'fullIngredientsList',
+              'ingredients',
+              'ingredientsList',
+              'ingredientList',
+              'allIngredients',
+              'extractedIngredients',
+              'rawIngredients',
+              'composition',
+              'ingredients_text'
+            ];
+
+            for (const key of candidateKeys) {
+              const val = parsed[key];
+              if (typeof val === 'string' && val.trim().length > 2) {
+                harvestedTokens.push(...val.split(/[,;\n•·]/));
+              } else if (Array.isArray(val)) {
+                val.forEach((item: any) => {
+                  if (typeof item === 'string') harvestedTokens.push(item);
+                  else if (item && typeof item === 'object') {
+                    const name = item.name || item.ingredient || item.active || '';
+                    const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                    if (name) harvestedTokens.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+                  }
+                });
+              }
+            }
+
+            // Also harvest active / table composition
+            const tableData = parsed.tableComposition || parsed.activesWithDose || parsed.activeComposition || parsed.actives;
+            if (Array.isArray(tableData)) {
+              tableData.forEach((item: any) => {
+                if (typeof item === 'string') harvestedTokens.push(item);
+                else if (item && typeof item === 'object') {
+                  const name = item.name || item.ingredient || item.active || '';
+                  const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                  if (name) harvestedTokens.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+                }
+              });
             }
           }
+
+          // If JSON extraction found nothing or only 1 item, parse entire raw LLM content
+          if (harvestedTokens.length < 2) {
+            const rawFallbackText = cleanAndNormalizeOCRText(rawContent);
+            if (rawFallbackText) {
+              harvestedTokens.push(...rawFallbackText.split(/[,;\n•·]/));
+            }
+          }
+
+          const sanitizedList = sanitizeIngredientList(harvestedTokens);
+          const ingText = sanitizedList.length > 0 ? sanitizedList.join(', ') : cleanAndNormalizeOCRText(rawContent);
+
+          const claimText = Array.isArray(parsed?.claims) 
+            ? parsed.claims.join(', ') 
+            : (parsed?.extractedClaimsText || parsed?.claims || '');
+          const prodName = parsed?.productName || parsed?.name || 'Audited Product';
+          const brandName = parsed?.brand || parsed?.brandName || '';
 
           if (ingText && ingText.trim().length > 3) {
             // Run through our clinical evidence & claims evaluation matrix
@@ -413,34 +460,71 @@ Return ONLY a valid JSON object matching this schema without markdown fences or 
           const brandName = parsed.brand || '';
           const claims = Array.isArray(parsed.claims) ? parsed.claims.join(', ') : (parsed.claims || '');
 
-          // Build composite ingredient string with active doses attached
           const activeDoseStrings: string[] = [];
-          if (Array.isArray(parsed.activesWithDose)) {
-            parsed.activesWithDose.forEach((act: any) => {
-              if (act.name && act.dose && isPureIngredient(act.name)) {
-                activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
-              } else if (act.name && isPureIngredient(act.name)) {
-                activeDoseStrings.push(act.name.trim());
+          const candidateArrayKeys = [
+            'fullIngredientsList',
+            'ingredients',
+            'ingredientsList',
+            'ingredientList',
+            'allIngredients',
+            'extractedIngredients',
+            'rawIngredients',
+            'composition'
+          ];
+
+          const harvestedList: string[] = [];
+
+          if (Array.isArray(parsed)) {
+            parsed.forEach((item: any) => {
+              if (typeof item === 'string') harvestedList.push(item);
+              else if (item && typeof item === 'object') {
+                const name = item.name || item.ingredient || item.active || '';
+                const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
               }
             });
-          }
+          } else if (parsed && typeof parsed === 'object') {
+            for (const key of candidateArrayKeys) {
+              const val = parsed[key];
+              if (typeof val === 'string' && val.trim().length > 2) {
+                harvestedList.push(...val.split(/[,;\n•·]/));
+              } else if (Array.isArray(val)) {
+                val.forEach((item: any) => {
+                  if (typeof item === 'string') harvestedList.push(item);
+                  else if (item && typeof item === 'object') {
+                    const name = item.name || item.ingredient || item.active || '';
+                    const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                    if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+                  }
+                });
+              }
+            }
 
-          const fullListStrings: string[] = Array.isArray(parsed.fullIngredientsList) 
-            ? parsed.fullIngredientsList
-                .map((s: string) => s.trim())
-                .filter((s: string) => isPureIngredient(s))
-            : [];
+            if (parsed.extractedIngredientsText && typeof parsed.extractedIngredientsText === 'string') {
+              harvestedList.push(...parsed.extractedIngredientsText.split(/[,;\n•·]/));
+            }
 
-          // Merge active doses with full ingredients list cleanly
-          const combinedList: string[] = [...activeDoseStrings];
-          for (const item of fullListStrings) {
-            const itemLower = item.toLowerCase();
-            const alreadyIncluded = activeDoseStrings.some(a => a.toLowerCase().includes(itemLower) || itemLower.includes(a.toLowerCase().split('(')[0].trim()));
-            if (!alreadyIncluded) {
-              combinedList.push(item);
+            if (Array.isArray(parsed.activesWithDose)) {
+              parsed.activesWithDose.forEach((act: any) => {
+                if (act.name && act.dose && isPureIngredient(act.name)) {
+                  activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
+                } else if (act.name && isPureIngredient(act.name)) {
+                  activeDoseStrings.push(act.name.trim());
+                }
+              });
             }
           }
 
+          // If JSON extraction found nothing or only 1 item, parse entire raw LLM content
+          if (harvestedList.length < 2 && activeDoseStrings.length < 2) {
+            const rawFallbackText = cleanAndNormalizeOCRText(rawContent);
+            if (rawFallbackText) {
+              harvestedList.push(...rawFallbackText.split(/[,;\n•·]/));
+            }
+          }
+
+          // Merge active doses with full ingredients list cleanly
+          const combinedList: string[] = [...activeDoseStrings, ...harvestedList];
           const sanitizedItems = sanitizeIngredientList(combinedList);
           const finalIngredientText = sanitizedItems.length > 0 ? sanitizedItems.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
           const analysis = analyzeLabelText(finalIngredientText, claims, userGoal, prodName);
