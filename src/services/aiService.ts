@@ -6,10 +6,11 @@ import { extractTextWithGoogleVision } from './googleVisionService';
 
 export const POPULAR_OPENROUTER_MODELS = [
   { id: 'openrouter/free', name: 'OpenRouter Free Multimodal Router (Auto / Fast)' },
-  { id: 'dots-studio/dots-3-note-preview:free', name: 'Dots Studio: Dots-3 Note Vision (Free / High-Fidelity)' },
+  { id: 'google/gemini-2.0-flash-exp:free', name: 'Google: Gemini 2.0 Flash Vision (Free / Fast)' },
   { id: 'google/gemma-4-31b-it:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
   { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
-  { id: 'qwen/qwen3.8-27b:free', name: 'Qwen: Qwen3.8 27B Vision (Free)' }
+  { id: 'qwen/qwen-2.5-vl-72b-instruct:free', name: 'Qwen: Qwen 2.5 VL 72B Vision (Free)' },
+  { id: 'meta-llama/llama-3.2-11b-vision-instruct:free', name: 'Meta: Llama 3.2 11B Vision (Free)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -23,6 +24,7 @@ export interface VisionLabelExtractionResult {
 
 /**
  * Direct Vision AI & Google Cloud Vision Extraction for bottle/packaging photos.
+ * Strictly extracts ONLY ingredients, active substances, and product info, discarding packaging noise.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
@@ -38,52 +40,20 @@ export async function extractLabelFromImageWithAI(
     base64DataUrl = await fileToBase64DataUrl(imageSource);
   }
 
-  // 1. Try Google Cloud Vision OCR if configured
-  const googleVisionKey = (import.meta as any).env?.VITE_GOOGLE_VISION_API_KEY || '';
-  if (googleVisionKey && googleVisionKey.length > 5) {
-    try {
-      if (onProgress) onProgress(20, 'Scanning characters with Google Cloud Vision OCR...');
-      const googleText = await extractTextWithGoogleVision(base64DataUrl, googleVisionKey);
-      if (googleText && googleText.length > 10) {
-        if (onProgress) onProgress(45, 'Google Vision characters extracted. De-noising & structuring with LLM...');
-        
-        // Pass high-fidelity raw OCR text to LLM for de-noising & dose structuring
-        const denoisedResult = await denoiseAndStructureOCRWithLLM(googleText, userGoal, apiKey, onProgress);
-        if (denoisedResult) {
-          if (onProgress) onProgress(100, 'De-noised Label Analysis Complete!');
-          return denoisedResult;
-        }
-
-        const cleanedIngredients = cleanAndNormalizeOCRText(googleText);
-        const analysis = analyzeLabelText(googleText, '', userGoal, 'Scanned Product');
-        
-        if (onProgress) onProgress(100, 'Google Cloud Vision OCR Complete!');
-        return {
-          productName: 'Scanned Product',
-          brand: '',
-          ingredientText: cleanedIngredients || googleText,
-          claimText: '',
-          analysis,
-          source: 'openrouter_vision'
-        };
-      }
-    } catch (gErr) {
-      console.warn('Google Cloud Vision call failed or billing pending, using Multimodal AI fallback:', gErr);
-    }
-  }
-
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 2. Multimodal Vision AI with smart model fallback
+  // 1. Multimodal Vision AI with smart model fallback (First Priority for camera captures)
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
       model && model !== 'local' ? model : 'openrouter/free',
       'openrouter/free',
+      'google/gemini-2.0-flash-exp:free',
       'google/gemma-4-31b-it:free',
       'google/gemma-4-26b-a4b-it:free',
-      'qwen/qwen3.8-27b:free'
+      'qwen/qwen-2.5-vl-72b-instruct:free',
+      'meta-llama/llama-3.2-11b-vision-instruct:free'
     ];
     // Remove duplicates
     const uniqueModels = [...new Set(candidateModels)];
@@ -93,23 +63,31 @@ export async function extractLabelFromImageWithAI(
         if (onProgress) onProgress(25, `Multimodal Vision AI reading bottle label (${candidateModel.split('/')[1] || candidateModel})...`);
 
         const prompt = `You are an expert cosmetic dermatologist, clinical pharmacologist, and label reader.
-Transcribe and analyze this product packaging photo with 100% accuracy.
+Look at this product photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label.
 
-Instructions:
-1. Product Name: Identify the exact product name from the label.
-2. Brand: Identify the brand name if visible.
-3. Nutritional / Active Composition Table: Read ALL active ingredients and nutrients listed in tables or panels with their exact numeric amounts and units (e.g. Melatonin 5.0mg, Tart Cherry Extract 200mg, L-Theanine 10.0mg, Chamomile Extract 10mg, Vitamin D2 15.0mcg).
-4. Full Ingredients List: Transcribe ALL ingredients from the "INGREDIENTS:" section in exact order (e.g. Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Medium Chain Triglycerides, Beet Root Powder).
-5. Front-Pack Claims: Extract any marketing claims (e.g. "Non-Habit Forming", "100% RDA", "Deep Rest").
+STRICTLY DO NOT include:
+- Directions for use, usage instructions, or dosage recommendations (e.g. "Take 1 gummy daily", "Apply on wet hair", "Massage gently into scalp", "Swallow with water")
+- Storage instructions & safety warnings (e.g. "Store below 25°C", "Keep away from direct sunlight", "Keep out of reach of children", "Not for medicinal use", "Consult physician")
+- Manufacturer, marketing & distributor info (e.g. "Marketed by", "Manufactured by", "FSSAI Lic No", "Batch No", "Mfg Date", "Best Before", "Expiry", "MRP", "Net Quantity", customer care emails, phone numbers, addresses)
+- General macronutrient facts (e.g. "Energy", "Calories", "Total Carbohydrate", "Protein", "Total Sugar", "Fat", "Saturated Fat", "Trans Fat", "Sodium", "RDA%")
+- Generic marketing boilerplate and packaging text
 
-Return ONLY valid JSON in this exact schema:
+DO EXTRACT:
+1. Product Name: Clean exact product name.
+2. Brand: Brand name if visible.
+3. Active Composition: All active ingredients, botanicals, and vitamins with their exact numeric doses and units (e.g. [{"name": "Melatonin", "amount": "5.0", "unit": "mg"}, {"name": "Tart Cherry Extract", "amount": "200", "unit": "mg"}, {"name": "L-Theanine", "amount": "10.0", "unit": "mg"}]).
+4. Full Ingredients List: Transcribe ONLY the ingredients from the "INGREDIENTS:" or "COMPOSITION:" section (e.g. "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Medium Chain Triglycerides, Beet Root Powder").
+5. Front-Pack Claims: Key front-of-pack claims if visible (e.g. "Supports Deep Sleep, Non-Habit Forming").
+6. Clinical Synthesis: Concise 1-2 sentence evidence synthesis of how these active ingredients function.
+
+Return ONLY valid JSON matching this schema:
 {
   "productName": "Product Name",
   "brand": "Brand Name",
   "tableComposition": [
     { "name": "Melatonin", "amount": "5.0", "unit": "mg" }
   ],
-  "extractedIngredientsText": "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin (INS 440), Acidity Regulators, Tart Cherry Extract, Chamomile Extract, L-Theanine, Melatonin, Ergocalciferol, Medium Chain Triglycerides, Beet Root Powder",
+  "extractedIngredientsText": "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Tart Cherry Extract, Chamomile Extract, L-Theanine, Melatonin, Ergocalciferol, Medium Chain Triglycerides, Beet Root Powder",
   "extractedClaimsText": "Supports Deep Sleep, 100% RDA Vitamin D",
   "clinicalSynthesis": "Evidence-backed nocturnal recovery formula combining chronobiotic melatonin with synergistic adaptogens."
 }`;
@@ -168,7 +146,7 @@ Return ONLY valid JSON in this exact schema:
             }
           }
 
-          // If JSON parsing yielded no ingredients (e.g. model output Markdown tables/freeform text), dynamically parse rawContent
+          // If JSON parsing yielded no ingredients, dynamically parse rawContent
           if (!ingText || ingText.trim().length < 3) {
             ingText = cleanAndNormalizeOCRText(rawContent);
           } else {
@@ -204,14 +182,48 @@ Return ONLY valid JSON in this exact schema:
     }
   }
 
-  // 3. Fallback: Canvas-enhanced Tesseract OCR + Local Clinical Matrix
+  // 2. Try Google Cloud Vision OCR if configured
+  const googleVisionKey = (import.meta as any).env?.VITE_GOOGLE_VISION_API_KEY || '';
+  if (googleVisionKey && googleVisionKey.length > 5) {
+    try {
+      if (onProgress) onProgress(20, 'Scanning characters with Google Cloud Vision OCR...');
+      const googleText = await extractTextWithGoogleVision(base64DataUrl, googleVisionKey);
+      if (googleText && googleText.length > 10) {
+        if (onProgress) onProgress(45, 'Google Vision characters extracted. Isolating ingredients with LLM...');
+        
+        // Pass raw OCR text to LLM to isolate ONLY the ingredient section
+        const denoisedResult = await denoiseAndStructureOCRWithLLM(googleText, userGoal, apiKey, onProgress);
+        if (denoisedResult) {
+          if (onProgress) onProgress(100, 'De-noised Label Analysis Complete!');
+          return denoisedResult;
+        }
+
+        const cleanedIngredients = cleanAndNormalizeOCRText(googleText);
+        const analysis = analyzeLabelText(cleanedIngredients, '', userGoal, 'Scanned Product');
+        
+        if (onProgress) onProgress(100, 'Google Cloud Vision OCR Complete!');
+        return {
+          productName: 'Scanned Product',
+          brand: '',
+          ingredientText: cleanedIngredients,
+          claimText: '',
+          analysis,
+          source: 'openrouter_vision'
+        };
+      }
+    } catch (gErr) {
+      console.warn('Google Cloud Vision call failed or billing pending, using Local OCR fallback:', gErr);
+    }
+  }
+
+  // 3. Fallback: Canvas-enhanced Tesseract OCR + LLM De-noising & Local Clinical Matrix
   if (onProgress) onProgress(30, 'Running enhanced image OCR...');
   const ocrText = await performBrowserOCR(imageSource, (p, s) => {
     if (onProgress) onProgress(30 + Math.round(p * 0.4), s);
   });
 
   if (ocrText && ocrText.length > 10) {
-    if (onProgress) onProgress(75, 'De-noising OCR text with AI...');
+    if (onProgress) onProgress(75, 'Isolating ingredients with AI...');
     const denoised = await denoiseAndStructureOCRWithLLM(ocrText, userGoal, apiKey, onProgress);
     if (denoised) {
       if (onProgress) onProgress(100, 'Analysis Complete');
@@ -219,21 +231,16 @@ Return ONLY valid JSON in this exact schema:
     }
   }
 
-  const analysis = analyzeLabelText(ocrText, '', userGoal, 'Scanned Product');
-  
-  // Assemble a pristine clean list of detected actives & carriers
-  const cleanList = analysis.detectedIngredients.map(d => {
-    return d.doesLabelDiscloseDose && d.rawTextMatch ? d.rawTextMatch : d.ingredient.name;
-  }).join(', ');
-
-  const finalIngredientText = (cleanList && cleanList.length > 5) ? cleanList : ocrText;
+  // Extract strictly ingredients only using local cleaner
+  const cleanedFallback = cleanAndNormalizeOCRText(ocrText);
+  const analysis = analyzeLabelText(cleanedFallback, '', userGoal, 'Scanned Product');
 
   if (onProgress) onProgress(100, 'Analysis Complete');
 
   return {
     productName: 'Scanned Product',
     brand: '',
-    ingredientText: finalIngredientText,
+    ingredientText: cleanedFallback,
     claimText: '',
     analysis,
     source: 'local_ocr'
@@ -292,8 +299,10 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
 
   const candidateModels = [
     'openrouter/free',
+    'google/gemini-2.0-flash-exp:free',
     'google/gemma-4-31b-it:free',
     'google/gemma-4-26b-a4b-it:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
     'qwen/qwen3.8-27b:free'
   ];
 

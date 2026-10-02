@@ -33,8 +33,10 @@ export const FUNCTIONAL_PATTERNS: { test: RegExp; name: string; tier: EvidenceTi
   { test: /jojoba|simmondsia/i, name: 'Jojoba Seed Oil', tier: 'promising_limited', purpose: 'Biomimetic Sebum Lipid', expl: 'Chemically resembles human sebum, regulating lipid balance without clogging follicles.' }
 ];
 
-// Comprehensive regex for nutrition panel headers, packaging metadata, macros, and legal text to completely exclude
-export const NON_INGREDIENT_FILTER_REGEX = /^(energy|calories|protein|carbohydrates?|total sugars?|added sugars?|fat|saturated fat|trans fat|cholesterol|sodium|potassium|chloride|dietary fiber|mrp|net qty|net quantity|batch|mfg|exp|best before|fssai|marketed|manufactured|trademark|feedback|email|call|phone|store below|store in|keep out|dosage|recommended|serving size|per serving|each gummy|each tablet|each capsule|not for medicinal|appropriate overages|icmr|rda|approx|ins\s*\d+|ins\b|contains\s+natural|qty\.?\s*per|nutritional|composition|loss on storage|not to be sold|unit sale price|for feedback|customercare)/i;
+// Comprehensive regex for nutrition panel headers, packaging metadata, macros, directions, warnings, and legal text to completely exclude
+export const NON_INGREDIENT_FILTER_REGEX = /^(energy|calories|protein|carbohydrates?|total sugars?|added sugars?|fat|saturated fat|trans fat|cholesterol|sodium|potassium|chloride|dietary fiber|mrp|net qty|net quantity|net content|net wt|batch|mfg|exp|expiry|best before|fssai|marketed|manufactured|mfg\s*by|mkt\s*by|trademark|feedback|email|call|phone|website|contact|customer\s*care|store below|store in|keep out|keep away|directions?|how to use|usage|recommended usage|dosage|recommended|serving size|per serving|each gummy|each tablet|each capsule|not for medicinal|appropriate overages|icmr|rda|approx|ins\s*\d+|ins\b|contains\s+natural|qty\.?\s*per|nutritional|composition|loss on storage|not to be sold|unit sale price|for feedback|customercare|warning|caution|consult|pregnant|lactating|swallow|massage|external use|shake well|made in|pvt\s*ltd|plot no|road|industrial)/i;
+
+export const NON_INGREDIENT_PHRASE_REGEX = /(directions for use|recommended (daily )?usage|how to use|take \d+|apply \d+|massage into|store in a cool|store below \d+|keep out of reach|not for medicinal use|consult your (physician|doctor|healthcare)|manufactured (by|in)|marketed by|customer care|batch no|mfg date|exp date|best before|fssai lic|net quantity|unit sale price|for external use only)/i;
 
 export function isPureIngredient(item: string): boolean {
   if (!item) return false;
@@ -42,6 +44,7 @@ export function isPureIngredient(item: string): boolean {
   if (trimmed.length < 2) return false;
   if (/^[0-9\W]+$/.test(trimmed)) return false;
   if (NON_INGREDIENT_FILTER_REGEX.test(trimmed)) return false;
+  if (NON_INGREDIENT_PHRASE_REGEX.test(trimmed)) return false;
   if (/^[a-z]['"]?$/i.test(trimmed)) return false;
   if (/^(z+|z'|zz|zzz)$/i.test(trimmed)) return false;
   return true;
@@ -72,6 +75,7 @@ export function sanitizeIngredientList(items: string[]): string[] {
 
 const NUTRITION_IGNORE_PATTERNS = [
   NON_INGREDIENT_FILTER_REGEX,
+  NON_INGREDIENT_PHRASE_REGEX,
   /nutritional information/i,
   /composition/i,
   /each gummy/i,
