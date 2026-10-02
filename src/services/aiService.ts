@@ -36,8 +36,12 @@ export async function extractLabelFromImageWithAI(
     base64DataUrl = await fileToBase64DataUrl(imageSource);
   }
 
+  const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
+    ? apiKey.trim() 
+    : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+
   // 1. If OpenRouter API key is available, use Multimodal Vision AI with smart model fallback
-  if (apiKey && apiKey.trim().length > 5) {
+  if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
       model && model !== 'local' ? model : 'openrouter/free',
       'openrouter/free',
@@ -77,7 +81,7 @@ Return ONLY valid JSON in this exact schema:
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${apiKey.trim()}`,
+            'Authorization': `Bearer ${effectiveApiKey.trim()}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': 'https://ritual-wellness.app',
             'X-Title': 'Ritual Wellness AI'
@@ -194,8 +198,12 @@ export async function analyzeIngredientsWithAI(
   apiKey?: string,
   model: string = 'openrouter/free'
 ): Promise<ProductAnalysisResult> {
-  // If user provided an OpenRouter API key, query OpenRouter for reasoning
-  if (apiKey && apiKey.trim().length > 5 && ingredientText && ingredientText.trim().length > 5) {
+  const effectiveKey = (apiKey && apiKey.trim().length > 5) 
+    ? apiKey.trim() 
+    : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+
+  // If OpenRouter API key is available, query OpenRouter for reasoning
+  if (effectiveKey && effectiveKey.length > 5 && ingredientText && ingredientText.trim().length > 5) {
     try {
       const prompt = `You are a clinical cosmetic dermatology & pharmacology analysis AI. Analyze the following cosmetic/wellness product ingredient list for the user goal: "${goal}".
 Product Name: "${productName}"
@@ -236,7 +244,7 @@ Respond ONLY with the JSON object.`;
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Authorization': `Bearer ${effectiveKey.trim()}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://ritual-wellness.app',
           'X-Title': 'Ritual Wellness AI'
