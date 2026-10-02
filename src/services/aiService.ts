@@ -63,18 +63,20 @@ export async function extractLabelWithGeminiDirect(
         body: JSON.stringify({
           system_instruction: {
             parts: [{
-              text: 'You are an expert cosmetic dermatologist, clinical pharmacologist, and label transcriber. Your task is to extract the Brand, Product Name, and the 100% complete and exact ingredient list from the packaging in order. Exclude directions, warnings, storage, FSSAI, batch numbers, manufacturer details, and nutrition tables.'
+              text: 'You are an expert clinical pharmacologist, cosmetic chemist, and label transcriber. Your critical task is to extract ALL THE INGREDIENTS and ONLY INGREDIENTS from the packaging image. STRICTLY exclude directions for use, usage recommendations, storage instructions, safety warnings, manufacturer information, distributor addresses, FSSAI numbers, batch codes, and nutrition facts tables (Calories, Carbs, Fat, Protein). Output only pure ingredients in exact order.'
             }]
           },
           contents: [{
             parts: [
               {
-                text: `Examine this packaging photo carefully.
-Extract and output in this exact structure:
+                text: `Extract ALL the ingredients and ONLY ingredients from this product packaging photo.
+Transcribe EVERY single chemical, botanical, vitamin, and active ingredient word-for-word in the exact order listed on the bottle.
+Do NOT include any directions, warnings, storage, manufacturer details, or nutrition facts.
 
+Output in this clean format:
 **Brand:** [Brand name if visible, or Unknown]
 **Product Name:** [Product name if visible, or Scanned Product]
-**Ingredients:** [Transcribe every single chemical, botanical, and active ingredient word-for-word in exact order, separated by commas or newlines. Do not skip or summarize any item.]`
+**Ingredients:** [Complete comma-separated list containing ALL ingredients and ONLY ingredients, without skipping or summarizing any item]`
               },
               {
                 inline_data: {
