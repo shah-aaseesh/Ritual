@@ -2,72 +2,69 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
 import { analyzeLabelText } from '../../services/analyzer';
-import { extractLabelFromImageWithAI, denoiseAndStructureOCRWithLLM, findMatchingMosaicProducts } from '../../services/aiService';
+import { extractLabelFromImageWithAI, findMatchingMosaicProducts } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
-import { VerdictBadge } from '../common/EvidenceBadge';
-import { DisclaimerBanner } from '../common/DisclaimerBanner';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
-import { ClinicalRecommendations } from '../recommendations/ClinicalRecommendations';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Camera, 
   Upload, 
   Sparkles, 
-  Edit3, 
+  ScanBarcode, 
+  FileText, 
+  ShieldCheck, 
+  X, 
+  AlertTriangle, 
+  Award, 
   BookmarkPlus,
-  ScanBarcode,
-  ClipboardPaste,
-  CheckCircle,
-  Terminal,
-  Copy,
-  Check,
-  ChevronRight,
-  ArrowLeft,
-  FileText,
-  ShieldCheck,
-  Activity,
-  Layers,
-  FlaskConical,
-  Zap
+  ThumbsDown,
+  ThumbsUp,
+  Info
 } from 'lucide-react';
 
-export type LabelLensSubView = 
-  | 'hub' 
-  | 'audit_sheet' 
-  | 'matrix' 
-  | 'claims' 
-  | 'alternatives' 
-  | 'samples' 
-  | 'ai_inspector';
+type MythBusterTab = 'audit_paper' | 'claims_matrix' | 'science_pillars' | 'alternatives';
 
 export const LabelLensView: React.FC = () => {
   const { profile, addShelfProduct, showToast, aiSettings } = useApp();
 
-  // Active Mobile Sub-View Navigation
-  const [activeSubView, setActiveSubView] = useState<LabelLensSubView>('hub');
+  // Active Results Tab
+  const [activeTab, setActiveTab] = useState<MythBusterTab>('audit_paper');
 
-  const [productName, setProductName] = useState<string>('Follicle Reactivate Scalp Serum');
+  // ============================================================================
+  // DUAL CAPTURE STATE: FRONT (CLAIMS) & BACK (INGREDIENTS)
+  // ============================================================================
+  const [productName, setProductName] = useState<string>('Follicle Reactivate 3% Redensyl + Rosemary Scalp Serum');
+  const [saveBrand, setSaveBrand] = useState<string>('Apex Derma Lab');
+  
+  // Front Label State
   const [frontClaimText, setFrontClaimText] = useState<string>(SAMPLE_PRODUCTS[0].frontLabelText);
+  const [frontImageThumbnail, setFrontImageThumbnail] = useState<string | null>(null);
+
+  // Back Label State
   const [ingredientText, setIngredientText] = useState<string>(SAMPLE_PRODUCTS[0].ingredientLabelText);
+  const [backImageThumbnail, setBackImageThumbnail] = useState<string | null>(null);
+
+  // Selected Sample
   const [selectedSampleId, setSelectedSampleId] = useState<string>(SAMPLE_PRODUCTS[0].id);
 
-  const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
-
+  // Scanning / Vision AI Progress
+  const [isScanningFront, setIsScanningFront] = useState<boolean>(false);
+  const [isScanningBack, setIsScanningBack] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
-  const [showManualEditor, setShowManualEditor] = useState<boolean>(false);
 
-  // Quick Paste Drawer
-  const [isQuickPasteOpen, setIsQuickPasteOpen] = useState<boolean>(false);
-  const [quickPasteInput, setQuickPasteInput] = useState<string>('');
-  const [isCleaningText, setIsCleaningText] = useState<boolean>(false);
+  // Modals
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
+  const [saveModalOpen, setSaveModalOpen] = useState<boolean>(false);
+  const [saveTimeOfDay, setSaveTimeOfDay] = useState<'morning' | 'evening' | 'both'>('evening');
 
-  // AI Inspector State
-  const [latestDebugTrace, setLatestDebugTrace] = useState<any>(null);
-  const [debugTab, setDebugTab] = useState<'response' | 'prompt'>('response');
-  const [hasCopiedRaw, setHasCopiedRaw] = useState<boolean>(false);
+  // File Input References
+  const frontFileInputRef = useRef<HTMLInputElement>(null);
+  const backFileInputRef = useRef<HTMLInputElement>(null);
 
+  // ============================================================================
+  // ANALYSIS ENGINE (RUNS CROSS-EXAMINATION ON INGREDIENTS & CLAIMS)
+  // ============================================================================
   const [analysisResult, setAnalysisResult] = useState<ProductAnalysisResult>(() => {
     return analyzeLabelText(
       SAMPLE_PRODUCTS[0].ingredientLabelText,
@@ -77,17 +74,10 @@ export const LabelLensView: React.FC = () => {
     );
   });
 
-  const matchingFormulations = useMemo(() => {
-    const activeNames = analysisResult?.detectedIngredients?.map(i => i.ingredient?.name || i.rawTextMatch) || [];
-    return findMatchingMosaicProducts(activeNames, profile.primaryGoal);
-  }, [analysisResult?.detectedIngredients, profile.primaryGoal]);
-
-  const [saveModalOpen, setSaveModalOpen] = useState<boolean>(false);
-  const [saveTimeOfDay, setSaveTimeOfDay] = useState<'morning' | 'evening' | 'both'>('evening');
-  const [saveBrand, setSaveBrand] = useState<string>('Apex Derma Lab');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const frontFileInputRef = useRef<HTMLInputElement>(null);
+  const handleReanalyze = (newIngText: string, newClaimText: string, newName: string) => {
+    const res = analyzeLabelText(newIngText, newClaimText, profile.primaryGoal, newName);
+    setAnalysisResult(res);
+  };
 
   const handleSelectSample = (sample: SampleProductLabel) => {
     setSelectedSampleId(sample.id);
@@ -95,6 +85,8 @@ export const LabelLensView: React.FC = () => {
     setFrontClaimText(sample.frontLabelText);
     setIngredientText(sample.ingredientLabelText);
     setSaveBrand(sample.brandSuggestion);
+    setFrontImageThumbnail(null);
+    setBackImageThumbnail(null);
 
     const res = analyzeLabelText(
       sample.ingredientLabelText,
@@ -103,20 +95,21 @@ export const LabelLensView: React.FC = () => {
       sample.name
     );
     setAnalysisResult(res);
-    showToast(`Loaded: ${sample.name}`, 'info');
+    showToast(`Loaded sample: ${sample.name}`, 'info');
   };
 
-  const handleReanalyze = (newIngText: string, newClaimText: string, newName: string) => {
-    const res = analyzeLabelText(newIngText, newClaimText, profile.primaryGoal, newName);
-    setAnalysisResult(res);
-  };
-
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>, isFrontLabel: boolean) => {
+  // Process Vision AI for Front Label (Claims & Name)
+  const handleFrontFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsScanning(true);
-    setScanProgress({ percent: 15, status: 'Sending photo directly to Vision AI...' });
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => setFrontImageThumbnail(reader.result as string);
+    reader.readAsDataURL(file);
+
+    setIsScanningFront(true);
+    setScanProgress({ percent: 20, status: 'Scanning Front Label for marketing claims & brand...' });
 
     try {
       const result = await extractLabelFromImageWithAI(
@@ -124,67 +117,59 @@ export const LabelLensView: React.FC = () => {
         profile.primaryGoal,
         aiSettings.openRouterApiKey,
         aiSettings.selectedModel,
-        (pct: number, msg: string) => setScanProgress({ percent: pct, status: msg })
+        (pct, msg) => setScanProgress({ percent: pct, status: msg })
       );
 
-      if (result.debugTrace) {
-        setLatestDebugTrace(result.debugTrace);
-      }
+      const claims = result.claimText || result.ingredientText;
+      setFrontClaimText(claims);
+      if (result.productName) setProductName(result.productName);
+      if (result.brand) setSaveBrand(result.brand);
 
-      if (isFrontLabel) {
-        const claims = result.claimText || result.ingredientText;
-        setFrontClaimText(claims);
-        if (result.productName) setProductName(result.productName);
-        handleReanalyze(ingredientText, claims, result.productName || productName);
-        showToast('Front label analyzed', 'success');
-      } else {
-        setIngredientText(result.ingredientText);
-        if (result.productName) setProductName(result.productName);
-        handleReanalyze(result.ingredientText, frontClaimText, result.productName || productName);
-        showToast('Ingredients analyzed', 'success');
-      }
+      handleReanalyze(ingredientText, claims, result.productName || productName);
       setSelectedSampleId('');
+      showToast('Front label claims extracted successfully!', 'success');
     } catch (err: any) {
-      showToast(err.message || 'Vision AI scan failed. You can paste ingredients manually.', 'warning');
+      showToast(err.message || 'Vision AI scan failed. You can type claims manually.', 'warning');
     } finally {
-      setIsScanning(false);
+      setIsScanningFront(false);
+      setScanProgress({ percent: 0, status: '' });
     }
   };
 
-  const handleQuickPasteClean = async (textOverride?: string) => {
-    const textToClean = textOverride || quickPasteInput;
-    if (!textToClean.trim()) return;
+  // Process Vision AI for Back Label (Ingredients & Dosage)
+  const handleBackFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setIsCleaningText(true);
-    showToast('Isolating active compounds with AI...', 'info');
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => setBackImageThumbnail(reader.result as string);
+    reader.readAsDataURL(file);
+
+    setIsScanningBack(true);
+    setScanProgress({ percent: 20, status: 'Scanning Back Label for ingredients & active concentrations...' });
 
     try {
-      const structured = await denoiseAndStructureOCRWithLLM(
-        textToClean, 
-        profile.primaryGoal, 
+      const result = await extractLabelFromImageWithAI(
+        file,
+        profile.primaryGoal,
         aiSettings.openRouterApiKey,
-        undefined,
-        aiSettings.selectedModel
+        aiSettings.selectedModel,
+        (pct, msg) => setScanProgress({ percent: pct, status: msg })
       );
-      if (structured && structured.ingredientText) {
-        setIngredientText(structured.ingredientText);
-        if (structured.productName) setProductName(structured.productName);
-        if (structured.claimText) setFrontClaimText(structured.claimText);
-        setSelectedSampleId('');
-        handleReanalyze(structured.ingredientText, structured.claimText || frontClaimText, structured.productName || productName);
-        setIsQuickPasteOpen(false);
-        setQuickPasteInput('');
-        showToast('Ingredients analyzed', 'success');
-      }
-    } catch (err) {
-      setIngredientText(textToClean);
+
+      setIngredientText(result.ingredientText);
+      if (result.productName && productName === 'Scanned Product') setProductName(result.productName);
+      if (result.brand && saveBrand === 'Apex Derma Lab') setSaveBrand(result.brand);
+
+      handleReanalyze(result.ingredientText, frontClaimText, result.productName || productName);
       setSelectedSampleId('');
-      handleReanalyze(textToClean, frontClaimText, productName);
-      setIsQuickPasteOpen(false);
-      setQuickPasteInput('');
-      showToast('Ingredients analyzed', 'info');
+      showToast('Back label ingredients parsed successfully!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Vision AI scan failed. You can paste ingredients manually.', 'warning');
     } finally {
-      setIsCleaningText(false);
+      setIsScanningBack(false);
+      setScanProgress({ percent: 0, status: '' });
     }
   };
 
@@ -194,9 +179,16 @@ export const LabelLensView: React.FC = () => {
     setIngredientText(result.ingredientText);
     setAnalysisResult(result.analysis);
     setSelectedSampleId('');
-    showToast(`Found: ${result.productName}`, 'success');
+    showToast(`Found product via barcode: ${result.productName}`, 'success');
   };
 
+  // Matching Clinical Alternatives
+  const matchingFormulations = useMemo(() => {
+    const activeNames = analysisResult?.detectedIngredients?.map(i => i.ingredient?.name || i.rawTextMatch) || [];
+    return findMatchingMosaicProducts(activeNames, profile.primaryGoal);
+  }, [analysisResult?.detectedIngredients, profile.primaryGoal]);
+
+  // Save Product to Smart Shelf
   const handleSaveToShelf = () => {
     const activeNames = analysisResult.detectedIngredients.map(d => d.ingredient.name);
     let topTier: EvidenceTier = 'supporting_ingredient';
@@ -209,7 +201,7 @@ export const LabelLensView: React.FC = () => {
     }
 
     addShelfProduct({
-      name: productName || 'Scanned Wellness Product',
+      name: productName || 'Audited Wellness Product',
       brand: saveBrand || 'Custom Brand',
       category: (analysisResult.category.includes('Hair') ? 'Hair' : analysisResult.category.includes('Body') ? 'Body' : analysisResult.category.includes('Sleep') ? 'Sleep' : 'General') as any,
       relevantGoal: profile.primaryGoal,
@@ -217,52 +209,344 @@ export const LabelLensView: React.FC = () => {
       evidenceSummary: analysisResult.summary.synthesisText,
       evidenceTier: topTier,
       timeOfDay: saveTimeOfDay,
-      notes: `Scanned via Label Lens on ${new Date().toLocaleDateString('en-IN')}`
+      notes: `Audited via Myth Buster on ${new Date().toLocaleDateString('en-IN')}`
     });
 
     setSaveModalOpen(false);
-    showToast('Saved to Smart Shelf', 'success');
+    showToast('Saved product to Smart Shelf!', 'success');
   };
 
+  const claimsCount = analysisResult.detectedClaims.length;
+
   return (
-    <div className="space-y-5 pb-24 text-charcoal-900 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-28 text-charcoal-900 font-sans">
       {/* Hidden File Inputs */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => handleFileSelected(e, false)}
-        className="hidden"
-      />
       <input
         type="file"
         ref={frontFileInputRef}
         accept="image/*"
         capture="environment"
-        onChange={(e) => handleFileSelected(e, true)}
+        onChange={handleFrontFileSelected}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={backFileInputRef}
+        accept="image/*"
+        capture="environment"
+        onChange={handleBackFileSelected}
         className="hidden"
       />
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 1: AUDIT SHEET */}
+      {/* 🛡️ HERO BANNER: DUAL FRONT & BACK CAPTURE / AUDIT ENGINE                  */}
       {/* ========================================================================= */}
-      {activeSubView === 'audit_sheet' && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Active Product</span>
-              <span className="text-xs font-black text-forest-950 truncate max-w-[180px] block">{productName}</span>
+      <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
+                CLINICAL MYTH BUSTER
+              </span>
+              <span className="text-xs text-charcoal-500 font-mono">
+                Front Claims vs Back Formulation Cross-Examination
+              </span>
             </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
+              Label Lens & Myth Buster
+            </h1>
+            <p className="text-xs text-charcoal-600 mt-1 max-w-xl">
+              Snap both Front (Claims & Buzzwords) and Back (Ingredients List) to uncover marketing exaggerations, fairy dusting, and true clinical actives.
+            </p>
           </div>
 
+          {/* Quick Barcode Scanner Button */}
+          <button
+            type="button"
+            onClick={() => setIsBarcodeModalOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-cream-50 hover:bg-mint-100 border border-mint-200 text-forest-900 font-black text-xs flex items-center gap-2 shadow-soft transition active:scale-95 shrink-0"
+          >
+            <ScanBarcode className="w-4 h-4 text-forest-800" />
+            <span>Scan Barcode</span>
+          </button>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 📸 DUAL CAPTURE SLOTS: FRONT (CLAIMS) & BACK (INGREDIENTS)                 */}
+        {/* ========================================================================= */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* SLOT 1: FRONT LABEL (MARKETING CLAIMS & BUZZWORDS) */}
+          <div className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
+                    1
+                  </span>
+                  <h3 className="text-sm font-black text-forest-950 uppercase tracking-wider font-mono">
+                    Front Label (Claims)
+                  </h3>
+                </div>
+
+                <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-full border border-mint-200 text-forest-800">
+                  {claimsCount} Claims Found
+                </span>
+              </div>
+
+              <p className="text-[11px] text-charcoal-600">
+                Marketing promises, buzzwords & product name (e.g. "10x Fast Growth", "100% Organic", "No Chemicals").
+              </p>
+
+              {/* Photo Preview / Upload Buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => frontFileInputRef.current?.click()}
+                  disabled={isScanningFront}
+                  className="flex-1 py-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-soft"
+                >
+                  <Camera className="w-3.5 h-3.5 text-forest-800" />
+                  <span>{isScanningFront ? 'AI Scanning...' : frontImageThumbnail ? 'Retake Front' : 'Snap Front Photo'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => frontFileInputRef.current?.click()}
+                  disabled={isScanningFront}
+                  className="p-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 transition"
+                  title="Upload Front Image"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Editable Front Claim Textarea */}
+              <textarea
+                rows={2}
+                value={frontClaimText}
+                onChange={(e) => {
+                  setFrontClaimText(e.target.value);
+                  handleReanalyze(ingredientText, e.target.value, productName);
+                }}
+                placeholder="Type or edit front label claims (e.g. '100% Chemical-Free, Regrows Hair in 14 Days')..."
+                className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500 resize-none font-mono"
+              />
+            </div>
+
+            {/* Front Photo Thumbnail Preview */}
+            {frontImageThumbnail && (
+              <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-mint-100 text-[11px]">
+                <div className="flex items-center gap-2 truncate">
+                  <img src={frontImageThumbnail} alt="Front Thumbnail" className="w-8 h-8 rounded-lg object-cover border border-mint-200" />
+                  <span className="font-bold text-forest-950 truncate">Front photo captured</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFrontImageThumbnail(null)}
+                  className="text-charcoal-400 hover:text-rose-600 p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* SLOT 2: BACK LABEL (FULL INGREDIENTS LIST & DOSING) */}
+          <div className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
+                    2
+                  </span>
+                  <h3 className="text-sm font-black text-forest-950 uppercase tracking-wider font-mono">
+                    Back Label (Ingredients)
+                  </h3>
+                </div>
+
+                <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-full border border-mint-200 text-forest-800">
+                  {analysisResult.detectedIngredients.length} Compounds Parsed
+                </span>
+              </div>
+
+              <p className="text-[11px] text-charcoal-600">
+                Full ingredient (INCI) composition, carrier oils, excipients, and declared active percentages.
+              </p>
+
+              {/* Photo Preview / Upload Buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => backFileInputRef.current?.click()}
+                  disabled={isScanningBack}
+                  className="flex-1 py-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-soft"
+                >
+                  <Camera className="w-3.5 h-3.5 text-forest-800" />
+                  <span>{isScanningBack ? 'AI Scanning...' : backImageThumbnail ? 'Retake Back' : 'Snap Back Photo'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => backFileInputRef.current?.click()}
+                  disabled={isScanningBack}
+                  className="p-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 transition"
+                  title="Upload Back Image"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Editable Ingredients Textarea */}
+              <textarea
+                rows={2}
+                value={ingredientText}
+                onChange={(e) => {
+                  setIngredientText(e.target.value);
+                  handleReanalyze(e.target.value, frontClaimText, productName);
+                }}
+                placeholder="Paste or edit ingredients list (e.g. 'Water, Redensyl 3%, Rosemary Oil 1%, Glycerin, Phenoxyethanol')..."
+                className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500 resize-none font-mono"
+              />
+            </div>
+
+            {/* Back Photo Thumbnail Preview */}
+            {backImageThumbnail && (
+              <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-mint-100 text-[11px]">
+                <div className="flex items-center gap-2 truncate">
+                  <img src={backImageThumbnail} alt="Back Thumbnail" className="w-8 h-8 rounded-lg object-cover border border-mint-200" />
+                  <span className="font-bold text-forest-950 truncate">Back photo captured</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setBackImageThumbnail(null)}
+                  className="text-charcoal-400 hover:text-rose-600 p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Scanning Live Status Banner */}
+        {(isScanningFront || isScanningBack) && (
+          <div className="p-4 rounded-2xl bg-mint-100/80 border border-mint-300 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-forest-800 animate-spin" />
+              <span className="text-xs font-bold text-forest-950 font-mono">
+                {scanProgress.status || 'Multimodal Vision AI processing label pixels...'}
+              </span>
+            </div>
+            <span className="text-xs font-mono font-black text-forest-900">{scanProgress.percent}%</span>
+          </div>
+        )}
+
+        {/* Quick Pre-Loaded Sample Debunk Products Carousel */}
+        <div className="space-y-2 pt-2">
+          <span className="text-[11px] font-mono font-bold uppercase text-charcoal-500 block">
+            Or Test with Pre-Loaded Real-World Debunk Samples:
+          </span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {SAMPLE_PRODUCTS.map((sample) => (
+              <button
+                key={sample.id}
+                type="button"
+                onClick={() => handleSelectSample(sample)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex items-center gap-1.5 ${
+                  selectedSampleId === sample.id
+                    ? 'bg-forest-900 text-white shadow-soft font-black'
+                    : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-200'
+                }`}
+              >
+                <span>{sample.name.split(' ')[0]} {sample.name.split(' ')[1]}</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                  sample.bannerBadge.includes('Busted') || sample.bannerBadge.includes('Alert')
+                    ? 'bg-rose-100 text-rose-800'
+                    : 'bg-mint-100 text-forest-800'
+                }`}>
+                  {sample.bannerBadge.split(' ')[0]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 🧭 MYTH BUSTER AUDIT REPORT TABS                                          */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-[2.5rem] p-3 sm:p-4 border border-mint-200/80 shadow-card flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('audit_paper')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'audit_paper'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-mint-300" />
+            <span>Formulation Debunk Paper</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('claims_matrix')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'claims_matrix'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-mint-400" />
+            <span>Front Claims vs Back Reality ({claimsCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('science_pillars')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'science_pillars'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <Award className="w-4 h-4 text-forest-700" />
+            <span>4-Pillar Scientific Matrix</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('alternatives')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'alternatives'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Clinical Formulations ({matchingFormulations.length})</span>
+          </button>
+        </div>
+
+        {/* Save to Smart Shelf CTA */}
+        <button
+          type="button"
+          onClick={() => setSaveModalOpen(true)}
+          className="hidden md:flex px-4 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-extrabold text-xs items-center gap-1.5 shrink-0 transition active:scale-95 shadow-soft"
+        >
+          <BookmarkPlus className="w-3.5 h-3.5 text-mint-300" />
+          <span>Save to Smart Shelf</span>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 📜 TAB 1: FORMULATION DEBUNK PAPER (ANIMATED STRIKETHROUGH REPORT)        */}
+      {/* ========================================================================= */}
+      {activeTab === 'audit_paper' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
           <IngredientDebunkPaper
             productName={productName}
             brand={saveBrand}
@@ -273,45 +557,160 @@ export const LabelLensView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 2: 4-DIMENSION MATRIX & SYNTHESIS */}
+      {/* ⚔️ TAB 2: FRONT CLAIMS VS BACK REALITY CROSS-EXAMINATION MATRIX           */}
       {/* ========================================================================= */}
-      {activeSubView === 'matrix' && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Scientific Matrix</span>
-              <span className="text-xs font-black text-forest-950 truncate max-w-[180px] block">{productName}</span>
-            </div>
-          </div>
+      {activeTab === 'claims_matrix' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+              <div>
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider block">
+                  CROSS-EXAMINATION REPORT
+                </span>
+                <h2 className="text-2xl font-black text-forest-950 mt-0.5">
+                  Front Marketing Claims vs Back Chemistry
+                </h2>
+                <p className="text-xs text-charcoal-600 mt-0.5">
+                  We cross-examined every front-pack promise against the physical ingredients and declared clinical dosage.
+                </p>
+              </div>
 
-          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-4">
-            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-800 font-mono font-black text-xs border border-mint-200">
+                  {claimsCount} Promises Audited
+                </span>
+              </div>
+            </div>
+
+            {/* Claims Audit Cards List */}
+            {analysisResult.detectedClaims.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-cream-50/70 border border-mint-100 text-center text-xs text-charcoal-600">
+                No specific marketing buzzwords detected. Type your front-label claims in the top box above to audit!
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {analysisResult.detectedClaims.map((claim, cIdx) => {
+                  const isPositive = claim.verdict === 'supported';
+                  const isUnderdosed = claim.verdict === 'partially_supported' || claim.verdict === 'too_vague_to_verify';
+                  const isBusted = claim.verdict === 'marketing_heavy';
+
+                  return (
+                    <div
+                      key={cIdx}
+                      className={`p-5 rounded-[2rem] border transition shadow-soft space-y-3.5 ${
+                        isPositive
+                          ? 'bg-emerald-50/40 border-emerald-300'
+                          : isUnderdosed
+                          ? 'bg-amber-50/40 border-amber-300'
+                          : 'bg-rose-50/40 border-rose-300'
+                      }`}
+                    >
+                      {/* Top Header: Claim Name & Myth Buster Verdict */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/5 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black font-mono px-2 py-0.5 rounded-md bg-white border border-black/10 text-charcoal-800">
+                            Claim #{cIdx + 1}
+                          </span>
+                          <h3 className="text-base font-black text-forest-950">
+                            "{claim.displayName}"
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {isPositive && (
+                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs font-mono flex items-center gap-1 border border-emerald-300">
+                              <ThumbsUp className="w-3.5 h-3.5" />
+                              <span>Clinically Validated</span>
+                            </span>
+                          )}
+                          {isUnderdosed && (
+                            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs font-mono flex items-center gap-1 border border-amber-300">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>Vague / Unregulated Marketing</span>
+                            </span>
+                          )}
+                          {isBusted && (
+                            <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-800 font-black text-xs font-mono flex items-center gap-1 border border-rose-300">
+                              <ThumbsDown className="w-3.5 h-3.5" />
+                              <span>Busted Marketing Gimmick</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Side-by-Side Comparison: Front Promise vs Back Reality */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-xl bg-white/90 border border-black/5 space-y-1">
+                          <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 block">
+                            Front Marketing Promise:
+                          </span>
+                          <p className="text-xs font-bold text-forest-950">
+                            {claim.displayName}
+                          </p>
+                          <p className="text-[11px] text-charcoal-600">
+                            {claim.whatItMeans}
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-white/90 border border-black/5 space-y-1">
+                          <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 block">
+                            Back Formulation Reality:
+                          </span>
+                          <p className="text-xs font-bold text-forest-950">
+                            {claim.supportRationale}
+                          </p>
+                          {claim.missingInformation && (
+                            <span className="text-[10px] text-amber-700 font-mono font-bold block">
+                              Missing Info: {claim.missingInformation}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Scientific Citation / Educational Takeaway */}
+                      <div className="flex items-center gap-2 text-[11px] text-charcoal-700 bg-white/60 p-2.5 rounded-xl border border-black/5">
+                        <Info className="w-4 h-4 text-forest-800 shrink-0" />
+                        <span>
+                          <strong>Clinical Insight:</strong> Therapeutic efficacy requires declared active concentrations meeting peer-reviewed clinical trial benchmarks rather than marketing buzzwords.
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🔬 TAB 3: 4-PILLAR SCIENTIFIC MATRIX                                      */}
+      {/* ========================================================================= */}
+      {activeTab === 'science_pillars' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-5">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-4">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-forest-700 font-mono">
-                  Objective 4-Pillar Metric
+                  OBJECTIVE 4-PILLAR METRIC
                 </span>
-                <h3 className="text-xl font-black text-forest-950">Scientific Evaluation Dimensions</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-forest-950">
+                  Scientific Evaluation Dimensions
+                </h3>
               </div>
-              <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 border border-mint-200 text-[11px] font-mono font-bold">
-                {analysisResult.summary.goalRelevanceScore}
+              <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 border border-mint-200 text-xs font-mono font-black">
+                {analysisResult.summary.goalRelevanceScore} Relevance
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* 1. Goal Relevance */}
-              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
+              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     1. Goal Relevance
                   </span>
-                  <span className="text-xs">🎯</span>
+                  <span className="text-sm">🎯</span>
                 </div>
                 <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.goalRelevanceScore}
@@ -322,12 +721,12 @@ export const LabelLensView: React.FC = () => {
               </div>
 
               {/* 2. Evidence Quality */}
-              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
+              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     2. Evidence Quality
                   </span>
-                  <span className="text-xs">🔬</span>
+                  <span className="text-sm">🔬</span>
                 </div>
                 <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.evidenceQualityScore}
@@ -338,12 +737,12 @@ export const LabelLensView: React.FC = () => {
               </div>
 
               {/* 3. Dose Transparency */}
-              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
+              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     3. Dose Transparency
                   </span>
-                  <span className="text-xs">📊</span>
+                  <span className="text-sm">📊</span>
                 </div>
                 <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.doseTransparencyScore}
@@ -354,12 +753,12 @@ export const LabelLensView: React.FC = () => {
               </div>
 
               {/* 4. Claim Credibility */}
-              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
+              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     4. Claim Credibility
                   </span>
-                  <span className="text-xs">🛡️</span>
+                  <span className="text-sm">🛡️</span>
                 </div>
                 <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.claimCredibilityScore}
@@ -370,11 +769,11 @@ export const LabelLensView: React.FC = () => {
               </div>
             </div>
 
-            {/* Synthesis Paragraph Card */}
-            <div className="p-5 rounded-[1.5rem] bg-mint-50/80 border border-mint-200 text-xs sm:text-sm text-charcoal-800 leading-relaxed">
-              <div className="flex items-center gap-1.5 text-forest-950 font-bold mb-2 uppercase tracking-wider text-[11px] font-mono">
+            {/* Clinical Synthesis Box */}
+            <div className="p-5 rounded-2xl bg-mint-50/90 border border-mint-200 text-xs sm:text-sm text-charcoal-800 space-y-2">
+              <div className="flex items-center gap-1.5 text-forest-950 font-bold uppercase tracking-wider text-[11px] font-mono">
                 <Sparkles className="w-4 h-4 text-forest-800" />
-                <span>Clinical Synthesis</span>
+                <span>Clinical Pharmacological Synthesis</span>
               </div>
               <p className="font-sans text-charcoal-800 leading-relaxed">
                 "{analysisResult.summary.synthesisText}"
@@ -385,682 +784,158 @@ export const LabelLensView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 3: FRONT-PACK CLAIM AUDIT */}
+      {/* 🌿 TAB 4: CLINICAL ALTERNATIVES & MOSAIC WELLNESS FORMULATIONS            */}
       {/* ========================================================================= */}
-      {activeSubView === 'claims' && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Claims Audited</span>
-              <span className="text-xs font-black text-forest-950">{analysisResult.detectedClaims.length} Claims</span>
-            </div>
-          </div>
-
-          <div className="space-y-3.5">
-            {analysisResult.detectedClaims.length === 0 ? (
-              <div className="p-8 rounded-[2rem] bg-white border border-mint-200/80 text-center space-y-2 shadow-card">
-                <ShieldCheck className="w-8 h-8 text-charcoal-400 mx-auto" />
-                <p className="text-sm font-bold text-forest-950">No front-pack marketing claims detected</p>
-                <p className="text-xs text-charcoal-500">Add front label text like "Clinically Proven" or "100% Natural" to test credibility.</p>
-              </div>
-            ) : (
-              analysisResult.detectedClaims.map((claim) => (
-                <div
-                  key={claim.id}
-                  className="p-5 rounded-[2rem] bg-white border border-mint-200/80 shadow-card space-y-3.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider font-mono">
-                        Audited Claim Statement
-                      </span>
-                      <h4 className="text-base font-black text-forest-950 mt-0.5">
-                        "{claim.displayName}"
-                      </h4>
-                    </div>
-                    <VerdictBadge verdict={claim.verdict} size="sm" />
-                  </div>
-
-                  <div className="space-y-2 text-xs text-charcoal-800">
-                    <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1">
-                      <strong className="text-forest-950 font-bold block text-xs">
-                        What this phrase usually means:
-                      </strong>
-                      <p className="text-charcoal-600 leading-relaxed">{claim.whatItMeans}</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1">
-                      <strong className="text-forest-950 font-bold block text-xs">
-                        What clinical evidence or data is missing:
-                      </strong>
-                      <p className="text-charcoal-600 leading-relaxed">{claim.missingInformation}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-charcoal-500 italic pt-2 border-t border-mint-100">
-                    {claim.supportRationale}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 4: CLINICALLY UPGRADED ALTERNATIVES */}
-      {/* ========================================================================= */}
-      {activeSubView === 'alternatives' && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Formulation Matches</span>
-              <span className="text-xs font-black text-forest-950">{matchingFormulations.length} Upgrades</span>
-            </div>
-          </div>
-
-          <ClinicalRecommendations
-            products={matchingFormulations}
-            title="Evidence-Based Alternative Formulations"
-            subtitle="Higher-bioavailability, clean-label clinical formulations matching the active ingredients detected on this label."
-          />
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 5: SAMPLE BENCHMARK LIBRARY */}
-      {/* ========================================================================= */}
-      {activeSubView === 'samples' && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Sample Library</span>
-              <span className="text-xs font-black text-forest-950">{SAMPLE_PRODUCTS.length} Benchmarks</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {SAMPLE_PRODUCTS.map((sample) => {
-              const isSelected = selectedSampleId === sample.id;
-              return (
-                <div
-                  key={sample.id}
-                  className={`p-5 rounded-[2rem] border transition-all duration-200 flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-mint-50/80 text-charcoal-900 border-mint-400 shadow-card'
-                      : 'bg-white text-charcoal-800 border-mint-200/80 hover:border-mint-400 shadow-soft'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest font-mono text-forest-700">
-                      {sample.category}
-                    </span>
-                    <h4 className="text-base font-black text-forest-950">
-                      {sample.name}
-                    </h4>
-                    <p className="text-xs text-charcoal-600">
-                      Brand: <span className="font-bold text-forest-900">{sample.brandSuggestion}</span>
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-mint-100 mt-4 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-charcoal-500">
-                      {sample.suggestedClaims.length} Claims Included
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleSelectSample(sample);
-                        setActiveSubView('audit_sheet');
-                      }}
-                      className="px-3.5 py-1.5 rounded-full text-xs font-extrabold transition active:scale-95 bg-forest-900 text-white hover:bg-forest-800 shadow-soft"
-                    >
-                      Audit This Sample ›
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 6: AI VISION & OCR INSPECTOR */}
-      {/* ========================================================================= */}
-      {activeSubView === 'ai_inspector' && latestDebugTrace && (
-        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
-            <button
-              onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4 text-forest-800" />
-              <span>‹ Label Lens Hub</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Model Trace</span>
-              <span className="text-xs font-black text-forest-950">{latestDebugTrace.model || 'Vision AI'}</span>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-[2rem] bg-white border border-mint-200/80 shadow-card space-y-4">
-            <div className="flex items-center justify-between border-b border-mint-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-mint-100 text-forest-900">
-                  <Terminal className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-forest-950">Live AI Extraction Trace</h3>
-                  <p className="text-xs text-charcoal-500">Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(latestDebugTrace.rawResponse || '');
-                  setHasCopiedRaw(true);
-                  setTimeout(() => setHasCopiedRaw(false), 2000);
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-cream-50 hover:bg-mint-100 border border-mint-200 text-xs font-bold text-forest-900 transition"
-              >
-                {hasCopiedRaw ? <Check className="w-3.5 h-3.5 text-forest-800" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{hasCopiedRaw ? 'Copied' : 'Copy JSON'}</span>
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDebugTab('response')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
-                  debugTab === 'response' ? 'bg-forest-900 text-white font-extrabold shadow-soft' : 'bg-cream-50 text-charcoal-600 border border-mint-200'
-                }`}
-              >
-                Raw LLM Response
-              </button>
-              <button
-                onClick={() => setDebugTab('prompt')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
-                  debugTab === 'prompt' ? 'bg-forest-900 text-white font-extrabold shadow-soft' : 'bg-cream-50 text-charcoal-600 border border-mint-200'
-                }`}
-              >
-                Prompt Instructions Sent
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-forest-950 border border-forest-900 font-mono text-xs text-mint-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
-              {debugTab === 'response' ? (latestDebugTrace.rawResponse || 'No response recorded') : (latestDebugTrace.prompt || 'No prompt recorded')}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MAIN HUB VIEW (Nested Mobile Dashboard) */}
-      {/* ========================================================================= */}
-      {activeSubView === 'hub' && (
-        <div className="space-y-6">
-          {/* Top Title & Scanner Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 text-[10px] font-extrabold uppercase tracking-wider font-mono border border-mint-200">
-                  Scientific Audit Suite
+      {activeTab === 'alternatives' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+              <div>
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
+                  TRANSPARENT FORMULATIONS
                 </span>
-                <span className="text-xs text-charcoal-500 font-mono font-medium">Hero Hub</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-forest-950 tracking-tight mt-1">
-                Label Lens
-              </h2>
-              <p className="text-xs sm:text-sm text-charcoal-600 max-w-xl">
-                Audit wellness labels against published literature, PubMed trials, and clinical dosages.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setSaveModalOpen(true)}
-              className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 font-extrabold text-xs shadow-soft transition active:scale-95"
-            >
-              <BookmarkPlus className="w-4 h-4 text-mint-300" />
-              <span>Save to Smart Shelf</span>
-            </button>
-          </div>
-
-          {/* ACTIVE AUDITED PRODUCT CARD */}
-          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card relative overflow-hidden group">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-forest-700 uppercase tracking-widest font-mono">
-                    Currently Loaded Product
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200 text-[10px] font-mono font-bold">
-                    Audited
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black text-forest-950 tracking-tight">
-                  {productName}
-                </h3>
-                <p className="text-xs text-charcoal-600 font-medium">
-                  Brand: <span className="text-forest-950 font-bold">{saveBrand}</span> • Category: <span className="text-forest-950 font-bold">{analysisResult.category}</span>
+                <h2 className="text-xl sm:text-2xl font-black text-forest-950 mt-1">
+                  Evidence-Backed Clinical Formulations
+                </h2>
+                <p className="text-xs text-charcoal-600 mt-0.5">
+                  Peer-reviewed formulations with transparent dosage disclosure and clinical bio-availability.
                 </p>
               </div>
 
-              {/* 4 Quick Badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
-                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Relevance</span>
-                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.goalRelevanceScore}</span>
-                </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
-                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Evidence</span>
-                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.evidenceQualityScore}</span>
-                </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
-                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Dose Clarity</span>
-                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.doseTransparencyScore}</span>
-                </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
-                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Claims</span>
-                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.claimCredibilityScore}</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-full bg-mint-100 border border-mint-200 text-forest-800 text-xs font-mono font-black flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-mint-600" />
+                  <span>100% Label Transparency</span>
+                </span>
               </div>
             </div>
 
-            {/* Quick Action Button into Audit Sheet */}
-            <div className="mt-5 pt-4 border-t border-mint-100 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs text-charcoal-600">
-                <FlaskConical className="w-4 h-4 text-forest-800" />
-                <span><strong className="text-forest-950">{analysisResult.detectedIngredients.length}</strong> active compounds identified</span>
-              </div>
-              <button
-                onClick={() => setActiveSubView('audit_sheet')}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-forest-900 text-white font-extrabold text-xs hover:bg-forest-800 transition active:scale-95 shadow-soft"
-              >
-                <span>View Rx Audit Sheet</span>
-                <ChevronRight className="w-3.5 h-3.5 text-mint-300" />
-              </button>
-            </div>
-          </div>
-
-          {/* INSTANT SCAN ACTION BAR */}
-          <div className="p-6 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-3.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-forest-950 uppercase tracking-wider font-mono flex items-center gap-2">
-                <Camera className="w-4 h-4 text-forest-800" />
-                <span>Scan New Physical Product</span>
-              </span>
-              <button
-                onClick={() => setShowManualEditor(!showManualEditor)}
-                className="flex items-center gap-1 text-xs font-bold text-charcoal-600 hover:text-forest-900 transition"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>{showManualEditor ? 'Hide Editor' : 'Edit Ingredients'}</span>
-              </button>
-            </div>
-
-            {/* Barcode Primary CTA */}
-            <button
-              type="button"
-              onClick={() => setIsBarcodeModalOpen(true)}
-              disabled={isScanning}
-              className="w-full p-4 rounded-full bg-forest-900 text-white hover:bg-forest-800 flex items-center justify-center gap-2.5 text-xs font-extrabold shadow-soft transition active:scale-[0.99]"
-            >
-              <ScanBarcode className="w-4 h-4 text-mint-300" />
-              <span>Scan Barcode (Instant Optical Barcode Match)</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isScanning}
-                className="p-3.5 rounded-full bg-cream-50 hover:bg-mint-50 border border-mint-200 text-forest-950 flex items-center justify-center gap-2 text-xs font-bold transition disabled:opacity-50"
-              >
-                <Upload className="w-4 h-4 text-forest-800" />
-                <span>Scan Bottle Photo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsQuickPasteOpen(!isQuickPasteOpen)}
-                className={`p-3.5 rounded-full border text-xs font-bold flex items-center justify-center gap-2 transition ${
-                  isQuickPasteOpen
-                    ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                    : 'bg-cream-50 hover:bg-mint-50 text-forest-950 border-mint-200'
-                }`}
-              >
-                <ClipboardPaste className="w-4 h-4" />
-                <span>Paste Text from Web</span>
-              </button>
-            </div>
-
-            {/* Quick Paste Box */}
-            {isQuickPasteOpen && (
-              <div className="p-4 rounded-2xl bg-cream-50/70 border border-mint-200 space-y-3 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-forest-950 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-forest-800" />
-                    Paste Product Ingredients / E-Commerce text
-                  </span>
-                  <span className="text-[10px] text-charcoal-500">Auto AI Denoise</span>
-                </div>
-
-                <textarea
-                  value={quickPasteInput}
-                  onChange={(e) => setQuickPasteInput(e.target.value)}
-                  placeholder="Paste ingredients (e.g. 'Melatonin 5mg, L-Theanine 100mg, Pectin, Glucose Syrup, Citric Acid...')"
-                  rows={3}
-                  className="w-full p-3 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-900 font-mono focus:outline-none focus:ring-2 focus:ring-mint-500 placeholder:text-charcoal-400"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickPasteClean()}
-                  disabled={isCleaningText || !quickPasteInput.trim()}
-                  className="w-full py-2.5 px-3 rounded-full bg-forest-900 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-soft transition disabled:opacity-50 hover:bg-forest-800"
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {matchingFormulations.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 hover:border-mint-400 transition space-y-4 flex flex-col justify-between group shadow-soft"
                 >
-                  {isCleaningText ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 animate-spin text-mint-300" />
-                      <span>Isolating Actives with AI...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5 text-mint-300" />
-                      <span>Clean & Debunk On Canvas</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* OCR Progress */}
-            {isScanning && (
-              <div className="p-4 rounded-2xl bg-cream-50/70 border border-mint-200 space-y-2 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-charcoal-700 font-medium flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin text-forest-800" />
-                    {scanProgress.status}
-                  </span>
-                  <span className="font-bold text-forest-950">{scanProgress.percent}%</span>
-                </div>
-                <div className="w-full bg-mint-100 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-forest-900 h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${scanProgress.percent}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Manual Editor */}
-            {showManualEditor && (
-              <div className="pt-3 border-t border-mint-100 space-y-3 animate-in fade-in duration-200">
-                <div>
-                  <label className="block text-[11px] font-bold text-charcoal-600 uppercase tracking-wider mb-1">
-                    Product Name
-                  </label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => {
-                      setProductName(e.target.value);
-                      handleReanalyze(ingredientText, frontClaimText, e.target.value);
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-cream-50 border border-mint-200 text-xs text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-charcoal-600 uppercase tracking-wider mb-1">
-                    Raw Ingredient List
-                  </label>
-                  <textarea
-                    value={ingredientText}
-                    onChange={(e) => {
-                      setIngredientText(e.target.value);
-                      setSelectedSampleId('');
-                      handleReanalyze(e.target.value, frontClaimText, productName);
-                    }}
-                    rows={4}
-                    className="w-full px-3 py-2 rounded-xl bg-cream-50 border border-mint-200 text-xs text-charcoal-900 font-mono focus:outline-none focus:ring-2 focus:ring-mint-500"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* NESTED MOBILE APP DRILL-DOWN TILES */}
-          <div className="space-y-3">
-            <span className="text-xs font-bold text-forest-700 uppercase tracking-wider block font-mono">
-              Deep-Dive Scientific Modules
-            </span>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* Tile 1: Rx Clinical Audit Sheet */}
-              <button
-                type="button"
-                onClick={() => setActiveSubView('audit_sheet')}
-                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-forest-950">
-                      Clinical Rx Audit Sheet
-                    </h4>
-                    <p className="text-xs text-charcoal-600 mt-0.5">
-                      {analysisResult.detectedIngredients.length} actives • PubMed trials & evidence tiers
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Tile 2: 4-Dimension Matrix & Synthesis */}
-              <button
-                type="button"
-                onClick={() => setActiveSubView('matrix')}
-                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                    <Activity className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-forest-950">
-                      4-Dimension Matrix
-                    </h4>
-                    <p className="text-xs text-charcoal-600 mt-0.5">
-                      Relevance, evidence, dose & claim scorecards
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Tile 3: Front-Pack Claim Audit */}
-              <button
-                type="button"
-                onClick={() => setActiveSubView('claims')}
-                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-forest-950">
-                      Claim Credibility Audit
-                    </h4>
-                    <p className="text-xs text-charcoal-600 mt-0.5">
-                      {analysisResult.detectedClaims.length} marketing claims verified
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Tile 4: Clinically Upgraded Alternatives */}
-              <button
-                type="button"
-                onClick={() => setActiveSubView('alternatives')}
-                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                    <Zap className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-forest-950">
-                      Alternative Formulations
-                    </h4>
-                    <p className="text-xs text-charcoal-600 mt-0.5">
-                      {matchingFormulations.length} clinically matched formulations
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Tile 5: Sample Benchmark Library */}
-              <button
-                type="button"
-                onClick={() => setActiveSubView('samples')}
-                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                    <Layers className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-forest-950">
-                      Sample Benchmark Library
-                    </h4>
-                    <p className="text-xs text-charcoal-600 mt-0.5">
-                      Test Hair, Sleep & Recovery reference labs
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Tile 6: AI Vision / OCR Trace Inspector (if trace available) */}
-              {latestDebugTrace && (
-                <button
-                  type="button"
-                  onClick={() => setActiveSubView('ai_inspector')}
-                  className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
-                      <Terminal className="w-6 h-6" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
+                        {prod.brand} • {prod.category}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-forest-900">
+                        ₹{prod.sitePrice}
+                      </span>
                     </div>
-                    <div>
-                      <h4 className="text-base font-black text-forest-950">
-                        AI Model Inspector
-                      </h4>
-                      <p className="text-xs text-charcoal-600 mt-0.5">
-                        Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}
-                      </p>
+
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-mint-200 shrink-0 overflow-hidden relative flex items-center justify-center">
+                        {prod.imageUrl && (
+                          <img
+                            src={prod.imageUrl}
+                            alt={prod.product}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-black text-forest-950 group-hover:text-forest-800 transition leading-tight">
+                          {prod.product}
+                        </h3>
+                        <p className="text-xs text-charcoal-600 mt-1 leading-relaxed line-clamp-2">
+                          {prod.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white border border-mint-100 space-y-1 text-xs">
+                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
+                        <span>Declared Actives</span>
+                        <span className="font-mono text-forest-950 font-bold">{prod.keyIngredients.join(' • ')}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
+                        <span>Clinical Advantage</span>
+                        <span className="font-mono text-mint-700 font-bold">{prod.clinicalAdvantage || 'Bio-enhanced formulation'}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
-                    <ChevronRight className="w-4 h-4" />
+
+                  <div className="pt-2 border-t border-mint-100 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-charcoal-600">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{prod.potencyBadge || 'Verified Clinical Efficacy'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => showToast(`Added ${prod.product} to your routine!`, 'success')}
+                      className="px-4 py-1.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 text-xs font-black transition active:scale-95 shadow-soft"
+                    >
+                      Add to Routine
+                    </button>
                   </div>
-                </button>
-              )}
+                </div>
+              ))}
             </div>
           </div>
-
-          <DisclaimerBanner />
         </div>
       )}
 
-      {/* Save To Smart Shelf Modal */}
+      {/* ========================================================================= */}
+      {/* 📥 SAVE TO SMART SHELF MODAL                                              */}
+      {/* ========================================================================= */}
       {saveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] max-w-sm w-full p-6 shadow-modal border border-mint-200 space-y-4 text-charcoal-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[2.5rem] max-w-md w-full p-6 shadow-modal border border-mint-200 space-y-5 text-charcoal-900">
             <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div className="flex items-center gap-2">
                 <BookmarkPlus className="w-5 h-5 text-forest-800" />
                 <h3 className="text-base font-black text-forest-950">Save to Smart Shelf</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSaveModalOpen(false)}
-                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
+                className="p-1.5 rounded-full text-charcoal-400 hover:text-charcoal-700 bg-cream-50"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-charcoal-600 mb-1">Product Title</label>
+              <div className="space-y-1">
+                <label className="font-bold text-charcoal-700">Product Name:</label>
                 <input
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
+                  className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 font-bold text-forest-950"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-charcoal-600 mb-1">Brand Name</label>
+              <div className="space-y-1">
+                <label className="font-bold text-charcoal-700">Brand:</label>
                 <input
                   type="text"
                   value={saveBrand}
                   onChange={(e) => setSaveBrand(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
+                  className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 font-bold text-forest-950"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-charcoal-600 mb-1">Recommended Usage Time</label>
-                <div className="grid grid-cols-3 gap-1.5">
+              <div className="space-y-1">
+                <label className="font-bold text-charcoal-700">Usage Timing:</label>
+                <div className="grid grid-cols-3 gap-2">
                   {(['morning', 'evening', 'both'] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setSaveTimeOfDay(t)}
-                      className={`py-2 rounded-xl border text-center font-bold capitalize transition ${
+                      className={`p-2 rounded-xl font-bold uppercase text-[10px] font-mono transition ${
                         saveTimeOfDay === t
-                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                          : 'bg-cream-50 text-charcoal-600 border-mint-200 hover:bg-mint-50'
+                          ? 'bg-forest-900 text-white shadow-soft'
+                          : 'bg-cream-50 text-charcoal-600 border border-mint-100'
                       }`}
                     >
                       {t}
@@ -1070,33 +945,35 @@ export const LabelLensView: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 flex items-center gap-2">
+            <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setSaveModalOpen(false)}
-                className="flex-1 py-3 rounded-full bg-cream-50 text-charcoal-700 font-bold text-xs hover:bg-mint-100 border border-mint-200 transition"
+                className="flex-1 py-2.5 rounded-xl bg-cream-50 text-charcoal-700 font-bold text-xs"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveToShelf}
-                className="flex-1 py-3 rounded-full bg-forest-900 text-white font-extrabold text-xs shadow-soft hover:bg-forest-800 transition"
+                className="flex-1 py-2.5 rounded-xl bg-forest-900 text-white font-black text-xs shadow-soft"
               >
-                Save Product
+                Confirm & Save
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Barcode Scanner Viewfinder Modal */}
-      <BarcodeScannerModal
-        isOpen={isBarcodeModalOpen}
-        onClose={() => setIsBarcodeModalOpen(false)}
-        onProductFound={handleBarcodeProductFound}
-        userGoal={profile.primaryGoal}
-      />
+      {/* Barcode Scanner Modal */}
+      {isBarcodeModalOpen && (
+        <BarcodeScannerModal
+          isOpen={isBarcodeModalOpen}
+          onClose={() => setIsBarcodeModalOpen(false)}
+          onProductFound={handleBarcodeProductFound}
+          userGoal={profile.primaryGoal}
+        />
+      )}
     </div>
   );
 };
