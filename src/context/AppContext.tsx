@@ -5,7 +5,9 @@ import {
   RoutineStep, 
   ProgressEntry, 
   WellnessGoal, 
-  DuplicateIngredientAlert 
+  DuplicateIngredientAlert,
+  AISettings,
+  OnboardingProduct
 } from '../types';
 import { 
   DEMO_USER_PROFILE, 
@@ -36,9 +38,13 @@ interface AppContextType {
   toasts: ToastState[];
   showToast: (message: string, type?: 'success' | 'info' | 'warning') => void;
   
+  // AI Integration
+  aiSettings: AISettings;
+  updateAISettings: (settings: Partial<AISettings>) => void;
+
   // Actions
   updateProfile: (updates: Partial<UserProfile>) => void;
-  completeOnboarding: (data: Partial<UserProfile>) => void;
+  completeOnboarding: (data: Partial<UserProfile>, scannedProducts?: OnboardingProduct[]) => void;
   addShelfProduct: (product: Omit<ShelfProduct, 'id' | 'dateAdded'>) => void;
   editShelfProduct: (id: string, updates: Partial<ShelfProduct>) => void;
   removeShelfProduct: (id: string) => void;
@@ -68,15 +74,24 @@ const STORAGE_KEYS = {
   ROUTINE: 'ritual_routine_steps_v1',
   PROGRESS: 'ritual_progress_history_v1',
   IS_DEMO: 'ritual_is_demo_v1',
+  AI_SETTINGS: 'ritual_ai_settings_v1',
 };
 
 const INITIAL_PROFILE: UserProfile = {
   name: '',
+  age: 24,
   primaryGoal: 'hair_health',
   dailyTime: '5_min',
   alreadyOwnsProducts: false,
   isOnboarded: false,
   createdAt: new Date().toISOString()
+};
+
+const INITIAL_AI_SETTINGS: AISettings = {
+  enabled: true,
+  provider: 'local',
+  openRouterApiKey: '',
+  selectedModel: 'google/gemini-2.0-flash-exp:free'
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -87,7 +102,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return DEMO_USER_PROFILE; // Default to demo profile for immediate reviewer joy, can be reset anytime
+    return DEMO_USER_PROFILE;
+  });
+
+  const [aiSettings, setAISettings] = useState<AISettings>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.AI_SETTINGS);
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+    }
+    return INITIAL_AI_SETTINGS;
   });
 
   const [shelfProducts, setShelfProducts] = useState<ShelfProduct[]>(() => {
@@ -128,6 +151,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [profile]);
 
   useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.AI_SETTINGS, JSON.stringify(aiSettings));
+  }, [aiSettings]);
+
+  useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SHELF, JSON.stringify(shelfProducts));
   }, [shelfProducts]);
 
@@ -162,12 +189,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3800);
   };
 
+  const updateAISettings = (settings: Partial<AISettings>) => {
+    setAISettings(prev => ({ ...prev, ...settings }));
+    showToast('AI Provider settings updated', 'success');
+  };
+
   const updateProfile = (updates: Partial<UserProfile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
     showToast('Profile preferences updated', 'success');
   };
 
-  const completeOnboarding = (data: Partial<UserProfile>) => {
+  const completeOnboarding = (data: Partial<UserProfile>, scannedProducts?: OnboardingProduct[]) => {
     const updated: UserProfile = {
       ...profile,
       ...data,
@@ -176,14 +208,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setProfile(updated);
     
-    // Auto-generate fresh routine for the chosen goal
+    let currentShelf = [...shelfProducts];
+
+    // If onboarding scanned products were provided, convert them to shelf items
+    if (scannedProducts && scannedProducts.length > 0) {
+      const newItems: ShelfProduct[] = scannedProducts.map((p, idx) => {
+        const detectedActives = p.ingredientAnalysis?.detectedIngredients.map(d => d.ingredient.name) || ['Active Formulation'];
+        return {
+          id: 'prod-onboard-' + Date.now().toString(36) + '-' + idx,
+          name: p.name || 'Audited Product',
+          brand: p.brand || 'Personal Product',
+          category: (p.category.includes('Hair') ? 'Hair' : p.category.includes('Body') ? 'Body' : p.category.includes('Sleep') ? 'Sleep' : 'General') as any,
+          relevantGoal: updated.primaryGoal,
+          activeIngredients: detectedActives,
+          evidenceSummary: p.ingredientAnalysis?.summary.synthesisText || 'Audited during onboarding with Label Lens.',
+          evidenceTier: p.ingredientAnalysis?.detectedIngredients[0]?.ingredient.evidenceTier || 'promising_limited',
+          timeOfDay: idx % 2 === 0 ? 'morning' : 'evening',
+          dateAdded: new Date().toISOString().split('T')[0]
+        };
+      });
+      currentShelf = [...newItems, ...shelfProducts];
+      setShelfProducts(currentShelf);
+    }
+
+    // Auto-generate fresh routine for the chosen goal with these products
     const newRoutine = generateRoutineFromProfile(
       updated.primaryGoal, 
       updated.dailyTime, 
-      shelfProducts
+      currentShelf
     );
     setRoutineSteps(newRoutine);
-    setActiveTab('today');
+    setActiveTab('routine'); // Send user straight to their generated routine as requested!
     showToast(`Welcome to Ritual, ${updated.name || 'friend'}!`, 'success');
   };
 
@@ -365,7 +420,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   ingredientMap.forEach((productNames, ingredientName) => {
     if (productNames.length > 1) {
-      // Capitalize
       const capName = ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1);
       duplicateAlerts.push({
         ingredientName: capName,
@@ -387,6 +441,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setShowRoutineRescue,
       toasts,
       showToast,
+      aiSettings,
+      updateAISettings,
       updateProfile,
       completeOnboarding,
       addShelfProduct,

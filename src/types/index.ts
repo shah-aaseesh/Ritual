@@ -20,11 +20,19 @@ export type ClaimVerdict =
 
 export interface UserProfile {
   name: string;
+  age?: number;
   primaryGoal: WellnessGoal;
   dailyTime: DailyTimeCommitment;
   alreadyOwnsProducts: boolean;
   isOnboarded: boolean;
   createdAt: string;
+}
+
+export interface AISettings {
+  enabled: boolean;
+  provider: 'local' | 'openrouter';
+  openRouterApiKey: string;
+  selectedModel: string;
 }
 
 export interface IngredientInfo {
@@ -83,6 +91,19 @@ export interface ProductAnalysisResult {
   detectedClaims: ClaimInfo[];
   summary: LabelAnalysisSummary;
   timestamp: string;
+}
+
+export interface OnboardingProduct {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  ingredientImage?: string;
+  ingredientText: string;
+  claimImage?: string;
+  claimText: string;
+  ingredientAnalysis?: ProductAnalysisResult;
+  matchedMosaic?: MosaicProduct[];
 }
 
 export interface ShelfProduct {

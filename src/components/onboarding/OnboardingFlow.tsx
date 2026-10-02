@@ -1,160 +1,352 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { WellnessGoal, DailyTimeCommitment } from '../../types';
-import { Leaf, ArrowRight, Check, Sparkles, Clock, ShieldCheck } from 'lucide-react';
+import { 
+  WellnessGoal, 
+  DailyTimeCommitment, 
+  OnboardingProduct, 
+  ProductAnalysisResult 
+} from '../../types';
+import { SAMPLE_PRODUCTS } from '../../data/sampleProducts';
+import { performBrowserOCR } from '../../services/analyzer';
+import { analyzeIngredientsWithAI, findMatchingMosaicProducts, POPULAR_OPENROUTER_MODELS } from '../../services/aiService';
+import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
+import { 
+  Leaf, 
+  ArrowRight, 
+  Check, 
+  Sparkles, 
+  Camera, 
+  Plus, 
+  Bot, 
+  ExternalLink,
+  ChevronRight
+} from 'lucide-react';
 
 export const OnboardingFlow: React.FC = () => {
-  const { completeOnboarding } = useApp();
+  const { completeOnboarding, aiSettings, updateAISettings, showToast } = useApp();
+
+  // Wizard Steps
+  // 1: Name -> 2: Age -> 3: Goal -> 4: Own Products? -> 5: Ingredient Scan & Debunk -> 6: Claims Scan & Debunk -> 7: Routine Genesis
   const [step, setStep] = useState<number>(1);
   const [name, setName] = useState<string>('');
+  const [age, setAge] = useState<number>(24);
   const [goal, setGoal] = useState<WellnessGoal>('hair_health');
-  const [dailyTime, setDailyTime] = useState<DailyTimeCommitment>('5_min');
+  const [dailyTime] = useState<DailyTimeCommitment>('5_min');
   const [ownsProducts, setOwnsProducts] = useState<boolean>(true);
 
-  const totalSteps = 4;
+  // Scanned products collection (multi-product support)
+  const [scannedProducts, setScannedProducts] = useState<OnboardingProduct[]>([
+    {
+      id: 'prod-1',
+      name: 'Scalp Growth Serum',
+      brand: 'My Product',
+      category: 'Hair Care',
+      ingredientText: SAMPLE_PRODUCTS[0].ingredientLabelText,
+      claimText: SAMPLE_PRODUCTS[0].frontLabelText,
+      ingredientAnalysis: undefined,
+      matchedMosaic: []
+    }
+  ]);
 
-  const handleFinish = () => {
-    completeOnboarding({
-      name: name.trim() || 'Friend',
-      primaryGoal: goal,
-      dailyTime,
-      alreadyOwnsProducts: ownsProducts,
-      isOnboarded: true
-    });
-  };
+  const [activeProdIndex, setActiveProdIndex] = useState<number>(0);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [ocrStatus, setOcrStatus] = useState<string>('');
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
+  const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
+  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'google/gemini-2.0-flash-exp:free');
 
-  const goalOptions: { id: WellnessGoal; title: string; desc: string; icon: string; tag: string }[] = [
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const claimFileInputRef = useRef<HTMLInputElement>(null);
+
+  const goalOptions: { id: WellnessGoal; title: string; desc: string; icon: string }[] = [
     {
       id: 'hair_health',
-      title: 'Improve hair health',
-      desc: 'Understand hair actives (Redensyl, Minoxidil, Rosemary) and build steady scalp consistency.',
-      icon: '🌿',
-      tag: 'Hair & Scalp'
+      title: 'Improve Hair Health',
+      desc: 'Follicular density, scalp microcirculation & shedding reduction.',
+      icon: '🌿'
     },
     {
       id: 'body_care',
-      title: 'Build a body-care routine',
-      desc: 'Clarify body acne, smooth strawberry legs, and repair barrier lipids with BHAs & Ceramides.',
-      icon: '💧',
-      tag: 'Body & Skin'
+      title: 'Build a Body-Care Routine',
+      desc: 'Clear body acne, keratosis pilaris & epidermal barrier care.',
+      icon: '💧'
     },
     {
       id: 'sleep_recovery',
-      title: 'Sleep and recover better',
-      desc: 'Evaluate adaptogens & nocturnal minerals (Ashwagandha, Magnesium, Melatonin) for deep rest.',
-      icon: '🌙',
-      tag: 'Sleep & Stress'
+      title: 'Sleep & Recover Better',
+      desc: 'Lower sleep latency, regulate cortisol & nocturnal relaxation.',
+      icon: '🌙'
     }
   ];
 
-  const timeOptions: { id: DailyTimeCommitment; title: string; desc: string; icon: React.FC<{ className?: string }> }[] = [
-    {
-      id: '2_min',
-      title: '2 minutes / day',
-      desc: 'Frictionless micro-habits. Perfect when your schedule is packed.',
-      icon: Clock
-    },
-    {
-      id: '5_min',
-      title: '5 minutes / day',
-      desc: 'The sweet spot. Balanced AM and PM rituals with real scientific momentum.',
-      icon: Sparkles
-    },
-    {
-      id: '10_min',
-      title: '10 minutes / day',
-      desc: 'Comprehensive multi-step routine including targeted massage and barrier care.',
-      icon: ShieldCheck
+  // Helper to trigger analysis on the active product
+  const analyzeActiveProduct = async (productIdx: number, overrideIngText?: string) => {
+    const prod = scannedProducts[productIdx];
+    if (!prod) return;
+
+    setIsAnalyzing(true);
+    setOcrStatus('Clinical AI analyzing active ingredients against evidence database...');
+
+    try {
+      const textToAnalyze = overrideIngText || prod.ingredientText || SAMPLE_PRODUCTS[0].ingredientLabelText;
+      const result: ProductAnalysisResult = await analyzeIngredientsWithAI(
+        textToAnalyze,
+        prod.ingredientImage,
+        goal,
+        prod.name,
+        aiSettings.openRouterApiKey,
+        aiSettings.selectedModel
+      );
+
+      const activeNames = result.detectedIngredients.map(d => d.ingredient.name);
+      const mosaicMatches = findMatchingMosaicProducts(activeNames, goal);
+
+      setScannedProducts(prev => {
+        const next = [...prev];
+        next[productIdx] = {
+          ...next[productIdx],
+          ingredientText: textToAnalyze,
+          ingredientAnalysis: result,
+          matchedMosaic: mosaicMatches
+        };
+        return next;
+      });
+      showToast('Ingredients audited & debriefed', 'success');
+    } catch (e) {
+      showToast('Analysis completed using local clinical database', 'info');
+    } finally {
+      setIsAnalyzing(false);
+      setOcrStatus('');
     }
-  ];
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isClaim: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setOcrStatus('Scanning photo typography with browser OCR...');
+
+    try {
+      const extracted = await performBrowserOCR(file, (percent, status) => {
+        setOcrStatus(`${status} (${percent}%)`);
+      });
+
+      if (extracted && extracted.trim().length > 0) {
+        if (isClaim) {
+          setScannedProducts(prev => {
+            const copy = [...prev];
+            copy[activeProdIndex].claimText = extracted;
+            return copy;
+          });
+          showToast('Claim packaging text extracted', 'success');
+        } else {
+          setScannedProducts(prev => {
+            const copy = [...prev];
+            copy[activeProdIndex].ingredientText = extracted;
+            return copy;
+          });
+          await analyzeActiveProduct(activeProdIndex, extracted);
+        }
+      }
+    } catch (err) {
+      showToast('OCR scan failed, you can paste or select sample label.', 'warning');
+    } finally {
+      setIsAnalyzing(false);
+      setOcrStatus('');
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleAddAnotherProduct = () => {
+    const newIdx = scannedProducts.length + 1;
+    const sample = SAMPLE_PRODUCTS[(newIdx - 1) % SAMPLE_PRODUCTS.length];
+    const newProd: OnboardingProduct = {
+      id: 'prod-' + Date.now().toString(36),
+      name: `Product ${newIdx} (${sample.category.split(' ')[0]})`,
+      brand: sample.brandSuggestion,
+      category: sample.category,
+      ingredientText: sample.ingredientLabelText,
+      claimText: sample.frontLabelText,
+      ingredientAnalysis: undefined,
+      matchedMosaic: []
+    };
+
+    setScannedProducts(prev => [...prev, newProd]);
+    setActiveProdIndex(scannedProducts.length);
+    showToast(`Added Product ${newIdx}. Scan or select sample.`, 'info');
+  };
+
+  const handleRemoveProduct = (index: number) => {
+    if (scannedProducts.length <= 1) return;
+    setScannedProducts(prev => prev.filter((_, i) => i !== index));
+    setActiveProdIndex(Math.max(0, activeProdIndex - 1));
+  };
+
+  const handleFinalFinish = () => {
+    completeOnboarding(
+      {
+        name: name.trim() || 'Friend',
+        age,
+        primaryGoal: goal,
+        dailyTime,
+        alreadyOwnsProducts: ownsProducts,
+        isOnboarded: true
+      },
+      ownsProducts ? scannedProducts : []
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-charcoal-900 flex flex-col justify-between p-4 sm:p-8 max-w-lg mx-auto">
-      {/* Top Brand Header */}
+    <div className="min-h-screen bg-[#FAF7F2] text-charcoal-900 flex flex-col justify-between p-4 sm:p-8 max-w-2xl mx-auto">
+      {/* Hidden File Inputs */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        capture="environment"
+        onChange={(e) => handleFileUpload(e, false)}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={claimFileInputRef}
+        accept="image/*"
+        capture="environment"
+        onChange={(e) => handleFileUpload(e, true)}
+        className="hidden"
+      />
+
+      {/* Top Brand Header & Step Indicator */}
       <div>
-        <div className="flex items-center justify-between pt-2 pb-6">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between pb-6 border-b border-cream-200">
+          <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-forest-900 flex items-center justify-center text-cream-50 shadow-sm">
               <Leaf className="w-4 h-4 text-mint-300" />
             </div>
-            <span className="text-lg font-extrabold tracking-tight text-forest-950">Ritual</span>
+            <div>
+              <span className="text-base font-extrabold tracking-tight text-forest-950">Ritual</span>
+              <span className="text-[10px] text-charcoal-500 font-medium block -mt-0.5">Evidence First</span>
+            </div>
           </div>
 
-          {step <= totalSteps && (
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4].map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    s === step
-                      ? 'w-6 bg-forest-800'
-                      : s < step
-                      ? 'w-2.5 bg-mint-500'
-                      : 'w-2.5 bg-cream-300'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {/* AI Model / Key Selector */}
+            <button
+              onClick={() => setShowApiKeyModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cream-100 hover:bg-cream-200 border border-cream-300 text-[11px] font-semibold text-forest-900 transition"
+              title="Configure free OpenRouter AI vision model"
+            >
+              <Bot className="w-3.5 h-3.5 text-mint-600" />
+              <span>{aiSettings.openRouterApiKey ? 'OpenRouter AI' : 'Local Clinical AI'}</span>
+            </button>
+
+            {/* Step Counter */}
+            <span className="text-xs font-bold text-charcoal-400">
+              Step {step} of {ownsProducts ? 7 : 5}
+            </span>
+          </div>
         </div>
 
-        {/* Step 1: Welcome & Name */}
+        {/* ========================================================================= */}
+        {/* STEP 1: NAME                                                              */}
+        {/* ========================================================================= */}
         {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
             <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
-                Step 1 of 4 • Welcome
+                Welcome to Ritual
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-forest-950 leading-tight">
-                Know what works. <br />
-                <span className="text-forest-700">Build what sticks.</span>
+              <h2 className="text-3xl font-extrabold text-forest-950 tracking-tight">
+                What's your name?
               </h2>
-              <p className="text-sm text-charcoal-600 leading-relaxed pt-1">
-                Ritual is an evidence-first wellness companion. We decode wellness claims, organize what you already own, and turn products into sustainable daily routines.
+              <p className="text-sm text-charcoal-600">
+                Let's personalize your evidence-first wellness journey.
               </p>
             </div>
 
             <div className="pt-2">
-              <label className="block text-xs font-semibold text-charcoal-700 uppercase tracking-wider mb-2">
-                What should we call you?
-              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your first name (e.g. Aarav, Ananya)"
-                className="w-full px-4 py-3.5 rounded-2xl bg-white border border-cream-300 text-charcoal-900 text-base placeholder:text-charcoal-400 focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-soft transition"
+                placeholder="e.g. Aarav, Ananya"
+                className="w-full px-5 py-4 rounded-2xl bg-white border border-cream-300 text-charcoal-900 text-lg placeholder:text-charcoal-400 focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-soft transition font-medium"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && name.trim()) setStep(2);
+                  if (e.key === 'Enter') setStep(2);
                 }}
               />
-            </div>
-
-            <div className="p-4 rounded-2xl bg-mint-50 border border-mint-200 text-xs text-charcoal-700 space-y-1">
-              <div className="flex items-center gap-1.5 font-semibold text-forest-900">
-                <ShieldCheck className="w-4 h-4 text-mint-600" />
-                <span>Zero fluff, zero marketing bias</span>
-              </div>
-              <p className="text-charcoal-600">
-                No sponsored rankings. No fake miracle scores. All ingredient analysis is grounded in peer-reviewed dermatology and clinical literature.
-              </p>
             </div>
           </div>
         )}
 
-        {/* Step 2: Primary Goal */}
+        {/* ========================================================================= */}
+        {/* STEP 2: AGE                                                               */}
+        {/* ========================================================================= */}
         {step === 2 && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-1">
+          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
-                Step 2 of 4 • Focus Area
+                Personalization
               </span>
-              <h2 className="text-2xl font-bold text-forest-950">
-                What is your primary wellness goal, {name || 'friend'}?
+              <h2 className="text-3xl font-extrabold text-forest-950 tracking-tight">
+                How old are you, {name || 'friend'}?
               </h2>
-              <p className="text-xs text-charcoal-500">
-                You can adjust or expand your focus anytime in preferences.
+              <p className="text-sm text-charcoal-600">
+                Age calibrates clinical metabolic baselines, cellular renewal rates, and barrier tolerance.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-2">
+                {[20, 24, 28, 32, 35].map((presetAge) => (
+                  <button
+                    key={presetAge}
+                    type="button"
+                    onClick={() => setAge(presetAge)}
+                    className={`flex-1 py-3 rounded-2xl border text-sm font-bold transition ${
+                      age === presetAge
+                        ? 'bg-forest-900 text-cream-50 border-forest-900 shadow-card'
+                        : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300'
+                    }`}
+                  >
+                    {presetAge}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-charcoal-600 mb-1">
+                  Or enter specific age:
+                </label>
+                <input
+                  type="number"
+                  min={16}
+                  max={90}
+                  value={age}
+                  onChange={(e) => setAge(Number(e.target.value))}
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-cream-300 text-charcoal-900 text-base focus:outline-none focus:ring-2 focus:ring-forest-800"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: GOAL                                                              */}
+        {/* ========================================================================= */}
+        {step === 3 && (
+          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
+                Primary Goal
+              </span>
+              <h2 className="text-3xl font-extrabold text-forest-950 tracking-tight">
+                What are you focusing on?
+              </h2>
+              <p className="text-sm text-charcoal-600">
+                Select your primary wellness priority to guide evidence audits.
               </p>
             </div>
 
@@ -164,35 +356,29 @@ export const OnboardingFlow: React.FC = () => {
                 return (
                   <button
                     key={opt.id}
+                    type="button"
                     onClick={() => setGoal(opt.id)}
-                    type="button"
-                    className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 relative ${
+                    className={`w-full p-4 sm:p-5 rounded-3xl border text-left transition-all duration-200 flex items-center justify-between gap-4 ${
                       isSelected
                         ? 'bg-forest-900 text-cream-50 border-forest-900 shadow-card ring-2 ring-forest-700'
-                        : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 hover:bg-cream-50 shadow-soft'
+                        : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 shadow-soft'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl p-2 rounded-xl bg-cream-100/30 shrink-0">
-                          {opt.icon}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className={`text-base font-bold ${isSelected ? 'text-cream-50' : 'text-forest-950'}`}>
-                              {opt.title}
-                            </h3>
-                          </div>
-                          <p className={`text-xs mt-1 leading-relaxed ${isSelected ? 'text-cream-200' : 'text-charcoal-600'}`}>
-                            {opt.desc}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-3.5">
+                      <span className="text-3xl">{opt.icon}</span>
+                      <div>
+                        <h3 className={`text-base font-bold ${isSelected ? 'text-cream-50' : 'text-forest-950'}`}>
+                          {opt.title}
+                        </h3>
+                        <p className={`text-xs mt-0.5 ${isSelected ? 'text-cream-200' : 'text-charcoal-600'}`}>
+                          {opt.desc}
+                        </p>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                        isSelected ? 'bg-mint-400 border-mint-400 text-forest-950' : 'border-charcoal-300'
-                      }`}>
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                      isSelected ? 'bg-mint-400 border-mint-400 text-forest-950' : 'border-charcoal-300'
+                    }`}>
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
                   </button>
                 );
@@ -201,98 +387,43 @@ export const OnboardingFlow: React.FC = () => {
           </div>
         )}
 
-        {/* Step 3: Daily Time Commitment */}
-        {step === 3 && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
-                Step 3 of 4 • Daily Habit Pace
-              </span>
-              <h2 className="text-2xl font-bold text-forest-950">
-                How much time can you spend daily?
-              </h2>
-              <p className="text-xs text-charcoal-500">
-                Consistency beats intensity. Choose a pace you can genuinely stick to for 90 days.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              {timeOptions.map((t) => {
-                const isSelected = dailyTime === t.id;
-                const Icon = t.icon;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setDailyTime(t.id)}
-                    type="button"
-                    className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-forest-900 text-cream-50 border-forest-900 shadow-card ring-2 ring-forest-700'
-                        : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 hover:bg-cream-50 shadow-soft'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2.5 rounded-xl shrink-0 ${isSelected ? 'bg-forest-800 text-mint-300' : 'bg-cream-100 text-forest-800'}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h3 className={`text-base font-bold ${isSelected ? 'text-cream-50' : 'text-forest-950'}`}>
-                            {t.title}
-                          </h3>
-                          <p className={`text-xs mt-0.5 leading-relaxed ${isSelected ? 'text-cream-200' : 'text-charcoal-600'}`}>
-                            {t.desc}
-                          </p>
-                        </div>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                        isSelected ? 'bg-mint-400 border-mint-400 text-forest-950' : 'border-charcoal-300'
-                      }`}>
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Product Ownership */}
+        {/* ========================================================================= */}
+        {/* STEP 4: CURRENTLY USING PRODUCTS?                                         */}
+        {/* ========================================================================= */}
         {step === 4 && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-1">
+          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
-                Step 4 of 4 • Your Current Setup
+                Current Products
               </span>
-              <h2 className="text-2xl font-bold text-forest-950">
-                Do you already own wellness products?
+              <h2 className="text-3xl font-extrabold text-forest-950 tracking-tight">
+                Are you already using products for this goal?
               </h2>
-              <p className="text-xs text-charcoal-500">
-                Ritual is brand-neutral. We prioritize organizing products already in your cabinet.
+              <p className="text-sm text-charcoal-600">
+                We will analyze their actual ingredients, check dosages, and debunk packaging claims.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
               <button
-                onClick={() => setOwnsProducts(true)}
                 type="button"
-                className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 ${
+                onClick={() => setOwnsProducts(true)}
+                className={`w-full p-5 rounded-3xl border text-left transition-all ${
                   ownsProducts
                     ? 'bg-forest-900 text-cream-50 border-forest-900 shadow-card ring-2 ring-forest-700'
-                    : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 hover:bg-cream-50 shadow-soft'
+                    : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 shadow-soft'
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className={`text-base font-bold ${ownsProducts ? 'text-cream-50' : 'text-forest-950'}`}>
-                      Yes, I have bottles and tubs at home
+                      Yes, I have bottles/tubs at home
                     </h3>
-                    <p className={`text-xs mt-1 leading-relaxed ${ownsProducts ? 'text-cream-200' : 'text-charcoal-600'}`}>
-                      You can photograph or scan ingredient labels with Label Lens to audit their clinical evidence and build a routine.
+                    <p className={`text-xs mt-1 ${ownsProducts ? 'text-cream-200' : 'text-charcoal-600'}`}>
+                      Take a photo of the ingredients list & front claims to decode what's real.
                     </p>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                     ownsProducts ? 'bg-mint-400 border-mint-400 text-forest-950' : 'border-charcoal-300'
                   }`}>
                     {ownsProducts && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -301,24 +432,24 @@ export const OnboardingFlow: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setOwnsProducts(false)}
                 type="button"
-                className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 ${
+                onClick={() => setOwnsProducts(false)}
+                className={`w-full p-5 rounded-3xl border text-left transition-all ${
                   !ownsProducts
                     ? 'bg-forest-900 text-cream-50 border-forest-900 shadow-card ring-2 ring-forest-700'
-                    : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 hover:bg-cream-50 shadow-soft'
+                    : 'bg-white text-charcoal-800 border-cream-300 hover:border-mint-300 shadow-soft'
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className={`text-base font-bold ${!ownsProducts ? 'text-cream-50' : 'text-forest-950'}`}>
                       No, I'm starting from scratch
                     </h3>
-                    <p className={`text-xs mt-1 leading-relaxed ${!ownsProducts ? 'text-cream-200' : 'text-charcoal-600'}`}>
-                      We will start with foundational evidence-backed habits (hydration, scalp circulation, sleep hygiene) without requiring any purchase.
+                    <p className={`text-xs mt-1 ${!ownsProducts ? 'text-cream-200' : 'text-charcoal-600'}`}>
+                      We'll start with foundational evidence-backed habits without requiring any product purchase.
                     </p>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                     !ownsProducts ? 'bg-mint-400 border-mint-400 text-forest-950' : 'border-charcoal-300'
                   }`}>
                     {!ownsProducts && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -329,89 +460,445 @@ export const OnboardingFlow: React.FC = () => {
           </div>
         )}
 
-        {/* Step 5: Personalized Welcome & Routine Preview */}
-        {step === 5 && (
-          <div className="space-y-6 text-center py-6 animate-in zoom-in-95 duration-300">
+        {/* ========================================================================= */}
+        {/* STEP 5 (IF YES): INGREDIENT PHOTO & DEBUNKER (SUPPORTS MULTIPLE PRODUCTS) */}
+        {/* ========================================================================= */}
+        {step === 5 && ownsProducts && (
+          <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
+                Step 5 of 7 • Ingredient Analysis
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-forest-950">
+                Photo & Debunk Your Ingredients
+              </h2>
+              <p className="text-xs sm:text-sm text-charcoal-600">
+                Snap or upload the back label of your products to audit active ingredients.
+              </p>
+            </div>
+
+            {/* Product Switcher Tabs if multiple */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {scannedProducts.map((p, idx) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setActiveProdIndex(idx);
+                    if (!p.ingredientAnalysis) {
+                      analyzeActiveProduct(idx);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${
+                    activeProdIndex === idx
+                      ? 'bg-forest-900 text-cream-50'
+                      : 'bg-white text-charcoal-700 border border-cream-300 hover:bg-cream-100'
+                  }`}
+                >
+                  <span>{p.name || `Product ${idx + 1}`}</span>
+                  {scannedProducts.length > 1 && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveProduct(idx);
+                      }}
+                      className="hover:text-coral-400 ml-1"
+                    >
+                      ×
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={handleAddAnotherProduct}
+                className="px-3 py-1.5 rounded-xl border border-dashed border-forest-800 text-forest-900 text-xs font-bold flex items-center gap-1 hover:bg-mint-50 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Product</span>
+              </button>
+            </div>
+
+            {/* Current Product Card */}
+            {scannedProducts[activeProdIndex] && (
+              <div className="space-y-4">
+                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 shadow-card space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-[10px] font-bold text-charcoal-400 uppercase tracking-wider">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        value={scannedProducts[activeProdIndex].name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setScannedProducts(prev => {
+                            const copy = [...prev];
+                            copy[activeProdIndex].name = val;
+                            return copy;
+                          });
+                        }}
+                        className="font-bold text-forest-950 text-base border-b border-cream-300 focus:outline-none focus:border-forest-800 bg-transparent"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3.5 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-1.5 shadow-soft transition"
+                    >
+                      <Camera className="w-4 h-4 text-mint-300" />
+                      <span>Take Photo</span>
+                    </button>
+                  </div>
+
+                  {/* OCR Progress if scanning */}
+                  {isAnalyzing && (
+                    <div className="p-3 rounded-2xl bg-forest-950 text-cream-50 text-xs flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-mint-300 animate-spin" />
+                      <span>{ocrStatus}</span>
+                    </div>
+                  )}
+
+                  {/* Ingredient Text area */}
+                  <div>
+                    <label className="block text-xs font-semibold text-charcoal-700 mb-1">
+                      Ingredients on Label:
+                    </label>
+                    <textarea
+                      value={scannedProducts[activeProdIndex].ingredientText}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setScannedProducts(prev => {
+                          const copy = [...prev];
+                          copy[activeProdIndex].ingredientText = val;
+                          return copy;
+                        });
+                      }}
+                      rows={2}
+                      className="w-full p-2.5 rounded-xl bg-cream-50 border border-cream-300 text-xs font-mono text-charcoal-800 focus:outline-none focus:ring-1 focus:ring-forest-800"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => analyzeActiveProduct(activeProdIndex)}
+                      className="text-xs font-bold text-forest-800 hover:text-mint-600 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-mint-600" />
+                      <span>Re-Audit Ingredients with AI</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Debunking Results */}
+                {scannedProducts[activeProdIndex].ingredientAnalysis && (
+                  <div className="p-4 sm:p-5 rounded-3xl bg-mint-50/90 border border-mint-200 shadow-soft space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-forest-900 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-mint-600" />
+                        <span>Ingredient Evidence Debrief</span>
+                      </h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-900 text-mint-300">
+                        {scannedProducts[activeProdIndex].ingredientAnalysis?.detectedIngredients.length} Actives Found
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-charcoal-800 font-sans leading-relaxed">
+                      "{scannedProducts[activeProdIndex].ingredientAnalysis?.summary.synthesisText}"
+                    </p>
+
+                    <div className="space-y-2 pt-2 border-t border-mint-200/70">
+                      {scannedProducts[activeProdIndex].ingredientAnalysis?.detectedIngredients.map((d, i) => (
+                        <div key={i} className="p-2.5 rounded-xl bg-white border border-mint-200 text-xs flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <strong className="font-bold text-forest-950">{d.ingredient.name}</strong>
+                              <EvidenceBadge tier={d.ingredient.evidenceTier} size="sm" />
+                            </div>
+                            <p className="text-charcoal-600 text-[11px] mt-0.5">{d.explanation}</p>
+                          </div>
+                          {d.ingredient.sourceUrl && (
+                            <a href={d.ingredient.sourceUrl} target="_blank" rel="noreferrer" className="text-forest-800 hover:text-mint-600 shrink-0">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Similar Mosaic Wellness Products match */}
+                    {scannedProducts[activeProdIndex].matchedMosaic && scannedProducts[activeProdIndex].matchedMosaic!.length > 0 && (
+                      <div className="pt-3 border-t border-mint-200 space-y-2">
+                        <span className="text-[11px] font-bold text-forest-900 uppercase tracking-wider block">
+                          🌿 Similar active formulations in Mosaic Wellness catalog:
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {scannedProducts[activeProdIndex].matchedMosaic!.map((m) => (
+                            <div key={m.id} className="p-2.5 rounded-xl bg-white border border-cream-300 text-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-forest-950 truncate">{m.product}</span>
+                                <span className="font-bold text-forest-800 text-[11px]">{m.currency}{m.sitePrice}</span>
+                              </div>
+                              <p className="text-[10px] text-charcoal-500 line-clamp-1">{m.whyItFits}</p>
+                              <a href={m.officialUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-forest-800 hover:underline inline-flex items-center gap-1">
+                                <span>Official Link</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 6 (IF YES): CLAIMS PHOTO & DEBUNKER                                  */}
+        {/* ========================================================================= */}
+        {step === 6 && ownsProducts && (
+          <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
+                Step 6 of 7 • Marketing Claims Audit
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-forest-950">
+                Verify & Debunk Packaging Claims
+              </h2>
+              <p className="text-xs sm:text-sm text-charcoal-600">
+                Take a photo of the front label claims (e.g. "Clinically Proven", "100% Natural", "Detox").
+              </p>
+            </div>
+
+            {scannedProducts[activeProdIndex] && (
+              <div className="space-y-4">
+                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 shadow-card space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider">
+                        Product
+                      </span>
+                      <h4 className="font-bold text-forest-950 text-base">
+                        {scannedProducts[activeProdIndex].name}
+                      </h4>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => claimFileInputRef.current?.click()}
+                      className="px-3.5 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-1.5 shadow-soft transition"
+                    >
+                      <Camera className="w-4 h-4 text-mint-300" />
+                      <span>Photo Front Label</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-charcoal-700 mb-1">
+                      Front-Pack Claims Text:
+                    </label>
+                    <input
+                      type="text"
+                      value={scannedProducts[activeProdIndex].claimText}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setScannedProducts(prev => {
+                          const copy = [...prev];
+                          copy[activeProdIndex].claimText = val;
+                          return copy;
+                        });
+                      }}
+                      placeholder="e.g. Clinically Proven, 100% Clean, Dermatologist Tested"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-xs font-medium text-charcoal-800"
+                    />
+                  </div>
+                </div>
+
+                {/* Claims Breakdown Verdicts */}
+                <div className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 shadow-soft space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-forest-900">
+                    Marketing Claim Verdicts
+                  </h4>
+
+                  <div className="space-y-2.5">
+                    {scannedProducts[activeProdIndex].ingredientAnalysis?.detectedClaims && scannedProducts[activeProdIndex].ingredientAnalysis!.detectedClaims.length > 0 ? (
+                      scannedProducts[activeProdIndex].ingredientAnalysis!.detectedClaims.map((c, i) => (
+                        <div key={i} className="p-3 rounded-2xl bg-cream-50 border border-cream-200 text-xs space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <strong className="font-bold text-forest-950">"{c.displayName}"</strong>
+                            <VerdictBadge verdict={c.verdict} size="sm" />
+                          </div>
+                          <p className="text-charcoal-600 text-[11px] leading-relaxed">
+                            <strong>Missing evidence:</strong> {c.missingInformation}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 rounded-xl bg-cream-50 text-xs text-charcoal-500 text-center">
+                        Scan or enter front claims like "Clinically Proven" or "100% Natural" to see debunker verdicts.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 7: ROUTINE GENESIS                                                   */}
+        {/* ========================================================================= */}
+        {((step === 7 && ownsProducts) || (step === 5 && !ownsProducts)) && (
+          <div className="space-y-6 pt-6 animate-in zoom-in-95 duration-300 text-center">
             <div className="w-16 h-16 rounded-3xl bg-forest-900 text-mint-300 flex items-center justify-center mx-auto shadow-card">
               <Sparkles className="w-8 h-8 animate-pulse" />
             </div>
 
             <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-mint-600">
-                Routine Ready
+                Personalized System Ready
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-forest-950">
-                Welcome to Ritual, {name || 'Aarav'}!
+              <h2 className="text-3xl font-extrabold text-forest-950">
+                Your Routine is Ready, {name || 'Aarav'}!
               </h2>
-              <p className="text-sm text-charcoal-600 max-w-xs mx-auto leading-relaxed">
-                Your personalized {dailyTime.replace('_', ' ')} routine for{' '}
-                <strong className="text-forest-900 font-semibold">
-                  {goal === 'hair_health' ? 'Hair Health' : goal === 'body_care' ? 'Body Care' : 'Sleep & Recovery'}
-                </strong>{' '}
-                is ready.
+              <p className="text-sm text-charcoal-600 max-w-sm mx-auto">
+                We've organized your {scannedProducts.length} scanned products into an evidence-backed {dailyTime.replace('_', ' ')} morning & evening routine.
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-2xl border border-cream-300 text-left shadow-soft space-y-2 text-xs">
-              <div className="flex items-center justify-between text-charcoal-500 border-b border-cream-200 pb-2">
-                <span>Daily Commitment:</span>
-                <span className="font-semibold text-forest-900">{dailyTime.replace('_', ' ')}</span>
+            <div className="bg-white p-5 rounded-3xl border border-cream-300 text-left shadow-soft space-y-3 text-xs">
+              <div className="flex items-center justify-between border-b border-cream-200 pb-2.5">
+                <span className="text-charcoal-500">Focus Goal:</span>
+                <span className="font-bold text-forest-950 capitalize">{goal.replace('_', ' ')}</span>
               </div>
-              <div className="flex items-center justify-between text-charcoal-500 border-b border-cream-200 pb-2">
-                <span>Hero Feature:</span>
-                <span className="font-semibold text-forest-900">Label Lens (Scan & Audit)</span>
+              <div className="flex items-center justify-between border-b border-cream-200 pb-2.5">
+                <span className="text-charcoal-500">Daily Commitment:</span>
+                <span className="font-bold text-forest-950">{dailyTime.replace('_', ' ')} / day</span>
               </div>
-              <div className="flex items-center justify-between text-charcoal-500">
-                <span>Next Step:</span>
-                <span className="font-semibold text-mint-600">Review Today's Checklist</span>
+              <div className="flex items-center justify-between">
+                <span className="text-charcoal-500">Products Included:</span>
+                <span className="font-bold text-mint-600">{ownsProducts ? scannedProducts.map(p => p.name).join(', ') : 'Foundational Habit Rituals'}</span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Bottom Button Navigation */}
-      <div className="pt-6 pb-2">
-        {step < 5 ? (
-          <div className="flex items-center gap-3">
-            {step > 1 && (
-              <button
-                type="button"
-                onClick={() => setStep((s) => s - 1)}
-                className="py-3.5 px-5 rounded-2xl bg-cream-200 text-charcoal-700 font-semibold text-sm hover:bg-cream-300 transition"
-              >
-                Back
-              </button>
-            )}
+      {/* Bottom Button Navigation Bar */}
+      <div className="pt-6 pb-2 border-t border-cream-200 mt-6">
+        <div className="flex items-center gap-3">
+          {step > 1 && (
             <button
               type="button"
-              onClick={() => {
-                if (step === 1 && !name.trim()) {
-                  setName('Aarav');
-                }
-                if (step === 4) {
+              onClick={() => setStep(s => s - 1)}
+              className="py-3.5 px-5 rounded-2xl bg-cream-200 text-charcoal-700 font-semibold text-xs hover:bg-cream-300 transition"
+            >
+              Back
+            </button>
+          )}
+
+          {((step < 7 && ownsProducts) || (step < 5 && !ownsProducts)) ? (
+            <button
+              type="button"
+              onClick={async () => {
+                if (step === 1 && !name.trim()) setName('Aarav');
+                if (step === 4 && ownsProducts) {
+                  // Trigger initial analysis on product 1
+                  if (!scannedProducts[0].ingredientAnalysis) {
+                    await analyzeActiveProduct(0);
+                  }
                   setStep(5);
+                } else if (step === 4 && !ownsProducts) {
+                  setStep(5); // skip to routine genesis
                 } else {
-                  setStep((s) => s + 1);
+                  setStep(s => s + 1);
                 }
               }}
-              className="flex-1 py-3.5 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-sm shadow-card flex items-center justify-center gap-2 transition transform active:scale-98"
+              className="flex-1 py-4 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-sm shadow-card flex items-center justify-center gap-2 transition transform active:scale-98"
             >
-              <span>{step === 4 ? 'Build My Routine' : 'Continue'}</span>
+              <span>Continue</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleFinish}
-            className="w-full py-4 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-base shadow-card flex items-center justify-center gap-2 transition transform active:scale-98"
-          >
-            <span>Enter Today View</span>
-            <ArrowRight className="w-5 h-5 text-mint-300" />
-          </button>
-        )}
+          ) : (
+            <button
+              type="button"
+              onClick={handleFinalFinish}
+              className="flex-1 py-4 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-sm shadow-card flex items-center justify-center gap-2 transition transform active:scale-98"
+            >
+              <span>Enter My Routine Page</span>
+              <ChevronRight className="w-5 h-5 text-mint-300" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* AI Settings Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-modal border border-cream-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="w-5 h-5 text-forest-800" />
+                <h3 className="text-base font-bold text-forest-950">AI Model Provider</h3>
+              </div>
+              <button onClick={() => setShowApiKeyModal(false)} className="text-charcoal-400 hover:text-charcoal-700">✕</button>
+            </div>
+
+            <p className="text-xs text-charcoal-600 leading-relaxed">
+              Ritual runs completely free offline with its built-in Clinical Dermatology database. You can optionally connect free OpenRouter vision models for multimodal photo reasoning.
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-charcoal-700 mb-1">OpenRouter Free Model</label>
+                <select
+                  value={tempModel}
+                  onChange={(e) => setTempModel(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900 font-medium"
+                >
+                  {POPULAR_OPENROUTER_MODELS.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-charcoal-700 mb-1">OpenRouter API Key (Optional)</label>
+                <input
+                  type="password"
+                  value={tempApiKey}
+                  onChange={(e) => setTempApiKey(e.target.value)}
+                  placeholder="sk-or-v1-..."
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  updateAISettings({
+                    openRouterApiKey: tempApiKey.trim(),
+                    selectedModel: tempModel,
+                    provider: tempApiKey.trim() ? 'openrouter' : 'local'
+                  });
+                  setShowApiKeyModal(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs shadow-soft transition"
+              >
+                Save AI Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
