@@ -244,28 +244,119 @@ function computeDimensionsSummary(
 }
 
 /**
- * Browser-based OCR extraction with Tesseract.js
+ * Converts a File or Blob into a Base64 data URL
+ */
+export function fileToBase64DataUrl(file: File | Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Normalizes common OCR artifacts in cosmetic typography
+ */
+export function cleanAndNormalizeOCRText(raw: string): string {
+  if (!raw) return '';
+  return raw
+    // Replace typical OCR character mixups
+    .replace(/[|]/g, ' ')
+    .replace(/\b[0o]%\b/gi, '0%')
+    .replace(/(\d+)\s*[%％]/g, '$1%')
+    .replace(/(\d+)\s*mg\b/gi, '$1mg')
+    .replace(/(\d+)\s*ml\b/gi, '$1ml')
+    .replace(/([a-z])\n([a-z])/gi, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Preprocesses image on an HTML5 canvas to boost contrast, sharpness and readability
+ */
+export async function preprocessImageForOCR(imageSource: File | string): Promise<string> {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(typeof imageSource === 'string' ? imageSource : URL.createObjectURL(imageSource));
+          return;
+        }
+
+        // Scale to standard optimal OCR width (~1600px)
+        const targetWidth = Math.min(1800, Math.max(1200, img.width));
+        const scale = targetWidth / img.width;
+        canvas.width = targetWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Apply grayscale and contrast adjustment
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          // Grayscale luminance
+          let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          // Contrast stretch (1.25 factor)
+          gray = (gray - 128) * 1.25 + 128;
+          gray = Math.min(255, Math.max(0, gray));
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      };
+      img.onerror = () => {
+        resolve(typeof imageSource === 'string' ? imageSource : URL.createObjectURL(imageSource));
+      };
+
+      if (typeof imageSource === 'string') {
+        img.src = imageSource;
+      } else {
+        img.src = URL.createObjectURL(imageSource);
+      }
+    } catch (e) {
+      resolve(typeof imageSource === 'string' ? imageSource : URL.createObjectURL(imageSource));
+    }
+  });
+}
+
+/**
+ * Browser-based OCR extraction with Tesseract.js (with canvas contrast preprocessing)
  */
 export async function performBrowserOCR(
   imageSource: File | string,
   onProgress?: (percent: number, status: string) => void
 ): Promise<string> {
   try {
-    if (onProgress) onProgress(10, 'Initializing OCR engine in browser...');
+    if (onProgress) onProgress(15, 'Optimizing image contrast & sharpness for label reading...');
     
+    // Preprocess image on canvas
+    const processedDataUrl = await preprocessImageForOCR(imageSource);
+
+    if (onProgress) onProgress(35, 'Initializing local OCR worker...');
     const worker = await createWorker('eng');
     
-    if (onProgress) onProgress(40, 'Analyzing label image contours...');
+    if (onProgress) onProgress(65, 'Analyzing label typography & chemical names...');
+    const ret = await worker.recognize(processedDataUrl);
     
-    const ret = await worker.recognize(imageSource);
-    
-    if (onProgress) onProgress(90, 'Parsing extracted typography...');
-    
+    if (onProgress) onProgress(90, 'Cleaning extracted typography...');
     await worker.terminate();
     
-    if (onProgress) onProgress(100, 'OCR Complete');
+    const cleanedText = cleanAndNormalizeOCRText(ret.data.text || '');
+    if (onProgress) onProgress(100, 'OCR Analysis Complete');
     
-    return ret.data.text || '';
+    return cleanedText;
   } catch (err) {
     console.error('OCR Error:', err);
     throw new Error('Image OCR could not extract text clearly. Please use manual paste or sample labels.');

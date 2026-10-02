@@ -7,8 +7,12 @@ import {
   ProductAnalysisResult 
 } from '../../types';
 import { SAMPLE_PRODUCTS } from '../../data/sampleProducts';
-import { performBrowserOCR } from '../../services/analyzer';
-import { analyzeIngredientsWithAI, findMatchingMosaicProducts, POPULAR_OPENROUTER_MODELS } from '../../services/aiService';
+import { 
+  analyzeIngredientsWithAI, 
+  extractLabelFromImageWithAI, 
+  findMatchingMosaicProducts, 
+  POPULAR_OPENROUTER_MODELS 
+} from '../../services/aiService';
 import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
 import { 
   Leaf, 
@@ -141,32 +145,51 @@ export const OnboardingFlow: React.FC = () => {
     if (!file) return;
 
     setIsAnalyzing(true);
-    setOcrStatus('Scanning photo typography with browser OCR...');
+    setOcrStatus('Scanning photo typography with Vision AI...');
 
     try {
-      const extracted = await performBrowserOCR(file, (percent, status) => {
-        setOcrStatus(`${status} (${percent}%)`);
+      const visionResult = await extractLabelFromImageWithAI(
+        file,
+        goal,
+        aiSettings.openRouterApiKey,
+        aiSettings.selectedModel,
+        (percent, status) => setOcrStatus(`${status} (${percent}%)`)
+      );
+
+      setScannedProducts(prev => {
+        const copy = [...prev];
+        const cur = copy[activeProdIndex] || copy[0];
+        
+        if (isClaim) {
+          copy[activeProdIndex] = {
+            ...cur,
+            claimText: visionResult.claimText || cur.claimText || visionResult.ingredientText
+          };
+        } else {
+          const detectedNames = visionResult.analysis.detectedIngredients.map(d => d.ingredient.name);
+          const matched = findMatchingMosaicProducts(detectedNames, goal);
+          
+          copy[activeProdIndex] = {
+            ...cur,
+            name: (cur.name && cur.name.trim().length > 0) ? cur.name : (visionResult.productName || cur.name),
+            brand: (cur.brand && cur.brand.trim().length > 0) ? cur.brand : (visionResult.brand || cur.brand),
+            ingredientText: visionResult.ingredientText,
+            claimText: visionResult.claimText || cur.claimText,
+            ingredientAnalysis: visionResult.analysis,
+            matchedMosaic: matched
+          };
+        }
+        return copy;
       });
 
-      if (extracted && extracted.trim().length > 0) {
-        if (isClaim) {
-          setScannedProducts(prev => {
-            const copy = [...prev];
-            copy[activeProdIndex].claimText = extracted;
-            return copy;
-          });
-          showToast('Claim packaging text extracted', 'success');
-        } else {
-          setScannedProducts(prev => {
-            const copy = [...prev];
-            copy[activeProdIndex].ingredientText = extracted;
-            return copy;
-          });
-          await analyzeActiveProduct(activeProdIndex, extracted);
-        }
-      }
+      showToast(
+        visionResult.source === 'openrouter_vision'
+          ? 'Vision AI parsed label typography with high precision!'
+          : 'Label scanned and parsed with local clinical OCR',
+        'success'
+      );
     } catch (err) {
-      showToast('OCR scan failed, you can paste or select sample label.', 'warning');
+      showToast('Scan could not extract clearly. You can paste ingredients or choose a sample.', 'warning');
     } finally {
       setIsAnalyzing(false);
       setOcrStatus('');

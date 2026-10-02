@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
-import { analyzeLabelText, performBrowserOCR } from '../../services/analyzer';
+import { analyzeLabelText } from '../../services/analyzer';
+import { extractLabelFromImageWithAI } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const LabelLensView: React.FC = () => {
-  const { profile, addShelfProduct, showToast } = useApp();
+  const { profile, addShelfProduct, showToast, aiSettings } = useApp();
 
   const [productName, setProductName] = useState<string>('Follicle Reactivate Scalp Serum');
   const [frontClaimText, setFrontClaimText] = useState<string>(SAMPLE_PRODUCTS[0].frontLabelText);
@@ -70,30 +71,50 @@ export const LabelLensView: React.FC = () => {
     if (!file) return;
 
     setIsScanning(true);
-    setScanProgress({ percent: 10, status: 'Initializing OCR engine in browser...' });
+    setScanProgress({ percent: 15, status: 'Analyzing label photo with Vision AI...' });
 
     try {
-      const extracted = await performBrowserOCR(file, (percent, status) => {
-        setScanProgress({ percent, status });
-      });
+      const visionRes = await extractLabelFromImageWithAI(
+        file,
+        profile.primaryGoal,
+        aiSettings.openRouterApiKey,
+        aiSettings.selectedModel,
+        (percent, status) => setScanProgress({ percent, status })
+      );
 
-      if (extracted && extracted.trim().length > 0) {
-        if (isFrontLabel) {
-          const combinedClaims = `${frontClaimText} ${extracted}`.trim();
-          setFrontClaimText(combinedClaims);
-          handleReanalyze(ingredientText, combinedClaims, productName);
-          showToast('Front label claims scanned successfully', 'success');
-        } else {
-          setIngredientText(extracted);
-          setSelectedSampleId('');
-          handleReanalyze(extracted, frontClaimText, productName);
-          showToast('Ingredient label scanned & analyzed', 'success');
+      if (isFrontLabel) {
+        const combinedClaims = `${frontClaimText} ${visionRes.claimText || visionRes.ingredientText}`.trim();
+        setFrontClaimText(combinedClaims);
+        if (visionRes.productName && visionRes.productName !== 'Scanned Product') {
+          setProductName(visionRes.productName);
         }
+        if (visionRes.brand) {
+          setSaveBrand(visionRes.brand);
+        }
+        handleReanalyze(ingredientText, combinedClaims, visionRes.productName || productName);
+        showToast('Front label claims analyzed with Vision AI', 'success');
       } else {
-        showToast('Image was blurry. Please edit or paste text manually.', 'warning');
+        setIngredientText(visionRes.ingredientText);
+        if (visionRes.claimText && !frontClaimText) {
+          setFrontClaimText(visionRes.claimText);
+        }
+        if (visionRes.productName && visionRes.productName !== 'Scanned Product') {
+          setProductName(visionRes.productName);
+        }
+        if (visionRes.brand) {
+          setSaveBrand(visionRes.brand);
+        }
+        setSelectedSampleId('');
+        setAnalysisResult(visionRes.analysis);
+        showToast(
+          visionRes.source === 'openrouter_vision'
+            ? 'Multimodal Vision AI decoded ingredients & claims with high precision!'
+            : 'Ingredient label parsed & analyzed',
+          'success'
+        );
       }
     } catch (err) {
-      showToast('OCR scanner encountered an error. You can paste ingredients manually.', 'warning');
+      showToast('Scanner encountered an error. You can paste ingredients or pick a sample.', 'warning');
     } finally {
       setIsScanning(false);
       setScanProgress({ percent: 0, status: '' });
