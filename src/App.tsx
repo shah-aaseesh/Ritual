@@ -5,6 +5,7 @@ import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { ToastContainer } from './components/common/Toast';
 import { DemoBar } from './components/demo/DemoBar';
+import { InstallPrompt } from './components/common/InstallPrompt';
 import { TodayView } from './components/today/TodayView';
 import { LabelLensView } from './components/labellens/LabelLensView';
 import { SmartShelfView } from './components/smartshelf/SmartShelfView';
@@ -20,6 +21,7 @@ const MainLayout: React.FC = () => {
       <div className="min-h-screen bg-[#FAF7F2]">
         <ToastContainer />
         <DemoBar />
+        <InstallPrompt />
         <OnboardingFlow />
       </div>
     );
@@ -46,6 +48,7 @@ const MainLayout: React.FC = () => {
 
       {/* Mobile-only Bottom Navigation */}
       <BottomNav />
+      <InstallPrompt />
       <RoutineRescueModal />
     </div>
   );
