@@ -2,8 +2,11 @@ import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl, cleanAndNorma
 import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
+import { extractTextWithGoogleVision } from './googleVisionService';
+
 export const POPULAR_OPENROUTER_MODELS = [
   { id: 'openrouter/free', name: 'OpenRouter Free Multimodal Router (Auto / Fast)' },
+  { id: 'dots-studio/dots-3-note-preview:free', name: 'Dots Studio: Dots-3 Note Vision (Free / High-Fidelity)' },
   { id: 'google/gemma-4-31b-it:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
   { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
   { id: 'qwen/qwen3.8-27b:free', name: 'Qwen: Qwen3.8 27B Vision (Free)' }
@@ -19,8 +22,7 @@ export interface VisionLabelExtractionResult {
 }
 
 /**
- * Direct Vision AI Extraction for bottle/packaging photos.
- * Vision LLMs read curved packaging, tiny typography, and chemical formulas with high accuracy.
+ * Direct Vision AI & Google Cloud Vision Extraction for bottle/packaging photos.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
@@ -36,11 +38,36 @@ export async function extractLabelFromImageWithAI(
     base64DataUrl = await fileToBase64DataUrl(imageSource);
   }
 
+  // 1. Try Google Cloud Vision OCR if configured
+  const googleVisionKey = (import.meta as any).env?.VITE_GOOGLE_VISION_API_KEY || '';
+  if (googleVisionKey && googleVisionKey.length > 5) {
+    try {
+      if (onProgress) onProgress(20, 'Scanning with Google Cloud Vision OCR...');
+      const googleText = await extractTextWithGoogleVision(base64DataUrl, googleVisionKey);
+      if (googleText && googleText.length > 10) {
+        const cleanedIngredients = cleanAndNormalizeOCRText(googleText);
+        const analysis = analyzeLabelText(googleText, '', userGoal, 'Scanned Product');
+        
+        if (onProgress) onProgress(100, 'Google Cloud Vision OCR Complete!');
+        return {
+          productName: 'Scanned Product',
+          brand: '',
+          ingredientText: cleanedIngredients || googleText,
+          claimText: '',
+          analysis,
+          source: 'openrouter_vision'
+        };
+      }
+    } catch (gErr) {
+      console.warn('Google Cloud Vision call failed or billing pending, using Multimodal AI fallback:', gErr);
+    }
+  }
+
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 1. If OpenRouter API key is available, use Multimodal Vision AI with smart model fallback
+  // 2. Multimodal Vision AI with smart model fallback
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
       model && model !== 'local' ? model : 'openrouter/free',
