@@ -285,6 +285,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const todayStr = new Date().toISOString().split('T')[0];
     
     setRoutineSteps(prev => {
+      const target = prev.find(s => s.id === stepId);
+      if (target && !target.isCompletedToday) {
+        const currentXp = parseInt(localStorage.getItem('ritual_user_xp') || '3450');
+        const nextXp = currentXp + 50;
+        localStorage.setItem('ritual_user_xp', nextXp.toString());
+        showToast(`⚡ +50 XP Earned! (${target.action})`, 'success');
+      }
+
       const updated = prev.map(step => {
         if (step.id === stepId) {
           return { ...step, isCompletedToday: !step.isCompletedToday };

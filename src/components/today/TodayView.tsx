@@ -10,7 +10,9 @@ import {
   ArrowRight, 
   Clock, 
   HeartHandshake,
-  Plus
+  Plus,
+  Dumbbell,
+  Utensils
 } from 'lucide-react';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 
@@ -187,6 +189,61 @@ export const TodayView: React.FC = () => {
               >
                 <span>View Journal</span>
                 <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* 🗺️ BIOMECHANICAL & MUSCLE READINESS RADAR WIDGET                           */}
+          {/* ========================================================================= */}
+          <div className="bg-gradient-to-br from-forest-950 via-forest-900 to-forest-950 text-cream-50 rounded-3xl p-5 sm:p-6 shadow-card border border-emerald-500/30 space-y-4 relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-black uppercase text-mint-300 font-mono tracking-widest">
+                  MUSCLE RECOVERY HEATMAP
+                </span>
+              </div>
+
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-black border border-emerald-500/30">
+                88% FULL BODY PRIMED
+              </span>
+            </div>
+
+            {/* Quick Muscle Recovery Status Chips */}
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10">
+                <span className="text-[9px] text-emerald-400 font-black block font-mono">100% READY</span>
+                <span className="font-bold text-white text-[11px]">Chest & Delts</span>
+              </div>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10">
+                <span className="text-[9px] text-emerald-400 font-black block font-mono">95% READY</span>
+                <span className="font-bold text-white text-[11px]">Back & Lats</span>
+              </div>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10">
+                <span className="text-[9px] text-amber-400 font-black block font-mono">45% SORE</span>
+                <span className="font-bold text-white text-[11px]">Legs & Glutes</span>
+              </div>
+            </div>
+
+            {/* Action Buttons to Jump to Gym & Calories */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('gym')}
+                className="py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-mint-400 text-forest-950 font-black text-xs flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition shadow-soft"
+              >
+                <Dumbbell className="w-3.5 h-3.5" />
+                <span>Open Body Map</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('calories')}
+                className="py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-cream-100 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+              >
+                <Utensils className="w-3.5 h-3.5" />
+                <span>Log Nutrition</span>
               </button>
             </div>
           </div>
