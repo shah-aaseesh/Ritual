@@ -221,8 +221,8 @@ export function analyzeLabelText(
                 conditionsOrLimitations: 'Standard pharmaceutical / dietary formulation component.',
                 doseMatters: false,
                 shortExplanation: pattern.expl,
-                sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/',
-                sourceLabel: 'Pharmacopeia & Formulation Reference',
+                sourceUrl: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(pattern.name + ' clinical pharmacology')}`,
+                sourceLabel: `PubMed Search (${pattern.name})`,
                 relevantGoals: []
               },
               rawTextMatch: segment,
@@ -254,8 +254,8 @@ export function analyzeLabelText(
             conditionsOrLimitations: 'Contributes to formulation texture, stability, or carrier delivery.',
             doseMatters: false,
             shortExplanation: `Formulation ingredient: ${cleanName}.`,
-            sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/',
-            sourceLabel: 'Formulation & INCI Dictionary',
+            sourceUrl: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(cleanName + ' clinical study')}`,
+            sourceLabel: `PubMed Search (${cleanName})`,
             relevantGoals: []
           },
           rawTextMatch: segment,

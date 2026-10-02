@@ -76,6 +76,8 @@ export interface ClaimInfo {
   verdict: ClaimVerdict;
   missingInformation: string;
   supportRationale: string;
+  sourceUrl?: string;
+  sourceLabel?: string;
 }
 
 export interface LabelAnalysisSummary {

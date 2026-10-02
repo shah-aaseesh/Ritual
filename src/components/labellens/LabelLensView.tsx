@@ -20,7 +20,8 @@ import {
   BookmarkPlus,
   ThumbsDown,
   ThumbsUp,
-  Info
+  BookOpen,
+  ExternalLink
 } from 'lucide-react';
 
 type MythBusterTab = 'audit_paper' | 'claims_matrix' | 'science_pillars' | 'alternatives';
@@ -667,12 +668,25 @@ export const LabelLensView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Scientific Citation / Educational Takeaway */}
-                      <div className="flex items-center gap-2 text-[11px] text-charcoal-700 bg-white/60 p-2.5 rounded-xl border border-black/5">
-                        <Info className="w-4 h-4 text-forest-800 shrink-0" />
-                        <span>
-                          <strong>Clinical Insight:</strong> Therapeutic efficacy requires declared active concentrations meeting peer-reviewed clinical trial benchmarks rather than marketing buzzwords.
-                        </span>
+                      {/* Scientific Citation / Peer-Reviewed PubMed Paper */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[11px] text-charcoal-700 bg-white/80 p-3 rounded-xl border border-black/5 shadow-xs">
+                        <div className="flex items-center gap-2 truncate">
+                          <BookOpen className="w-4 h-4 text-forest-800 shrink-0" />
+                          <span className="truncate">
+                            <strong>Scientific Paper:</strong> {claim.sourceLabel || 'Peer-Reviewed Clinical Literature'}
+                          </span>
+                        </div>
+                        {claim.sourceUrl && (
+                          <a
+                            href={claim.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-forest-900 hover:text-forest-950 bg-mint-50 hover:bg-mint-100 px-3 py-1.5 rounded-lg border border-mint-200 shrink-0 transition"
+                          >
+                            <span>Read PubMed Paper</span>
+                            <ExternalLink className="w-3 h-3 text-forest-700" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   );
@@ -778,6 +792,51 @@ export const LabelLensView: React.FC = () => {
               <p className="font-sans text-charcoal-800 leading-relaxed">
                 "{analysisResult.summary.synthesisText}"
               </p>
+            </div>
+
+            {/* Direct PubMed Evidence Repository */}
+            <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-200/80 space-y-3">
+              <div className="flex items-center justify-between border-b border-mint-100 pb-2">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-forest-900" />
+                  <span className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono">
+                    PubMed Clinical Trial Citations
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-charcoal-500">
+                  {analysisResult.detectedIngredients.length} Compounds Audited
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {analysisResult.detectedIngredients.map((d, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-xl bg-white border border-mint-100 flex items-center justify-between gap-2 shadow-xs"
+                  >
+                    <div className="space-y-0.5 truncate">
+                      <span className="text-xs font-black text-forest-950 block truncate">
+                        {d.ingredient.name}
+                      </span>
+                      <span className="text-[10px] text-charcoal-500 font-mono block truncate">
+                        {d.ingredient.sourceLabel || 'PubMed Clinical Reference'}
+                      </span>
+                    </div>
+
+                    {d.ingredient.sourceUrl && (
+                      <a
+                        href={d.ingredient.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-forest-900 bg-mint-50 hover:bg-mint-100 px-2 py-1 rounded-lg border border-mint-200 shrink-0 transition"
+                      >
+                        <span>PubMed</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

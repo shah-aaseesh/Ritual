@@ -7,7 +7,8 @@ import {
   Zap, 
   Trophy, 
   Info,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 
@@ -29,6 +30,7 @@ interface ParsedItem {
   purpose?: string;
   explanation?: string;
   sourceUrl?: string;
+  sourceLabel?: string;
   hasDose?: boolean;
   isStruckThrough: boolean;
   strikeTag?: string;
@@ -132,6 +134,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         purpose: d.ingredient.commonPurpose,
         explanation: d.ingredient.shortExplanation,
         sourceUrl: d.ingredient.sourceUrl,
+        sourceLabel: d.ingredient.sourceLabel,
         hasDose: Boolean(d.doesLabelDiscloseDose),
         isStruckThrough: d.ingredient.evidenceTier === 'insufficient_info' || d.ingredient.evidenceTier === 'supporting_ingredient',
         ...getSpecificDebunkVerdict(d.rawTextMatch || d.ingredient.name)
@@ -163,6 +166,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
           purpose: match.ingredient.commonPurpose,
           explanation: match.ingredient.shortExplanation,
           sourceUrl: match.ingredient.sourceUrl,
+          sourceLabel: match.ingredient.sourceLabel,
           hasDose: Boolean(match.doesLabelDiscloseDose),
           isStruckThrough: !isLegit,
           strikeTag: !isLegit ? specific.strikeTag : undefined,
@@ -537,10 +541,11 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                   href={selectedItem.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-bold text-forest-900 hover:underline flex items-center gap-1 font-mono"
+                  className="text-xs font-bold text-forest-900 hover:underline flex items-center gap-1.5 font-mono bg-mint-50 px-3 py-1.5 rounded-xl border border-mint-200 transition hover:bg-mint-100"
                 >
-                  <span>PubMed Study</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <FileText className="w-3.5 h-3.5 text-forest-700" />
+                  <span>{selectedItem.sourceLabel || 'Read PubMed Research Paper'}</span>
+                  <ExternalLink className="w-3 h-3 text-forest-600" />
                 </a>
               ) : <div />}
 
