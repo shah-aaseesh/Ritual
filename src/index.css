@@ -29,15 +29,15 @@ body {
 }
 
 .glass-card-dark {
-  background: rgba(20, 41, 29, 0.95);
+  background: rgba(12, 27, 19, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(68, 146, 108, 0.2);
+  border: 1px solid rgba(68, 146, 108, 0.25);
 }
 
 /* Subtle glow badges */
 .glow-badge {
-  box-shadow: 0 0 12px -2px rgba(68, 146, 108, 0.35);
+  box-shadow: 0 0 16px -2px rgba(68, 146, 108, 0.4);
 }
 
 /* Realistic Prescription Paper Ruled Grid */
@@ -47,6 +47,47 @@ body {
     linear-gradient(to right, rgba(200, 70, 70, 0.12) 1px, transparent 1px),
     repeating-linear-gradient(to bottom, transparent, transparent 35px, rgba(160, 140, 110, 0.15) 35px, rgba(160, 140, 110, 0.15) 36px);
   background-position: 40px 0, 0 0;
+}
+
+/* SaaS Scanning Laser Beam Animation */
+@keyframes laserSweep {
+  0% {
+    top: 0%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    top: 100%;
+    opacity: 0.2;
+  }
+}
+
+.animate-laser-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.8) 20%, rgba(16, 185, 129, 1) 50%, rgba(52, 211, 153, 0.8) 80%, transparent);
+  box-shadow: 0 0 16px 3px rgba(16, 185, 129, 0.6), 0 0 30px 6px rgba(52, 211, 153, 0.3);
+  animation: laserSweep 2s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* SaaS Shimmer Sweep Animation */
+@keyframes saasShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: saasShimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Red Pen Strike-through Animation */
