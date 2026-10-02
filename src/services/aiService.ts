@@ -3,13 +3,13 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
-  { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek Vision V4.1 (Direct Multimodal Photo Extraction)' },
+  { id: 'openai/gpt-4o', name: 'OpenAI: GPT-4o (Frontier Vision - Exact ChatGPT Engine)' },
+  { id: 'openai/gpt-4o-2024-11-20', name: 'OpenAI: GPT-4o Latest (High-Res Packaging Vision)' },
   { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 (Clinical Grade Extraction & Reasoning)' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Deep Clinical Reasoning & Actives Isolation)' },
+  { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek Vision V4.1 (Multimodal Vision)' },
   { id: 'inclusionai/ling-3.0-flash-sante:free', name: 'Ling 3.0 Flash Sante (Medical Specialist - Free)' },
   { id: 'nvidia/nemotron-3-super-120b-a12b:free', name: 'NVIDIA Nemotron 3 Super (High Accuracy - Free)' },
-  { id: 'dots-studio/dots-3-note-preview:free', name: 'Dots Studio: Dots-3 Note Vision (Free)' },
-  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
   { id: 'openrouter/free', name: 'OpenRouter Auto Router (Free)' }
 ];
 
@@ -23,9 +23,9 @@ export interface VisionLabelExtractionResult {
 }
 
 /**
- * Resizes and compresses image to max 1600px for lightning-fast direct Vision LLM upload
+ * Resizes and compresses image to max 2048px with high clarity for GPT-4o multi-tile vision
  */
-export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 1600): Promise<string> {
+export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 2048): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -51,7 +51,7 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
         return;
       }
       ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
+      resolve(canvas.toDataURL('image/jpeg', 0.92));
     };
     img.onerror = () => {
       if (typeof fileOrDataUrl === 'string') {
@@ -71,44 +71,44 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
 }
 
 /**
- * Direct DeepSeek Multimodal Extraction:
- * Sends the packaging photo directly straight to DeepSeek multimodal AI.
- * The DeepSeek model visually inspects the label, ignores marketing/usage/warnings,
- * and extracts ONLY the ingredients and active composition.
+ * High-Resolution Multimodal Extraction using GPT-4o (ChatGPT Vision Engine):
+ * Sends the high-res packaging photo directly to GPT-4o with multi-tile detail inspection.
+ * GPT-4o reads dense 4pt-6pt ingredient typography, extracts active doses & excipients,
+ * and discards all non-ingredient noise.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
-  model: string = 'deepseek/deepseek-v4.1-flash',
+  model: string = 'openai/gpt-4o',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
-  if (onProgress) onProgress(15, 'Optimizing packaging photo for DeepSeek...');
+  if (onProgress) onProgress(15, 'Enhancing high-res packaging photo for GPT-4o Vision...');
   const base64DataUrl = await optimizeImageForVisionAI(imageSource);
 
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 1. Direct Multimodal DeepSeek Vision AI (Straight Image Pipeline)
+  // 1. Direct Multimodal GPT-4o Vision AI (ChatGPT Engine)
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
-      model && model !== 'local' && (model.includes('deepseek') || model.includes('vision') || model.includes('preview')) ? model : 'deepseek/deepseek-v4.1-flash',
+      model && model !== 'local' ? model : 'openai/gpt-4o',
+      'openai/gpt-4o',
+      'openai/gpt-4o-2024-11-20',
       'deepseek/deepseek-v4.1-flash',
-      'deepseek/deepseek-v4-flash-vision-exp',
       'dots-studio/dots-3-note-preview:free',
-      'google/gemma-4-26b-a4b-it:free',
       'openrouter/free'
     ];
     const uniqueModels = [...new Set(candidateModels)];
 
     for (const candidateModel of uniqueModels) {
       try {
-        const modelLabel = candidateModel.includes('deepseek') ? 'DeepSeek Vision AI' : candidateModel.split('/')[1] || candidateModel;
-        if (onProgress) onProgress(35, `Sending photo straight to ${modelLabel}...`);
+        const modelLabel = candidateModel.includes('gpt-4o') ? 'GPT-4o Vision (ChatGPT)' : (candidateModel.split('/')[1] || candidateModel);
+        if (onProgress) onProgress(35, `Scanning label with ${modelLabel}...`);
 
         const prompt = `You are an expert cosmetic dermatologist and clinical pharmacologist.
-Look at this product photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label.
+Look closely at this product packaging photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label.
 
 STRICTLY DO NOT include:
 - Directions for use, usage instructions, or dosage recommendations (e.g. "Take 1 gummy daily", "Apply on wet hair", "Massage gently into scalp", "Swallow with water")
@@ -152,7 +152,13 @@ Return ONLY valid JSON matching this schema:
                 role: 'user',
                 content: [
                   { type: 'text', text: prompt },
-                  { type: 'image_url', image_url: { url: base64DataUrl } }
+                  { 
+                    type: 'image_url', 
+                    image_url: { 
+                      url: base64DataUrl,
+                      detail: 'high'
+                    } 
+                  }
                 ]
               }
             ],
@@ -212,7 +218,7 @@ Return ONLY valid JSON matching this schema:
               analysis.summary.synthesisText = parsed.clinicalSynthesis;
             }
 
-            if (onProgress) onProgress(100, 'DeepSeek Photo Extraction Complete!');
+            if (onProgress) onProgress(100, 'Frontier Vision Analysis Complete!');
 
             return {
               productName: prodName,
