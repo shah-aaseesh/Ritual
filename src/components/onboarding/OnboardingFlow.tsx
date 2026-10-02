@@ -61,7 +61,7 @@ export const OnboardingFlow: React.FC = () => {
   const [ocrStatus, setOcrStatus] = useState<string>('');
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
-  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'openrouter/free');
+  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'openai/gpt-4o');
   const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);

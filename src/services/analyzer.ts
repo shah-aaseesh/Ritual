@@ -55,7 +55,9 @@ export function sanitizeIngredientList(items: string[]): string[] {
   const result: string[] = [];
 
   for (const item of items) {
-    const trimmed = item
+    let trimmed = item
+      .replace(/^(the ingredient list|ingredients? list|ingredients?|active ingredients?|composition)[\s\w\:\-]*\:\s*/i, '')
+      .replace(/^[\d\.\s\-\*•·\(\)\[\]\:\>]+/g, '')
       .replace(/^[^\w\(\)]+/g, '')
       .replace(/[^\w\(\)\.\s]+$/g, '')
       .replace(/\s+/g, ' ')

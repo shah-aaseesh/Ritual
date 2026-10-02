@@ -118,7 +118,7 @@ export async function extractLabelFromImageWithAI(
         if (onProgress) onProgress(35, `Scanning label with ${modelLabel}...`);
 
         const prompt = `You are an expert cosmetic dermatologist and clinical pharmacologist.
-Look closely at this product packaging photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label.
+Look closely at this product packaging photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label, exactly like ChatGPT.
 
 STRICTLY DO NOT include:
 - Directions for use, usage instructions, or dosage recommendations (e.g. "Take 1 gummy daily", "Apply on wet hair", "Massage gently into scalp", "Swallow with water")
@@ -129,22 +129,22 @@ STRICTLY DO NOT include:
 
 DO EXTRACT:
 1. Product Name: Clean exact product name.
-2. Brand: Brand name if visible.
-3. Active Composition: All active ingredients, botanicals, and vitamins with their exact numeric doses and units (e.g. [{"name": "Melatonin", "amount": "5.0", "unit": "mg"}, {"name": "Tart Cherry Extract", "amount": "200", "unit": "mg"}, {"name": "L-Theanine", "amount": "10.0", "unit": "mg"}]).
-4. Full Ingredients List: Transcribe ONLY the ingredients from the "INGREDIENTS:" or "COMPOSITION:" section (e.g. "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Medium Chain Triglycerides, Beet Root Powder").
-5. Front-Pack Claims: Key front-of-pack claims if visible (e.g. "Supports Deep Sleep, Non-Habit Forming").
-6. Clinical Synthesis: Concise 1-2 sentence evidence synthesis of how these active ingredients function.
+2. Brand: Brand name if visible (e.g. "NIVEA", "Mosaic", "Nutraharmony").
+3. Full Ingredients List: Transcribe EVERY SINGLE ingredient from the "INGREDIENTS:" or "COMPOSITION:" section word-for-word in the exact order listed on the bottle. (e.g. "Aqua, Glycerin, C15-19 Alkane, Cetearyl Alcohol, Paraffinum Liquidum, Isopropyl Palmitate, Glyceryl Stearate SE, Butyrospermum Parkii Butter, Dimethicone, Hydrogenated Coco-Glycerides, Sodium Cetearyl Sulfate, Carbomer, Sodium Hydroxide, Ethylhexylglycerin, Phenoxyethanol, Linalool, Citronellol, Alpha-Isomethyl Ionone, Benzyl Alcohol, Limonene, Parfum"). Do NOT summarize or skip any chemical name.
+4. Active Composition: Any active ingredients with explicit numeric amounts/percentages if stated in a table or on the pack.
+5. Front-Pack Claims: Key front-of-pack claims if visible (e.g. "48h Deep Moisture, Rich Nourishing Body Cream").
+6. Clinical Synthesis: Concise 1-2 sentence evidence synthesis of how the core active ingredients function.
 
 Return ONLY valid JSON matching this schema:
 {
   "productName": "Product Name",
   "brand": "Brand Name",
   "tableComposition": [
-    { "name": "Melatonin", "amount": "5.0", "unit": "mg" }
+    { "name": "Active Ingredient", "amount": "5.0", "unit": "mg" }
   ],
-  "extractedIngredientsText": "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Tart Cherry Extract, Chamomile Extract, L-Theanine, Melatonin, Ergocalciferol, Medium Chain Triglycerides, Beet Root Powder",
-  "extractedClaimsText": "Supports Deep Sleep, 100% RDA Vitamin D",
-  "clinicalSynthesis": "Evidence-backed nocturnal recovery formula combining chronobiotic melatonin with synergistic adaptogens."
+  "extractedIngredientsText": "Aqua, Glycerin, C15-19 Alkane, Cetearyl Alcohol, Paraffinum Liquidum, Isopropyl Palmitate, Glyceryl Stearate SE, Butyrospermum Parkii Butter, Dimethicone, Hydrogenated Coco-Glycerides, Sodium Cetearyl Sulfate, Carbomer, Sodium Hydroxide, Ethylhexylglycerin, Phenoxyethanol, Linalool, Citronellol, Alpha-Isomethyl Ionone, Benzyl Alcohol, Limonene, Parfum",
+  "extractedClaimsText": "48h Deep Moisture Care",
+  "clinicalSynthesis": "Emollient and humectant-rich barrier repair emulsion combining physiological occlusives with natural hydration agents."
 }`;
 
         const startTime = Date.now();
