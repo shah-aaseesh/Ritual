@@ -414,9 +414,10 @@ export function cleanAndNormalizeOCRText(raw: string): string {
   // Words that represent non-ingredient packaging metadata/macros to filter out
   const skipWords = /^(energy|protein|carbohydrate|carbohydrates|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol|serving|gummy|per day|rda|net quantity|mrp|loss|feedback|email|visit|store below|batch)/i;
 
-  // 1. Dynamic Table Row Parser: Matches any "[Ingredient Name] (unit) [number]"
-  // e.g. "Chamomile Extract (mg) 10", "Melatonin (mg) 5.0", "Vitamin D2 (mcg) 15.0"
-  const tableUnitRegex = /([a-zA-Z0-9\s\-]+?)\s*\(([a-zA-Z%]+)\)\s*([\d\.]+)/g;
+  // 1. Dynamic Table Row Parser: Matches plain text or Markdown tables "[Ingredient Name] (unit) [number]"
+  // Plain text: "Chamomile Extract (mg) 10"
+  // Markdown: "| **Chamomile Extract (mg)** | 10 |"
+  const tableUnitRegex = /(?:\|\s*\*{0,2})?([a-zA-Z0-9\s\-]+?)\s*\(([a-zA-Z%]+)\)\*{0,2}\s*(?:\|\s*)?([\d\.]+)/g;
   let match: RegExpExecArray | null;
 
   while ((match = tableUnitRegex.exec(raw)) !== null) {

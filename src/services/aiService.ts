@@ -1,4 +1,4 @@
-import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl } from './analyzer';
+import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl, cleanAndNormalizeOCRText } from './analyzer';
 import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
@@ -52,31 +52,26 @@ export async function extractLabelFromImageWithAI(
       try {
         if (onProgress) onProgress(25, `Multimodal Vision AI reading bottle label (${candidateModel.split('/')[1] || candidateModel})...`);
 
-        const prompt = `You are an expert cosmetic dermatologist, formulation chemist, and high-precision label reader.
-Analyze this cosmetic / supplement / wellness product packaging photo carefully.
+        const prompt = `You are an expert cosmetic dermatologist, clinical pharmacologist, and label reader.
+Transcribe and analyze this product packaging photo with 100% accuracy.
 
 Instructions:
-1. Product Name: Read the main product title (e.g. "Deep Sleep Gummies", "Salicylic Acid Body Wash").
-2. Brand Name: Identify the brand if visible.
-3. Ingredients List: Transcribe ALL active ingredients, vitamins, botanical extracts, minerals, and base components accurately in order, fixing optical blur/artifacts into standard INCI names separated by commas (e.g. "Melatonin 5mg, L-Theanine 10mg, Tart Cherry Extract 200mg, Chamomile Extract 10mg, Vitamin D2 15mcg, Liquid Glucose, Sugar, Pectin, Citric Acid").
-4. Front-Pack Claims: Extract all marketing or clinical claims (e.g. "Clinically Proven", "Supports Deep Sleep", "100% RDA Vitamin D", "Non-Habit Forming").
-5. Explain EVERY single ingredient on the bottle (actives, humectants, carriers, preservatives, botanicals).
+1. Product Name: Identify the exact product name from the label.
+2. Brand: Identify the brand name if visible.
+3. Nutritional / Active Composition Table: Read ALL active ingredients and nutrients listed in tables or panels with their exact numeric amounts and units (e.g. Melatonin 5.0mg, Tart Cherry Extract 200mg, L-Theanine 10.0mg, Chamomile Extract 10mg, Vitamin D2 15.0mcg).
+4. Full Ingredients List: Transcribe ALL ingredients from the "INGREDIENTS:" section in exact order (e.g. Liquid Glucose, Sugar, Maltodextrin, Water, Pectin, Acidity Regulators, Medium Chain Triglycerides, Beet Root Powder).
+5. Front-Pack Claims: Extract any marketing claims (e.g. "Non-Habit Forming", "100% RDA", "Deep Rest").
 
-Return ONLY valid JSON in this exact structure:
+Return ONLY valid JSON in this exact schema:
 {
-  "productName": "Exact product name",
-  "brand": "Brand name",
-  "extractedIngredientsText": "Melatonin 5mg, L-Theanine 10mg, Tart Cherry Extract 200mg, Chamomile Extract 10mg, Vitamin D2 15mcg, Pectin...",
-  "extractedClaimsText": "Supports Deep Sleep, 100% RDA...",
-  "clinicalSynthesis": "Summary note for goal ${userGoal}...",
-  "ingredientsDetailed": [
-    {
-      "name": "Melatonin 5mg",
-      "purpose": "Circadian chronobiotic active",
-      "tier": "strong_evidence",
-      "explanation": "Clinically proven to lower sleep latency and regulate sleep-wake cycles."
-    }
-  ]
+  "productName": "Product Name",
+  "brand": "Brand Name",
+  "tableComposition": [
+    { "name": "Melatonin", "amount": "5.0", "unit": "mg" }
+  ],
+  "extractedIngredientsText": "Liquid Glucose, Sugar, Maltodextrin, Water, Pectin (INS 440), Acidity Regulators, Tart Cherry Extract, Chamomile Extract, L-Theanine, Melatonin, Ergocalciferol, Medium Chain Triglycerides, Beet Root Powder",
+  "extractedClaimsText": "Supports Deep Sleep, 100% RDA Vitamin D",
+  "clinicalSynthesis": "Evidence-backed nocturnal recovery formula combining chronobiotic melatonin with synergistic adaptogens."
 }`;
 
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -116,30 +111,34 @@ Return ONLY valid JSON in this exact structure:
             if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
           }
 
-          const ingText = parsed.extractedIngredientsText || '';
+          let ingText = parsed.extractedIngredientsText || '';
           const claimText = parsed.extractedClaimsText || '';
           const prodName = parsed.productName || 'Audited Product';
           const brandName = parsed.brand || '';
+
+          // Merge active table composition into ingredient text if available from JSON
+          if (parsed.tableComposition && Array.isArray(parsed.tableComposition) && parsed.tableComposition.length > 0) {
+            const skipMacros = /^(energy|protein|carbohydrate|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol)/i;
+            const tableItems = parsed.tableComposition
+              .filter((item: any) => item.name && !skipMacros.test(item.name.trim()))
+              .map((item: any) => `${item.name.trim()} (${item.amount || ''} ${item.unit || ''})`.trim());
+
+            if (tableItems.length > 0) {
+              const tableString = tableItems.join(', ');
+              ingText = `${tableString}, ${ingText.replace(/^ingredients?\s*[:\-]\s*/i, '')}`;
+            }
+          }
+
+          // If JSON parsing yielded no ingredients (e.g. model output Markdown tables/freeform text), dynamically parse rawContent
+          if (!ingText || ingText.trim().length < 3) {
+            ingText = cleanAndNormalizeOCRText(rawContent);
+          }
 
           if (ingText && ingText.trim().length > 3) {
             // Run through our clinical evidence & claims evaluation matrix
             const analysis = analyzeLabelText(ingText, claimText, userGoal, prodName);
             if (parsed.clinicalSynthesis) {
               analysis.summary.synthesisText = parsed.clinicalSynthesis;
-            }
-
-            // If Vision model provided detailed ingredient notes, merge them
-            if (parsed.ingredientsDetailed && Array.isArray(parsed.ingredientsDetailed)) {
-              parsed.ingredientsDetailed.forEach((item: any) => {
-                if (!item.name) return;
-                const existing = analysis.detectedIngredients.find(
-                  d => d.ingredient.name.toLowerCase().includes(item.name.toLowerCase()) || 
-                       item.name.toLowerCase().includes(d.ingredient.name.toLowerCase())
-                );
-                if (existing && item.explanation) {
-                  existing.explanation = item.explanation;
-                }
-              });
             }
 
             if (onProgress) onProgress(100, 'Vision AI Analysis Complete!');
