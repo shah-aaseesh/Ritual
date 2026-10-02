@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
 import { analyzeLabelText } from '../../services/analyzer';
-import { extractLabelFromImageWithAI } from '../../services/aiService';
+import { extractLabelFromImageWithAI, denoiseAndStructureOCRWithLLM } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 import { VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
@@ -15,7 +15,9 @@ import {
   Sparkles, 
   Edit3, 
   BookmarkPlus,
-  ScanBarcode
+  ScanBarcode,
+  ClipboardPaste,
+  CheckCircle
 } from 'lucide-react';
 
 export const LabelLensView: React.FC = () => {
@@ -124,6 +126,63 @@ export const LabelLensView: React.FC = () => {
       setIsScanning(false);
       setScanProgress({ percent: 0, status: '' });
       if (e.target) e.target.value = '';
+    }
+  };
+
+  const [isQuickPasteOpen, setIsQuickPasteOpen] = useState<boolean>(false);
+  const [quickPasteInput, setQuickPasteInput] = useState<string>('');
+  const [isCleaningText, setIsCleaningText] = useState<boolean>(false);
+
+  const handleQuickPasteClean = async (rawInput?: string) => {
+    const textToClean = (rawInput ?? quickPasteInput).trim();
+    if (!textToClean) {
+      showToast('Please paste some text from ChatGPT or product packaging first.', 'warning');
+      return;
+    }
+
+    setIsCleaningText(true);
+    try {
+      const structured = await denoiseAndStructureOCRWithLLM(
+        textToClean,
+        profile.primaryGoal,
+        aiSettings.openRouterApiKey,
+        undefined,
+        'deepseek/deepseek-chat'
+      );
+
+      if (structured) {
+        setIngredientText(structured.ingredientText);
+        if (structured.productName && structured.productName !== 'Audited Product') {
+          setProductName(structured.productName);
+        }
+        if (structured.brand) {
+          setSaveBrand(structured.brand);
+        }
+        if (structured.claimText) {
+          setFrontClaimText(structured.claimText);
+        }
+        setAnalysisResult(structured.analysis);
+        setSelectedSampleId('');
+        setIsQuickPasteOpen(false);
+        setQuickPasteInput('');
+        showToast('AI Cleaned & Debunked Actives!', 'success');
+      } else {
+        setIngredientText(textToClean);
+        setSelectedSampleId('');
+        handleReanalyze(textToClean, frontClaimText, productName);
+        setIsQuickPasteOpen(false);
+        setQuickPasteInput('');
+        showToast('Ingredients analyzed', 'success');
+      }
+    } catch (err) {
+      setIngredientText(textToClean);
+      setSelectedSampleId('');
+      handleReanalyze(textToClean, frontClaimText, productName);
+      setIsQuickPasteOpen(false);
+      setQuickPasteInput('');
+      showToast('Ingredients analyzed', 'info');
+    } finally {
+      setIsCleaningText(false);
     }
   };
 
@@ -271,16 +330,6 @@ export const LabelLensView: React.FC = () => {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => frontFileInputRef.current?.click()}
-                disabled={isScanning}
-                className="p-3 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-cream-300 text-charcoal-800 flex items-center justify-center gap-2 text-xs font-semibold transition disabled:opacity-50"
-              >
-                <Camera className="w-4 h-4 text-forest-800" />
-                <span>Scan Front Claims</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isScanning}
                 className="p-3 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-cream-300 text-charcoal-800 flex items-center justify-center gap-2 text-xs font-semibold transition disabled:opacity-50"
@@ -288,7 +337,91 @@ export const LabelLensView: React.FC = () => {
                 <Upload className="w-4 h-4 text-forest-800" />
                 <span>Scan Bottle Photo</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setIsQuickPasteOpen(!isQuickPasteOpen)}
+                className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition ${
+                  isQuickPasteOpen
+                    ? 'bg-forest-900 text-mint-300 border-forest-900 shadow-sm'
+                    : 'bg-mint-50 hover:bg-mint-100 text-forest-900 border-mint-200'
+                }`}
+              >
+                <ClipboardPaste className="w-4 h-4 text-forest-800" />
+                <span>Paste from ChatGPT / Web</span>
+              </button>
             </div>
+
+            {/* Quick Paste from ChatGPT / Web Drawer */}
+            {isQuickPasteOpen && (
+              <div className="p-4 rounded-2xl bg-mint-50/60 border border-mint-200 space-y-3 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-forest-800" />
+                    <span className="text-xs font-bold text-forest-950">
+                      Paste from ChatGPT / Product Page
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-forest-700">
+                    Auto-Filters Noise
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-charcoal-600 leading-relaxed">
+                  Paste the text or breakdown from ChatGPT or an e-commerce site. AI will isolate the actives and debunk fillers on the prescription canvas.
+                </p>
+
+                <textarea
+                  value={quickPasteInput}
+                  onChange={(e) => setQuickPasteInput(e.target.value)}
+                  placeholder="Paste ingredients or ChatGPT output here (e.g. 'Melatonin 5mg, L-Theanine 10mg, Pectin, Glucose Syrup, Citric Acid...')"
+                  rows={3}
+                  className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-900 font-mono focus:outline-none focus:ring-1 focus:ring-forest-800 placeholder:text-charcoal-400"
+                />
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickPasteClean()}
+                    disabled={isCleaningText || !quickPasteInput.trim()}
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50"
+                  >
+                    {isCleaningText ? (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 animate-spin text-mint-300" />
+                        <span>Isolating Actives with AI...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-mint-400" />
+                        <span>Clean & Debunk on Canvas</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const clipText = await navigator.clipboard.readText();
+                        if (clipText && clipText.trim()) {
+                          setQuickPasteInput(clipText.trim());
+                          handleQuickPasteClean(clipText.trim());
+                        } else {
+                          showToast('Clipboard is empty', 'warning');
+                        }
+                      } catch (e) {
+                        showToast('Please paste text directly in the box above', 'info');
+                      }
+                    }}
+                    disabled={isCleaningText}
+                    className="py-2.5 px-3 rounded-xl bg-white hover:bg-cream-100 border border-cream-300 text-charcoal-800 text-xs font-semibold flex items-center gap-1 transition"
+                  >
+                    <span>Read Clipboard</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* OCR In-Flight Progress */}
             {isScanning && (
