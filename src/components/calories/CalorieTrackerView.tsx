@@ -159,22 +159,22 @@ export const CalorieTrackerView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-24 text-white">
+    <div className="space-y-6 pb-24 text-charcoal-900">
       {/* ========================================================================= */}
       {/* 🧭 NESTED VIEW HEADER & NAVIGATION BAR                                     */}
       {/* ========================================================================= */}
       {subView !== 'hub' && (
-        <div className="flex items-center justify-between bg-[#121217] p-3.5 sm:p-4 rounded-3xl border border-white/10 shadow-lg">
+        <div className="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-3xl border border-mint-200/80 shadow-soft">
           <button
             type="button"
             onClick={() => setSubView('hub')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-black text-white transition active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-black text-forest-900 transition active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Nutrition Hub</span>
           </button>
 
-          <span className="text-xs font-mono font-black uppercase text-zinc-300 tracking-wider">
+          <span className="text-xs font-mono font-black uppercase text-forest-950 tracking-wider">
             {subView === 'meal_detail' && `🥗 ${activeMealCategory.toUpperCase()} LOG`}
             {subView === 'food_library' && '🔍 Food & Supplement Library'}
             {subView === 'hydration' && '💧 Hydration & Electrolytes'}
@@ -187,7 +187,7 @@ export const CalorieTrackerView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSubView('food_library')}
-                className="px-3 py-1.5 rounded-full bg-white text-black text-xs font-black flex items-center gap-1 shadow-md hover:bg-zinc-200 transition"
+                className="px-3 py-1.5 rounded-full bg-forest-900 text-white text-xs font-black flex items-center gap-1 shadow-soft hover:bg-forest-800 transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Food</span>
@@ -203,13 +203,13 @@ export const CalorieTrackerView: React.FC = () => {
       {subView === 'hub' && (
         <div className="space-y-5 animate-in fade-in duration-200">
           {/* Main Caloric & Macro Summary Card */}
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                   METABOLIC PRECISION
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
+                <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-0.5">
                   Caloric & Macro Targets
                 </h1>
               </div>
@@ -218,16 +218,16 @@ export const CalorieTrackerView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCameraModalOpen(true)}
-                  className="px-4 py-2 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs transition shadow-lg flex items-center gap-1.5 active:scale-95 animate-pulse"
+                  className="px-4 py-2 rounded-full bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition shadow-soft flex items-center gap-1.5 active:scale-95"
                 >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Snap Meal (Gemini AI)</span>
+                  <Camera className="w-3.5 h-3.5 text-mint-300" />
+                  <span>Snap Meal (AI Vision)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSubView('custom_food')}
-                  className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-lg flex items-center gap-1.5 active:scale-95"
+                  className="px-4 py-2 rounded-full bg-cream-50 hover:bg-mint-100 text-forest-950 font-black text-xs transition border border-mint-200 flex items-center gap-1.5 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Quick Add</span>
@@ -238,15 +238,15 @@ export const CalorieTrackerView: React.FC = () => {
             {/* Caloric Big Dial & Triple Concentric Progress */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pt-2">
               {/* Left Dial */}
-              <div className="md:col-span-5 flex items-center gap-5 p-5 rounded-3xl bg-[#14141C] border border-white/5">
+              <div className="md:col-span-5 flex items-center gap-5 p-5 rounded-3xl bg-cream-50/70 border border-mint-100">
                 <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
                   <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
+                    <circle cx="50" cy="50" r="40" stroke="#E1EBE6" strokeWidth="8" fill="none" />
                     <circle
                       cx="50"
                       cy="50"
                       r="40"
-                      stroke="#FF3B30"
+                      stroke="#317353"
                       strokeWidth="8"
                       strokeDasharray="251.32"
                       strokeDashoffset={251.32 * (1 - calPercentage / 100)}
@@ -256,18 +256,18 @@ export const CalorieTrackerView: React.FC = () => {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center font-mono">
-                    <Flame className="w-5 h-5 text-[#FF3B30]" />
+                    <Flame className="w-5 h-5 text-forest-800" />
                   </div>
                 </div>
 
                 <div className="space-y-1 font-mono">
-                  <span className="text-2xl sm:text-3xl font-black text-white leading-none block">
+                  <span className="text-2xl sm:text-3xl font-black text-forest-950 leading-none block">
                     {calRemaining}
                   </span>
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                  <span className="text-[10px] uppercase font-bold text-charcoal-500 block tracking-wider">
                     kcal Remaining
                   </span>
-                  <span className="text-xs font-bold text-zinc-300">
+                  <span className="text-xs font-bold text-forest-800">
                     {currentMacros.calories} / {macroTargets.calories} kcal consumed
                   </span>
                 </div>
@@ -276,69 +276,69 @@ export const CalorieTrackerView: React.FC = () => {
               {/* Right Macro Triple Bars */}
               <div className="md:col-span-7 space-y-3">
                 {/* Protein Bar */}
-                <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1.5">
                   <div className="flex justify-between items-center text-xs font-mono">
-                    <div className="flex items-center gap-1.5 font-bold text-white">
-                      <Beef className="w-3.5 h-3.5 text-rose-400" />
+                    <div className="flex items-center gap-1.5 font-bold text-forest-950">
+                      <Beef className="w-3.5 h-3.5 text-rose-500" />
                       <span>Protein</span>
                     </div>
-                    <span className="font-bold text-zinc-300">
+                    <span className="font-bold text-charcoal-600">
                       {currentMacros.proteinG}g / {macroTargets.proteinG}g ({proteinPercentage}%)
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#09090D] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-mint-100 overflow-hidden">
                     <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${proteinPercentage}%` }} />
                   </div>
                 </div>
 
                 {/* Carbs Bar */}
-                <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1.5">
                   <div className="flex justify-between items-center text-xs font-mono">
-                    <div className="flex items-center gap-1.5 font-bold text-white">
-                      <Wheat className="w-3.5 h-3.5 text-amber-400" />
+                    <div className="flex items-center gap-1.5 font-bold text-forest-950">
+                      <Wheat className="w-3.5 h-3.5 text-amber-600" />
                       <span>Carbohydrates</span>
                     </div>
-                    <span className="font-bold text-zinc-300">
+                    <span className="font-bold text-charcoal-600">
                       {currentMacros.carbsG}g / {macroTargets.carbsG}g ({carbsPercentage}%)
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#09090D] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-mint-100 overflow-hidden">
                     <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{ width: `${carbsPercentage}%` }} />
                   </div>
                 </div>
 
                 {/* Fats Bar */}
-                <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1.5">
                   <div className="flex justify-between items-center text-xs font-mono">
-                    <div className="flex items-center gap-1.5 font-bold text-white">
-                      <Cookie className="w-3.5 h-3.5 text-teal-400" />
+                    <div className="flex items-center gap-1.5 font-bold text-forest-950">
+                      <Cookie className="w-3.5 h-3.5 text-teal-600" />
                       <span>Fats</span>
                     </div>
-                    <span className="font-bold text-zinc-300">
+                    <span className="font-bold text-charcoal-600">
                       {currentMacros.fatG}g / {macroTargets.fatG}g ({fatPercentage}%)
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#09090D] overflow-hidden">
-                    <div className="h-full bg-teal-500 rounded-full transition-all duration-500" style={{ width: `${fatPercentage}%` }} />
+                  <div className="w-full h-2 rounded-full bg-mint-100 overflow-hidden">
+                    <div className="h-full bg-teal-600 rounded-full transition-all duration-500" style={{ width: `${fatPercentage}%` }} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Quick Hydration Stepper Bar */}
-            <div className="p-4 rounded-3xl bg-[#14141C] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono">
+            <div className="p-4 rounded-3xl bg-cream-50/70 border border-mint-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono">
               <div 
                 onClick={() => setSubView('hydration')}
                 className="flex items-center gap-3 cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 border border-teal-200 flex items-center justify-center">
                   <Droplets className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-white group-hover:text-cyan-400 transition">
+                  <span className="text-xs font-black text-forest-950 group-hover:text-teal-700 transition">
                     Hydration Target: {waterMl} / {macroTargets.waterMl} ml
                   </span>
-                  <span className="text-[10px] text-zinc-400 block font-sans">Euvolemic electrolyte baseline</span>
+                  <span className="text-[10px] text-charcoal-500 block font-sans">Euvolemic electrolyte baseline</span>
                 </div>
               </div>
 
@@ -346,14 +346,14 @@ export const CalorieTrackerView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => addWater(250)}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
                 >
                   +250 ml
                 </button>
                 <button
                   type="button"
                   onClick={() => addWater(500)}
-                  className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black transition active:scale-95 shadow-md"
+                  className="px-3 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white text-xs font-black transition active:scale-95 shadow-soft"
                 >
                   +500 ml
                 </button>
@@ -363,7 +363,7 @@ export const CalorieTrackerView: React.FC = () => {
 
           {/* Four Meal Category Navigation Tiles (Nested Drill-Downs) */}
           <div className="space-y-3">
-            <h2 className="text-xs font-black uppercase text-zinc-400 tracking-wider font-mono px-1">
+            <h2 className="text-xs font-black uppercase text-forest-700 tracking-wider font-mono px-1">
               Daily Meal Breakdown (Tap to Drill Down)
             </h2>
 
@@ -379,36 +379,36 @@ export const CalorieTrackerView: React.FC = () => {
                       setActiveMealCategory(cat.id);
                       setSubView('meal_detail');
                     }}
-                    className="group p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex flex-col justify-between space-y-3"
+                    className="group p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-card flex flex-col justify-between space-y-3"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{cat.icon}</span>
                         <div>
-                          <h3 className="text-base font-black text-white group-hover:text-[#FF3B30] transition">
+                          <h3 className="text-base font-black text-forest-950 group-hover:text-forest-800 transition">
                             {cat.label}
                           </h3>
-                          <span className="text-[10px] text-zinc-400 font-mono">
+                          <span className="text-[10px] text-charcoal-500 font-mono">
                             {logs.length} {logs.length === 1 ? 'item' : 'items'} logged
                           </span>
                         </div>
                       </div>
 
                       <div className="text-right font-mono">
-                        <span className="text-base font-black text-white block">
+                        <span className="text-base font-black text-forest-950 block">
                           {macros.calories} kcal
                         </span>
-                        <span className="text-[10px] text-rose-400 font-bold">
+                        <span className="text-[10px] text-rose-600 font-bold">
                           {macros.proteinG}g P
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-1 flex items-center justify-between border-t border-white/5 text-[11px] text-zinc-400">
+                    <div className="pt-1 flex items-center justify-between border-t border-mint-100 text-[11px] text-charcoal-500">
                       <span className="truncate max-w-[200px]">
                         {logs.length > 0 ? logs.map(l => l.food.name).join(', ') : 'No foods logged yet'}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition shrink-0" />
                     </div>
                   </div>
                 );
@@ -420,56 +420,56 @@ export const CalorieTrackerView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div
               onClick={() => setIsCameraModalOpen(true)}
-              className="p-4 rounded-2xl bg-[#1C1215] hover:bg-[#25151A] border border-[#FF3B30]/30 hover:border-[#FF3B30] cursor-pointer transition flex items-center gap-3 group shadow-card"
+              className="p-4 rounded-2xl bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 cursor-pointer transition flex items-center gap-3 group shadow-card"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/20 text-[#FF3B30] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-soft">
                 <Camera className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-black text-white group-hover:text-[#FF3B30] transition">Snap Meal Photo</h4>
-                  <span className="px-1.5 py-0.2 rounded bg-[#FF3B30]/20 text-[#FF3B30] text-[9px] font-mono font-bold">&lt;1s</span>
+                  <h4 className="text-xs font-black text-forest-950 group-hover:text-forest-800 transition">Snap Meal Photo</h4>
+                  <span className="px-1.5 py-0.2 rounded bg-mint-100 text-forest-800 text-[9px] font-mono font-bold">&lt;1s</span>
                 </div>
-                <p className="text-[10px] text-zinc-400">Instant Gemini Vision Macros</p>
+                <p className="text-[10px] text-charcoal-500">Instant Gemini Vision Macros</p>
               </div>
             </div>
 
             <div
               onClick={() => setSubView('food_library')}
-              className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
+              className="p-4 rounded-2xl bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 cursor-pointer transition flex items-center gap-3 group shadow-card"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 text-[#FF3B30] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-cream-50 text-forest-900 border border-mint-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Search className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white group-hover:text-[#FF3B30] transition">Food Database</h4>
-                <p className="text-[10px] text-zinc-400">Search verified whole foods</p>
+                <h4 className="text-xs font-black text-forest-950 group-hover:text-forest-800 transition">Food Database</h4>
+                <p className="text-[10px] text-charcoal-500">Search verified whole foods</p>
               </div>
             </div>
 
             <div
               onClick={() => setSubView('hydration')}
-              className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
+              className="p-4 rounded-2xl bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 cursor-pointer transition flex items-center gap-3 group shadow-card"
             >
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 border border-teal-150 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Droplets className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white group-hover:text-cyan-400 transition">Hydration Engine</h4>
-                <p className="text-[10px] text-zinc-400">Electrolyte & volume logs</p>
+                <h4 className="text-xs font-black text-forest-950 group-hover:text-teal-700 transition">Hydration Engine</h4>
+                <p className="text-[10px] text-charcoal-500">Electrolyte & volume logs</p>
               </div>
             </div>
 
             <div
               onClick={() => setSubView('targets')}
-              className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
+              className="p-4 rounded-2xl bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 cursor-pointer transition flex items-center gap-3 group shadow-card"
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-150 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white group-hover:text-amber-400 transition">Target Calibrator</h4>
-                <p className="text-[10px] text-zinc-400">Calibrate protein & carbs</p>
+                <h4 className="text-xs font-black text-forest-950 group-hover:text-amber-700 transition">Target Calibrator</h4>
+                <p className="text-[10px] text-charcoal-500">Calibrate protein & carbs</p>
               </div>
             </div>
           </div>
@@ -482,13 +482,13 @@ export const CalorieTrackerView: React.FC = () => {
       {subView === 'meal_detail' && (
         <div className="space-y-5 animate-in fade-in duration-200">
           {/* Meal Header Stats */}
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-4">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                   MEAL LOG
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-white capitalize">
+                <h2 className="text-2xl sm:text-3xl font-black text-forest-950 capitalize">
                   {activeMealCategory}
                 </h2>
               </div>
@@ -497,16 +497,16 @@ export const CalorieTrackerView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCameraModalOpen(true)}
-                  className="px-4 py-2 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs transition shadow-md flex items-center gap-1.5 active:scale-95 animate-pulse"
+                  className="px-4 py-2 rounded-full bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition shadow-soft flex items-center gap-1.5 active:scale-95"
                 >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Snap Meal (Gemini AI)</span>
+                  <Camera className="w-3.5 h-3.5 text-mint-300" />
+                  <span>Snap Meal (AI Vision)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSubView('food_library')}
-                  className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-md flex items-center gap-1 active:scale-95"
+                  className="px-4 py-2 rounded-full bg-cream-50 hover:bg-mint-100 text-forest-950 border border-mint-200 font-black text-xs transition shadow-sm flex items-center gap-1 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Search Food</span>
@@ -516,53 +516,53 @@ export const CalorieTrackerView: React.FC = () => {
 
             {/* Meal Specific Macro Totals */}
             <div className="grid grid-cols-4 gap-2 font-mono text-center pt-2">
-              <div className="p-3 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-zinc-400 uppercase block">Calories</span>
-                <span className="text-base font-black text-white">{getMealMacros(activeMealCategory).calories} kcal</span>
+              <div className="p-3 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-charcoal-500 uppercase block">Calories</span>
+                <span className="text-base font-black text-forest-950">{getMealMacros(activeMealCategory).calories} kcal</span>
               </div>
-              <div className="p-3 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-rose-400 uppercase block">Protein</span>
-                <span className="text-base font-black text-white">{getMealMacros(activeMealCategory).proteinG}g</span>
+              <div className="p-3 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-rose-600 uppercase block">Protein</span>
+                <span className="text-base font-black text-forest-950">{getMealMacros(activeMealCategory).proteinG}g</span>
               </div>
-              <div className="p-3 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-amber-400 uppercase block">Carbs</span>
-                <span className="text-base font-black text-white">{getMealMacros(activeMealCategory).carbsG}g</span>
+              <div className="p-3 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-amber-600 uppercase block">Carbs</span>
+                <span className="text-base font-black text-forest-950">{getMealMacros(activeMealCategory).carbsG}g</span>
               </div>
-              <div className="p-3 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-teal-400 uppercase block">Fats</span>
-                <span className="text-base font-black text-white">{getMealMacros(activeMealCategory).fatG}g</span>
+              <div className="p-3 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-teal-600 uppercase block">Fats</span>
+                <span className="text-base font-black text-forest-950">{getMealMacros(activeMealCategory).fatG}g</span>
               </div>
             </div>
           </div>
 
           {/* Logged Food Items in this meal */}
           <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider font-mono px-1">
+            <h3 className="text-xs font-black uppercase text-forest-700 tracking-wider font-mono px-1">
               Logged Items in {activeMealCategory}
             </h3>
 
             {getMealLogs(activeMealCategory).length === 0 ? (
-              <div className="p-8 rounded-[2rem] bg-[#121217] border border-white/10 text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-[#FF3B30]">
+              <div className="p-8 rounded-[2rem] bg-white border border-mint-200/80 text-center space-y-4 shadow-card">
+                <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center mx-auto text-forest-900">
                   <Camera className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-white">No items logged for {activeMealCategory}</h4>
-                  <p className="text-xs text-zinc-400 font-mono mt-0.5">Take a plate photo with Gemini AI Vision or search verified whole foods.</p>
+                  <h4 className="text-sm font-black text-forest-950">No items logged for {activeMealCategory}</h4>
+                  <p className="text-xs text-charcoal-500 font-mono mt-0.5">Take a plate photo with Gemini AI Vision or search verified whole foods.</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                   <button
                     type="button"
                     onClick={() => setIsCameraModalOpen(true)}
-                    className="px-4 py-2.5 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs shadow-lg flex items-center gap-1.5 active:scale-95"
+                    className="px-4 py-2.5 rounded-full bg-forest-900 hover:bg-forest-800 text-white font-black text-xs shadow-soft flex items-center gap-1.5 active:scale-95"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>Snap Photo (Gemini AI &lt;1s)</span>
+                    <Camera className="w-3.5 h-3.5 text-mint-300" />
+                    <span>Snap Photo (AI Vision &lt;1s)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubView('food_library')}
-                    className="px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs shadow-md"
+                    className="px-4 py-2.5 rounded-full bg-cream-50 hover:bg-mint-100 text-forest-950 border border-mint-200 font-black text-xs shadow-sm"
                   >
                     + Food Database
                   </button>
@@ -573,17 +573,17 @@ export const CalorieTrackerView: React.FC = () => {
                 {getMealLogs(activeMealCategory).map((entry) => (
                   <div
                     key={entry.id}
-                    className="p-4 rounded-2xl bg-[#121217] border border-white/10 flex items-center justify-between gap-3 shadow-md"
+                    className="p-4 rounded-2xl bg-white border border-mint-200/80 flex items-center justify-between gap-3 shadow-card"
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-white">{entry.food.name}</span>
-                        <span className="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full">
+                        <span className="text-sm font-black text-forest-950">{entry.food.name}</span>
+                        <span className="text-[10px] font-mono text-forest-800 bg-mint-100 px-2 py-0.5 rounded-full border border-mint-200">
                           {entry.quantity} × {entry.food.servingSize}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-                        <span className="text-[#FF3B30] font-bold">{Math.round(entry.food.calories * entry.quantity)} kcal</span>
+                      <div className="flex items-center gap-2 text-xs font-mono text-charcoal-600">
+                        <span className="text-forest-900 font-bold">{Math.round(entry.food.calories * entry.quantity)} kcal</span>
                         <span>•</span>
                         <span>{Math.round(entry.food.proteinG * entry.quantity)}g P</span>
                         <span>•</span>
@@ -596,7 +596,7 @@ export const CalorieTrackerView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => removeFoodLog(entry.id)}
-                      className="p-2 rounded-xl text-zinc-400 hover:text-[#FF3B30] transition"
+                      className="p-2 rounded-xl text-charcoal-400 hover:text-rose-600 transition"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -613,19 +613,19 @@ export const CalorieTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'food_library' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-4">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-4">
             <div>
-              <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+              <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                 CATALOG
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950">
                 Food & Supplement Database
               </h2>
             </div>
 
             {/* Target Meal Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase text-zinc-400">Adding to:</span>
+              <span className="text-xs font-mono uppercase text-charcoal-500">Adding to:</span>
               <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono">
                 {mealCategories.map(m => (
                   <button
@@ -634,8 +634,8 @@ export const CalorieTrackerView: React.FC = () => {
                     onClick={() => setActiveMealCategory(m.id)}
                     className={`px-3 py-1 rounded-full font-bold transition ${
                       activeMealCategory === m.id
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-[#181822] text-zinc-400 hover:text-white border border-white/10'
+                        ? 'bg-forest-900 text-white shadow-soft'
+                        : 'bg-cream-50 text-charcoal-600 hover:text-forest-900 border border-mint-200'
                     }`}
                   >
                     {m.label}
@@ -646,13 +646,13 @@ export const CalorieTrackerView: React.FC = () => {
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-charcoal-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search food, protein source, shake, or supplement..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#09090D] border border-white/10 text-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-cream-50 border border-mint-200 text-charcoal-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
               />
             </div>
 
@@ -665,8 +665,8 @@ export const CalorieTrackerView: React.FC = () => {
                   onClick={() => setSelectedCategoryFilter(cat)}
                   className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition ${
                     selectedCategoryFilter === cat
-                      ? 'bg-white text-black'
-                      : 'bg-[#181822] text-zinc-400 hover:text-white border border-white/5'
+                      ? 'bg-forest-900 text-white'
+                      : 'bg-cream-50 text-charcoal-600 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
                   }`}
                 >
                   {cat}
@@ -684,17 +684,17 @@ export const CalorieTrackerView: React.FC = () => {
                   handleLogFood(food, 1, activeMealCategory);
                   setSubView('meal_detail');
                 }}
-                className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition cursor-pointer flex items-center justify-between group"
+                className="p-4 rounded-2xl bg-white hover:bg-mint-50/40 border border-mint-200/80 hover:border-mint-400 transition cursor-pointer flex items-center justify-between group shadow-card"
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-white group-hover:text-[#FF3B30] transition">{food.name}</span>
-                    <span className="text-[9px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full">{food.category}</span>
+                    <span className="text-xs font-black text-forest-950 group-hover:text-forest-800 transition">{food.name}</span>
+                    <span className="text-[9px] font-mono text-forest-800 bg-mint-100 px-2 py-0.5 rounded-full border border-mint-200">{food.category}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
-                    <span className="text-zinc-200 font-bold">{food.calories} kcal</span>
+                  <div className="flex items-center gap-2 text-[11px] font-mono text-charcoal-500">
+                    <span className="text-forest-900 font-bold">{food.calories} kcal</span>
                     <span>•</span>
-                    <span className="text-rose-400 font-bold">{food.proteinG}g P</span>
+                    <span className="text-rose-600 font-bold">{food.proteinG}g P</span>
                     <span>•</span>
                     <span>{food.carbsG}g C</span>
                     <span>•</span>
@@ -702,7 +702,7 @@ export const CalorieTrackerView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-xl bg-white/5 group-hover:bg-white group-hover:text-black flex items-center justify-center text-zinc-400 transition shadow-sm shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-mint-100 group-hover:bg-forest-900 group-hover:text-white flex items-center justify-center text-forest-900 transition shadow-sm shrink-0">
                   <Plus className="w-4 h-4" />
                 </div>
               </div>
@@ -716,34 +716,34 @@ export const CalorieTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'hydration' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div>
-              <span className="text-[10px] font-mono font-black uppercase text-cyan-400 tracking-widest block">
+              <span className="text-[10px] font-mono font-black uppercase text-teal-700 tracking-widest block">
                 EUVOLEMIC HYDRATION
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950">
                 Fluid & Electrolyte Tracker
               </h2>
-              <p className="text-xs text-zinc-400 mt-1">Maintaining optimal blood volume, intracellular pressure & nutrient transport.</p>
+              <p className="text-xs text-charcoal-600 mt-1">Maintaining optimal blood volume, intracellular pressure & nutrient transport.</p>
             </div>
 
-            <div className="p-6 rounded-3xl bg-[#14141C] border border-white/5 flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="w-24 h-24 rounded-3xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shadow-lg">
+            <div className="p-6 rounded-3xl bg-cream-50/70 border border-mint-100 flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="w-24 h-24 rounded-3xl bg-teal-100 text-teal-700 border border-teal-200 flex items-center justify-center shadow-soft">
                 <Droplets className="w-12 h-12" />
               </div>
 
               <div className="space-y-1 font-mono">
-                <span className="text-4xl sm:text-5xl font-black text-white leading-none block">
-                  {waterMl} <span className="text-lg text-cyan-400 font-bold">/ {macroTargets.waterMl} ml</span>
+                <span className="text-4xl sm:text-5xl font-black text-forest-950 leading-none block">
+                  {waterMl} <span className="text-lg text-teal-700 font-bold">/ {macroTargets.waterMl} ml</span>
                 </span>
-                <span className="text-xs text-zinc-400 block">
+                <span className="text-xs text-charcoal-500 block">
                   {Math.round((waterMl / macroTargets.waterMl) * 100)}% of daily baseline completed
                 </span>
               </div>
 
-              <div className="w-full max-w-md h-3 rounded-full bg-[#09090D] overflow-hidden border border-white/10">
+              <div className="w-full max-w-md h-3 rounded-full bg-mint-100 overflow-hidden border border-mint-200">
                 <div 
-                  className="h-full bg-cyan-400 rounded-full transition-all duration-700" 
+                  className="h-full bg-teal-600 rounded-full transition-all duration-700" 
                   style={{ width: `${Math.min(100, (waterMl / macroTargets.waterMl) * 100)}%` }} 
                 />
               </div>
@@ -752,21 +752,21 @@ export const CalorieTrackerView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => addWater(250)}
-                  className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-mono font-black text-xs transition active:scale-95"
+                  className="px-5 py-3 rounded-2xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-950 font-mono font-black text-xs transition active:scale-95 shadow-soft"
                 >
                   +250 ml (1 Glass)
                 </button>
                 <button
                   type="button"
                   onClick={() => addWater(500)}
-                  className="px-5 py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-black text-xs transition active:scale-95 shadow-md"
+                  className="px-5 py-3 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-mono font-black text-xs transition active:scale-95 shadow-soft"
                 >
                   +500 ml (1 Bottle)
                 </button>
                 <button
                   type="button"
                   onClick={() => addWater(1000)}
-                  className="px-5 py-3 rounded-2xl bg-white hover:bg-zinc-200 text-black font-mono font-black text-xs transition active:scale-95 shadow-md"
+                  className="px-5 py-3 rounded-2xl bg-mint-100 hover:bg-mint-200 text-forest-900 border border-mint-300 font-mono font-black text-xs transition active:scale-95 shadow-soft"
                 >
                   +1,000 ml
                 </button>
@@ -781,54 +781,54 @@ export const CalorieTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'targets' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div>
-              <span className="text-[10px] font-mono font-black uppercase text-amber-400 tracking-widest block">
+              <span className="text-[10px] font-mono font-black uppercase text-amber-700 tracking-widest block">
                 CALIBRATION
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950">
                 Daily Macronutrient Targets
               </h2>
-              <p className="text-xs text-zinc-400 mt-1">Calibrate target calories and macro ratios for your specific athletic goals.</p>
+              <p className="text-xs text-charcoal-600 mt-1">Calibrate target calories and macro ratios for your specific athletic goals.</p>
             </div>
 
             <div className="space-y-4 max-w-md">
               <div>
-                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1">Target Calories (kcal)</label>
+                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">Target Calories (kcal)</label>
                 <input
                   type="number"
                   value={macroTargets.calories}
                   onChange={(e) => setMacroTargets(prev => ({ ...prev, calories: parseInt(e.target.value) || 2000 }))}
-                  className="w-full px-4 py-3 rounded-xl bg-[#14141C] border border-white/10 text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                  className="w-full px-4 py-3 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-rose-400 mb-1">Protein (g)</label>
+                  <label className="block text-[10px] font-mono uppercase text-rose-600 mb-1">Protein (g)</label>
                   <input
                     type="number"
                     value={macroTargets.proteinG}
                     onChange={(e) => setMacroTargets(prev => ({ ...prev, proteinG: parseInt(e.target.value) || 150 }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-mono font-bold focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-amber-400 mb-1">Carbs (g)</label>
+                  <label className="block text-[10px] font-mono uppercase text-amber-600 mb-1">Carbs (g)</label>
                   <input
                     type="number"
                     value={macroTargets.carbsG}
                     onChange={(e) => setMacroTargets(prev => ({ ...prev, carbsG: parseInt(e.target.value) || 200 }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-mono font-bold focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-teal-400 mb-1">Fats (g)</label>
+                  <label className="block text-[10px] font-mono uppercase text-teal-600 mb-1">Fats (g)</label>
                   <input
                     type="number"
                     value={macroTargets.fatG}
                     onChange={(e) => setMacroTargets(prev => ({ ...prev, fatG: parseInt(e.target.value) || 60 }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-mono font-bold focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
               </div>
@@ -839,7 +839,7 @@ export const CalorieTrackerView: React.FC = () => {
                   showToast('Updated Daily Targets', 'success');
                   setSubView('hub');
                 }}
-                className="w-full py-3 rounded-2xl bg-white hover:bg-zinc-200 text-black font-black text-xs shadow-lg transition"
+                className="w-full py-3 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs shadow-soft transition"
               >
                 Save Targets
               </button>
@@ -853,43 +853,43 @@ export const CalorieTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'custom_food' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div>
-              <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+              <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                 CUSTOM INPUT
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950">
                 Quick Macro Entry
               </h2>
-              <p className="text-xs text-zinc-400 mt-1">Log custom foods, meal shakes, or quick raw macronutrient values.</p>
+              <p className="text-xs text-charcoal-600 mt-1">Log custom foods, meal shakes, or quick raw macronutrient values.</p>
             </div>
 
             <div className="space-y-4 max-w-md">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono uppercase text-zinc-400 mb-1">Food / Shake Name</label>
+                  <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">Food / Shake Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Whey Shake + Banana..."
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-[#14141C] border border-white/10 text-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                    className="w-full px-4 py-3 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-zinc-400 mb-1">Serving Size</label>
+                  <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">Serving Size</label>
                   <input
                     type="text"
                     placeholder="e.g. 1 scoop (35g), 1 bowl..."
                     value={customServing}
                     onChange={(e) => setCustomServing(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-[#14141C] border border-white/10 text-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                    className="w-full px-4 py-3 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1">Target Meal</label>
+                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">Target Meal</label>
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                   {mealCategories.map(m => (
                     <button
@@ -898,8 +898,8 @@ export const CalorieTrackerView: React.FC = () => {
                       onClick={() => setActiveMealCategory(m.id)}
                       className={`p-2.5 rounded-xl border font-bold transition text-left ${
                         activeMealCategory === m.id
-                          ? 'bg-white text-black border-white shadow-md'
-                          : 'bg-[#14141C] text-zinc-400 border-white/10 hover:text-white'
+                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
+                          : 'bg-cream-50 text-charcoal-700 border-mint-200 hover:text-forest-900 hover:bg-mint-50'
                       }`}
                     >
                       {m.label}
@@ -910,39 +910,39 @@ export const CalorieTrackerView: React.FC = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
                 <div>
-                  <label className="block text-[10px] uppercase text-zinc-400 mb-1">Calories</label>
+                  <label className="block text-[10px] uppercase text-charcoal-500 mb-1">Calories</label>
                   <input
                     type="number"
                     value={customCals}
                     onChange={(e) => setCustomCals(parseInt(e.target.value) || 0)}
-                    className="w-full p-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-bold"
+                    className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase text-rose-400 mb-1">Protein (g)</label>
+                  <label className="block text-[10px] uppercase text-rose-600 mb-1">Protein (g)</label>
                   <input
                     type="number"
                     value={customProtein}
                     onChange={(e) => setCustomProtein(parseInt(e.target.value) || 0)}
-                    className="w-full p-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-bold"
+                    className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase text-amber-400 mb-1">Carbs (g)</label>
+                  <label className="block text-[10px] uppercase text-amber-600 mb-1">Carbs (g)</label>
                   <input
                     type="number"
                     value={customCarbs}
                     onChange={(e) => setCustomCarbs(parseInt(e.target.value) || 0)}
-                    className="w-full p-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-bold"
+                    className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase text-teal-400 mb-1">Fat (g)</label>
+                  <label className="block text-[10px] uppercase text-teal-600 mb-1">Fat (g)</label>
                   <input
                     type="number"
                     value={customFat}
                     onChange={(e) => setCustomFat(parseInt(e.target.value) || 0)}
-                    className="w-full p-2.5 rounded-xl bg-[#14141C] border border-white/10 text-white font-bold"
+                    className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
               </div>
@@ -950,7 +950,7 @@ export const CalorieTrackerView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAddCustomFood}
-                className="w-full py-3.5 rounded-2xl bg-white hover:bg-zinc-200 text-black font-black text-xs shadow-lg transition"
+                className="w-full py-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs shadow-soft transition"
               >
                 Log Meal to {activeMealCategory}
               </button>

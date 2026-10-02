@@ -63,25 +63,35 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleProcessImage = async (fileOrUrl: File | string) => {
+  const handleProcessImage = async (imageInput: File | string) => {
     setIsAnalyzing(true);
-    setAnalysisResult(null);
-    setPortionMultiplier(1.0);
-    setProgressState({ percent: 15, status: 'Sending to Google Gemini Flash-Lite Vision...' });
+    setProgressState({ percent: 20, status: 'Initializing Gemini Flash Vision pipeline...' });
 
     try {
+      if (typeof imageInput === 'string') {
+        // Sample image URL
+        setProgressState({ percent: 40, status: 'Fetching dish image...' });
+      } else {
+        // Direct camera photo file
+        setProgressState({ percent: 40, status: 'Processing camera photo pixels...' });
+      }
+
+      setProgressState({ percent: 75, status: 'Gemini 3.1 Flash-Lite extracting macros...' });
+
       const result = await analyzeFoodImageWithGemini(
-        fileOrUrl,
+        imageInput,
         aiSettings.openRouterApiKey,
         (pct, status) => setProgressState({ percent: pct, status })
       );
 
       setAnalysisResult(result);
-      showToast(`Analyzed ${result.dishName} in ${(result.durationMs / 1000).toFixed(1)}s`, 'success');
+      setPortionMultiplier(1.0);
+      showToast(`Analyzed ${result.dishName} (${result.totalCalories} kcal) in ${(result.durationMs / 1000).toFixed(2)}s!`, 'success');
     } catch (err: any) {
-      showToast('Vision scan failed. Please try again.', 'warning');
+      showToast(err?.message || 'Error analyzing food photo. Please try again.', 'warning');
     } finally {
       setIsAnalyzing(false);
+      setProgressState({ percent: 0, status: '' });
     }
   };
 
@@ -95,21 +105,20 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
   const handleConfirmLog = () => {
     if (!analysisResult) return;
 
-    const scaledFoodItem: FoodItem = {
-      id: `ai-food-${Date.now()}`,
+    const scaledFood: FoodItem = {
+      id: `gemini-food-${Date.now()}`,
       name: analysisResult.dishName,
       servingSize: analysisResult.servingSize,
       calories: Math.round(analysisResult.totalCalories * portionMultiplier),
       proteinG: Math.round(analysisResult.proteinG * portionMultiplier),
       carbsG: Math.round(analysisResult.carbsG * portionMultiplier),
       fatG: Math.round(analysisResult.fatG * portionMultiplier),
-      fiberG: analysisResult.fiberG ? Math.round(analysisResult.fiberG * portionMultiplier) : undefined,
-      brand: 'Gemini Vision AI',
-      category: 'AI Scanned'
+      category: 'Indian Whole Foods'
     };
 
-    onFoodLogged(selectedMeal, scaledFoodItem, 1);
-    showToast(`Logged ${scaledFoodItem.name} to ${selectedMeal}!`, 'success');
+    onFoodLogged(selectedMeal, scaledFood, 1);
+    showToast(`Logged ${scaledFood.name} to ${selectedMeal}!`, 'success');
+    setAnalysisResult(null);
     onClose();
   };
 
@@ -117,108 +126,111 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
   const currentProtein = analysisResult ? Math.round(analysisResult.proteinG * portionMultiplier) : 0;
   const currentCarbs = analysisResult ? Math.round(analysisResult.carbsG * portionMultiplier) : 0;
   const currentFat = analysisResult ? Math.round(analysisResult.fatG * portionMultiplier) : 0;
-  const currentFiber = analysisResult?.fiberG ? Math.round(analysisResult.fiberG * portionMultiplier) : undefined;
+  const currentFiber = analysisResult?.fiberG !== undefined ? Math.round(analysisResult.fiberG * portionMultiplier) : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      {/* Hidden File / Camera Inputs */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <input
-        type="file"
-        ref={cameraInputRef}
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
-      <div className="bg-[#121218] border border-white/10 rounded-[2.5rem] max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-white">
-        {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#181822]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-[#FF3B30]">
-              <Camera className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-6 sm:p-7 shadow-modal border border-mint-200 text-charcoal-900 space-y-5 max-h-[92vh] flex flex-col overflow-hidden">
+        
+        {/* Top Header */}
+        <div className="flex items-center justify-between border-b border-mint-100 pb-4 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-mint-100 text-forest-800 border border-mint-200 flex items-center justify-center font-mono">
+              <Camera className="w-5 h-5 text-forest-800" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-black text-white">Gemini Food & Calorie Vision</h3>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                  aiSettings.openRouterApiKey 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'bg-[#FF3B30]/20 text-[#FF3B30]'
-                }`}>
-                  {aiSettings.openRouterApiKey ? '🟢 Live Gemini Flash' : '⚡ Local Vision AI'}
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-base font-black text-forest-950">Gemini AI Meal Camera</h3>
+                <span className="px-2 py-0.2 rounded-full bg-mint-100 text-forest-800 text-[10px] font-mono font-bold border border-mint-200">
+                  ⚡ &lt;1s Vision
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400">
-                Snap or upload your meal photo to estimate instant macros & calories
-              </p>
+              <p className="text-xs text-charcoal-600 font-mono">Instant photo calorie estimation</p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition"
+            className="p-1.5 rounded-full text-charcoal-400 hover:text-charcoal-700 hover:bg-mint-50 transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-5 overflow-y-auto flex-1 space-y-5">
-          {/* Target Meal Bar */}
-          <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-[#09090D] border border-white/5">
-            {(['breakfast', 'lunch', 'dinner', 'snacks'] as const).map(meal => (
-              <button
-                key={meal}
-                type="button"
-                onClick={() => setSelectedMeal(meal)}
-                className={`flex-1 py-2 rounded-xl text-xs font-mono font-bold capitalize transition ${
-                  selectedMeal === meal
-                    ? 'bg-white text-black shadow-md'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                {meal}
-              </button>
-            ))}
-          </div>
+        {/* Scrollable Modal Content */}
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+          
+          {/* Hidden File / Camera Inputs */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={cameraInputRef}
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
-          {/* Action Trigger Buttons (Camera Snap vs Upload) */}
-          {!isAnalyzing && !analysisResult && (
+          {/* Initial Capture Screen */}
+          {!analysisResult && !isAnalyzing && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Target Meal Pill Selector */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-mono font-bold uppercase text-charcoal-600 block">
+                  Log this meal to:
+                </span>
+                <div className="grid grid-cols-4 gap-2 text-xs font-mono">
+                  {(['breakfast', 'lunch', 'dinner', 'snacks'] as MealCategory[]).map((meal) => (
+                    <button
+                      key={meal}
+                      type="button"
+                      onClick={() => setSelectedMeal(meal)}
+                      className={`py-2 rounded-xl border text-center capitalize font-bold transition ${
+                        selectedMeal === meal
+                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft font-extrabold'
+                          : 'bg-cream-50 text-charcoal-700 border-mint-100 hover:bg-mint-50'
+                      }`}
+                    >
+                      {meal}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Big 2-Card Direct Capture Actions */}
+              <div className="grid grid-cols-2 gap-3.5 pt-2">
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="p-6 rounded-[2rem] bg-[#181822] hover:bg-[#20202D] border border-white/10 flex flex-col items-center justify-center gap-3 text-center transition group active:scale-98 shadow-card"
+                  className="p-6 rounded-[2rem] bg-cream-50/80 hover:bg-mint-50/50 border border-mint-200 flex flex-col items-center justify-center gap-3 text-center transition group active:scale-98 shadow-soft"
                 >
-                  <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Camera className="w-7 h-7 text-[#FF3B30]" />
+                  <div className="w-14 h-14 rounded-full bg-forest-900 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                    <Camera className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <span className="text-sm font-black text-white block">Take Meal Photo</span>
-                    <span className="text-xs text-zinc-400 mt-0.5 block">Direct Camera Viewfinder</span>
+                    <span className="text-sm font-black text-forest-950 block">Take Meal Photo</span>
+                    <span className="text-xs text-charcoal-500 mt-0.5 block">Direct Camera Viewfinder</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-6 rounded-[2rem] bg-[#181822] hover:bg-[#20202D] border border-white/10 flex flex-col items-center justify-center gap-3 text-center transition group active:scale-98 shadow-card"
+                  className="p-6 rounded-[2rem] bg-cream-50/80 hover:bg-mint-50/50 border border-mint-200 flex flex-col items-center justify-center gap-3 text-center transition group active:scale-98 shadow-soft"
                 >
-                  <div className="w-14 h-14 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Upload className="w-7 h-7 text-white" />
+                  <div className="w-14 h-14 rounded-full bg-mint-100 border border-mint-200 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                    <Upload className="w-7 h-7 text-forest-800" />
                   </div>
                   <div>
-                    <span className="text-sm font-black text-white block">Upload Food Image</span>
-                    <span className="text-xs text-zinc-400 mt-0.5 block">From Photo Library</span>
+                    <span className="text-sm font-black text-forest-950 block">Upload Food Image</span>
+                    <span className="text-xs text-charcoal-500 mt-0.5 block">From Photo Library</span>
                   </div>
                 </button>
               </div>
@@ -226,10 +238,10 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
               {/* Sample Food Quick Test Grid */}
               <div className="space-y-2.5 pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                  <span className="text-xs font-mono font-bold text-charcoal-600 uppercase tracking-wider">
                     Or Test Fast Demo Meals:
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">1-Click Test</span>
+                  <span className="text-[10px] text-charcoal-400 font-mono">1-Click Test</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
@@ -238,18 +250,18 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => handleProcessImage(sample.preview)}
-                      className="p-3 rounded-2xl bg-[#14141C] hover:bg-[#1C1C28] border border-white/5 text-left flex items-center gap-3 transition group"
+                      className="p-3 rounded-2xl bg-white hover:bg-mint-50/40 border border-mint-200 text-left flex items-center gap-3 transition group shadow-soft"
                     >
                       <img
                         src={sample.preview}
                         alt={sample.name}
-                        className="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:scale-105 transition-transform shrink-0"
+                        className="w-12 h-12 rounded-xl object-cover border border-mint-200 group-hover:scale-105 transition-transform shrink-0"
                       />
                       <div className="overflow-hidden">
-                        <span className="text-xs font-bold text-white block truncate group-hover:text-white">
+                        <span className="text-xs font-bold text-forest-950 block truncate group-hover:text-forest-800">
                           {sample.name}
                         </span>
-                        <span className="text-[10px] text-zinc-400 block truncate font-sans">
+                        <span className="text-[10px] text-charcoal-500 block truncate font-sans">
                           {sample.description}
                         </span>
                       </div>
@@ -262,24 +274,24 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
           {/* In-Flight Scanning State */}
           {isAnalyzing && (
-            <div className="p-8 rounded-[2rem] bg-[#14141C] border border-white/10 flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="relative w-20 h-20 rounded-full bg-[#FF3B30]/10 border border-[#FF3B30]/30 flex items-center justify-center">
-                <Sparkles className="w-10 h-10 text-[#FF3B30] animate-spin" />
-                <div className="absolute inset-0 rounded-full border-2 border-[#FF3B30] animate-ping opacity-25" />
+            <div className="p-8 rounded-[2rem] bg-cream-50/70 border border-mint-200 flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="relative w-20 h-20 rounded-full bg-mint-100 border border-mint-300 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-forest-800 animate-spin" />
+                <div className="absolute inset-0 rounded-full border-2 border-mint-500 animate-ping opacity-25" />
               </div>
 
               <div className="space-y-1">
-                <h4 className="text-base font-black text-white">
+                <h4 className="text-base font-black text-forest-950">
                   Gemini Flash Vision Processing
                 </h4>
-                <p className="text-xs text-zinc-400 font-mono">
+                <p className="text-xs text-charcoal-600 font-mono">
                   {progressState.status || 'Extracting food volume and macronutrients...'}
                 </p>
               </div>
 
-              <div className="w-full max-w-xs bg-black/50 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full max-w-xs bg-cream-200 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-[#FF3B30] h-1.5 rounded-full transition-all duration-300"
+                  className="bg-forest-900 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progressState.percent}%` }}
                 />
               </div>
@@ -290,50 +302,50 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
           {analysisResult && !isAnalyzing && (
             <div className="space-y-4 animate-in fade-in duration-300">
               {/* Dish Overview & Photo Header */}
-              <div className="p-4 rounded-[2rem] bg-[#181822] border border-white/10 flex items-center gap-4">
+              <div className="p-4 rounded-[2rem] bg-cream-50/70 border border-mint-200 flex items-center gap-4">
                 {analysisResult.imageThumbnail && (
                   <img
                     src={analysisResult.imageThumbnail}
                     alt={analysisResult.dishName}
-                    className="w-20 h-20 rounded-2xl object-cover border border-white/10 shrink-0"
+                    className="w-20 h-20 rounded-2xl object-cover border border-mint-200 shrink-0"
                   />
                 )}
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+                    <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200 text-[10px] font-mono font-bold">
                       {analysisResult.confidence.toUpperCase()} CONFIDENCE
                     </span>
-                    <span className="text-[10px] text-zinc-400 font-mono">
+                    <span className="text-[10px] text-charcoal-500 font-mono">
                       {(analysisResult.durationMs / 1000).toFixed(1)}s • {analysisResult.modelUsed}
                     </span>
                   </div>
-                  <h4 className="text-base font-black text-white truncate mt-1">
+                  <h4 className="text-base font-black text-forest-950 truncate mt-1">
                     {analysisResult.dishName}
                   </h4>
-                  <p className="text-xs text-zinc-400 font-mono">
+                  <p className="text-xs text-charcoal-600 font-mono">
                     Baseline Portion: {analysisResult.servingSize}
                   </p>
                 </div>
               </div>
 
               {/* Huge Calorie & Macro Banner */}
-              <div className="p-5 rounded-[2rem] bg-[#14141C] border border-white/10 shadow-card space-y-4">
+              <div className="p-5 rounded-[2rem] bg-white border border-mint-200/80 shadow-card space-y-4">
                 <div className="flex items-baseline justify-between">
                   <div>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#FF3B30]">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-forest-700">
                       Calculated Energy
                     </span>
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-4xl font-black text-white font-mono leading-none">
+                      <span className="text-4xl font-black text-forest-950 font-mono leading-none">
                         {currentCalories}
                       </span>
-                      <span className="text-sm font-bold text-zinc-400 font-mono">kcal</span>
+                      <span className="text-sm font-bold text-charcoal-500 font-mono">kcal</span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] font-mono text-zinc-400 block uppercase">Target Meal</span>
-                    <span className="text-xs font-black text-white font-mono uppercase bg-white/10 px-2.5 py-1 rounded-full">
+                    <span className="text-[10px] font-mono text-charcoal-500 block uppercase">Target Meal</span>
+                    <span className="text-xs font-black text-forest-950 font-mono uppercase bg-mint-100 px-2.5 py-1 rounded-full border border-mint-200">
                       {selectedMeal}
                     </span>
                   </div>
@@ -341,43 +353,43 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
                 {/* Macro Badges */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 font-mono">
-                  <div className="p-3 rounded-2xl bg-[#1C1418] border border-rose-500/20 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-rose-400">
+                  <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-rose-700">
                       <Beef className="w-3 h-3" />
                       <span>Protein</span>
                     </div>
-                    <span className="text-base font-black text-white block mt-0.5">
+                    <span className="text-base font-black text-forest-950 block mt-0.5">
                       {currentProtein}g
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#1C1A14] border border-amber-500/20 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-amber-400">
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-amber-700">
                       <Wheat className="w-3 h-3" />
                       <span>Carbs</span>
                     </div>
-                    <span className="text-base font-black text-white block mt-0.5">
+                    <span className="text-base font-black text-forest-950 block mt-0.5">
                       {currentCarbs}g
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#141A1C] border border-cyan-500/20 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-cyan-400">
+                  <div className="p-3 rounded-2xl bg-teal-50 border border-teal-200 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-teal-700">
                       <Cookie className="w-3 h-3" />
                       <span>Fat</span>
                     </div>
-                    <span className="text-base font-black text-white block mt-0.5">
+                    <span className="text-base font-black text-forest-950 block mt-0.5">
                       {currentFat}g
                     </span>
                   </div>
 
                   {currentFiber !== undefined && (
-                    <div className="p-3 rounded-2xl bg-[#141C16] border border-emerald-500/20 text-center col-span-3 sm:col-span-1">
-                      <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-emerald-400">
+                    <div className="p-3 rounded-2xl bg-mint-50 border border-mint-200 text-center col-span-3 sm:col-span-1">
+                      <div className="flex items-center justify-center gap-1 text-[10px] uppercase font-bold text-forest-700">
                         <Sparkles className="w-3 h-3" />
                         <span>Fiber</span>
                       </div>
-                      <span className="text-base font-black text-white block mt-0.5">
+                      <span className="text-base font-black text-forest-950 block mt-0.5">
                         {currentFiber}g
                       </span>
                     </div>
@@ -386,12 +398,12 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
               </div>
 
               {/* Dynamic Portion Multiplier Scaler */}
-              <div className="p-4 rounded-2xl bg-[#181822] border border-white/10 space-y-2">
+              <div className="p-4 rounded-2xl bg-cream-50/70 border border-mint-200 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono font-bold text-zinc-300">
+                  <span className="font-mono font-bold text-charcoal-700">
                     Portion Size Scaler ({portionMultiplier}x)
                   </span>
-                  <span className="text-zinc-400 font-mono text-[11px]">
+                  <span className="text-charcoal-500 font-mono text-[11px]">
                     Adjust to match your plate size
                   </span>
                 </div>
@@ -404,8 +416,8 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
                       onClick={() => setPortionMultiplier(mult)}
                       className={`py-2 rounded-xl font-bold transition ${
                         portionMultiplier === mult
-                          ? 'bg-white text-black font-extrabold shadow-md'
-                          : 'bg-black/40 text-zinc-400 hover:text-white border border-white/5'
+                          ? 'bg-forest-900 text-white font-extrabold shadow-soft'
+                          : 'bg-white text-charcoal-700 hover:text-forest-900 border border-mint-200'
                       }`}
                     >
                       {mult}x
@@ -417,22 +429,22 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
               {/* Detected Dish Components Breakdown */}
               {analysisResult.components && analysisResult.components.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-xs font-mono font-bold text-charcoal-600 uppercase tracking-wider block">
                     Detected Component Breakdown:
                   </span>
                   <div className="space-y-1.5">
                     {analysisResult.components.map((comp, i) => (
                       <div
                         key={i}
-                        className="p-3 rounded-xl bg-[#14141C] border border-white/5 flex items-center justify-between text-xs"
+                        className="p-3 rounded-xl bg-white border border-mint-100 flex items-center justify-between text-xs shadow-soft"
                       >
                         <div>
-                          <span className="font-bold text-white block">{comp.name}</span>
-                          <span className="text-[10px] text-zinc-400 font-mono">{comp.portion}</span>
+                          <span className="font-bold text-forest-950 block">{comp.name}</span>
+                          <span className="text-[10px] text-charcoal-500 font-mono">{comp.portion}</span>
                         </div>
                         <div className="text-right font-mono">
-                          <span className="font-bold text-white block">{Math.round(comp.calories * portionMultiplier)} kcal</span>
-                          <span className="text-[10px] text-zinc-400">
+                          <span className="font-bold text-forest-950 block">{Math.round(comp.calories * portionMultiplier)} kcal</span>
+                          <span className="text-[10px] text-charcoal-500">
                             {Math.round(comp.proteinG * portionMultiplier)}P • {Math.round(comp.carbsG * portionMultiplier)}C • {Math.round(comp.fatG * portionMultiplier)}F
                           </span>
                         </div>
@@ -444,8 +456,8 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
               {/* Clinical Health Notes */}
               {analysisResult.healthNotes && (
-                <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs text-zinc-400 font-sans leading-relaxed">
-                  <strong className="text-white font-mono uppercase text-[10px] block mb-1">
+                <div className="p-3.5 rounded-2xl bg-cream-50 border border-mint-200 text-xs text-charcoal-700 font-sans leading-relaxed">
+                  <strong className="text-forest-950 font-mono uppercase text-[10px] block mb-1">
                     💡 Nutritional Synthesis:
                   </strong>
                   {analysisResult.healthNotes}
@@ -457,7 +469,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setAnalysisResult(null)}
-                  className="py-3 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center justify-center gap-1.5"
+                  className="py-3 px-4 rounded-full bg-cream-50 hover:bg-mint-100 text-charcoal-800 font-bold text-xs transition flex items-center justify-center gap-1.5 border border-mint-200"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Retake</span>
@@ -466,9 +478,9 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
                 <button
                   type="button"
                   onClick={handleConfirmLog}
-                  className="flex-1 py-3.5 px-5 rounded-full bg-white hover:bg-zinc-200 text-black font-extrabold text-xs shadow-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="flex-1 py-3.5 px-5 rounded-full bg-forest-900 hover:bg-forest-800 text-white font-extrabold text-xs shadow-soft transition active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                  <Plus className="w-4 h-4 text-[#FF3B30]" />
+                  <Plus className="w-4 h-4 text-mint-300" />
                   <span>Log to {selectedMeal.toUpperCase()} (+{currentCalories} kcal)</span>
                 </button>
               </div>

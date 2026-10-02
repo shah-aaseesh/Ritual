@@ -225,7 +225,7 @@ export const LabelLensView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 pb-24 text-white animate-in fade-in duration-200">
+    <div className="space-y-5 pb-24 text-charcoal-900 animate-in fade-in duration-200">
       {/* Hidden File Inputs */}
       <input
         type="file"
@@ -249,17 +249,17 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'audit_sheet' && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Active Product</span>
-              <span className="text-xs font-black text-white truncate max-w-[180px] block">{productName}</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Active Product</span>
+              <span className="text-xs font-black text-forest-950 truncate max-w-[180px] block">{productName}</span>
             </div>
           </div>
 
@@ -277,106 +277,106 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'matrix' && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Scientific Matrix</span>
-              <span className="text-xs font-black text-white truncate max-w-[180px] block">{productName}</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Scientific Matrix</span>
+              <span className="text-xs font-black text-forest-950 truncate max-w-[180px] block">{productName}</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-4">
+          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF3B30] font-mono">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-forest-700 font-mono">
                   Objective 4-Pillar Metric
                 </span>
-                <h3 className="text-xl font-black text-white">Scientific Evaluation Dimensions</h3>
+                <h3 className="text-xl font-black text-forest-950">Scientific Evaluation Dimensions</h3>
               </div>
-              <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[11px] font-mono font-bold">
+              <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 border border-mint-200 text-[11px] font-mono font-bold">
                 {analysisResult.summary.goalRelevanceScore}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* 1. Goal Relevance */}
-              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     1. Goal Relevance
                   </span>
                   <span className="text-xs">🎯</span>
                 </div>
-                <div className="text-lg font-black text-white">
+                <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.goalRelevanceScore}
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-charcoal-600 leading-relaxed">
                   {analysisResult.summary.goalRelevanceDescription}
                 </p>
               </div>
 
               {/* 2. Evidence Quality */}
-              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     2. Evidence Quality
                   </span>
                   <span className="text-xs">🔬</span>
                 </div>
-                <div className="text-lg font-black text-white">
+                <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.evidenceQualityScore}
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-charcoal-600 leading-relaxed">
                   {analysisResult.summary.evidenceQualityDescription}
                 </p>
               </div>
 
               {/* 3. Dose Transparency */}
-              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     3. Dose Transparency
                   </span>
                   <span className="text-xs">📊</span>
                 </div>
-                <div className="text-lg font-black text-white">
+                <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.doseTransparencyScore}
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-charcoal-600 leading-relaxed">
                   {analysisResult.summary.doseTransparencyDescription}
                 </p>
               </div>
 
               {/* 4. Claim Credibility */}
-              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+              <div className="p-4 rounded-[1.5rem] bg-cream-50/70 border border-mint-100 shadow-soft space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
                     4. Claim Credibility
                   </span>
                   <span className="text-xs">🛡️</span>
                 </div>
-                <div className="text-lg font-black text-white">
+                <div className="text-lg font-black text-forest-950">
                   {analysisResult.summary.claimCredibilityScore}
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-charcoal-600 leading-relaxed">
                   {analysisResult.summary.claimCredibilityDescription}
                 </p>
               </div>
             </div>
 
             {/* Synthesis Paragraph Card */}
-            <div className="p-5 rounded-[1.5rem] bg-black/40 border border-white/10 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-              <div className="flex items-center gap-1.5 text-white font-bold mb-2 uppercase tracking-wider text-[11px] font-mono">
-                <Sparkles className="w-4 h-4 text-[#FF3B30]" />
+            <div className="p-5 rounded-[1.5rem] bg-mint-50/80 border border-mint-200 text-xs sm:text-sm text-charcoal-800 leading-relaxed">
+              <div className="flex items-center gap-1.5 text-forest-950 font-bold mb-2 uppercase tracking-wider text-[11px] font-mono">
+                <Sparkles className="w-4 h-4 text-forest-800" />
                 <span>Clinical Synthesis</span>
               </div>
-              <p className="font-sans text-zinc-300 leading-relaxed">
+              <p className="font-sans text-charcoal-800 leading-relaxed">
                 "{analysisResult.summary.synthesisText}"
               </p>
             </div>
@@ -389,62 +389,62 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'claims' && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Claims Audited</span>
-              <span className="text-xs font-black text-white">{analysisResult.detectedClaims.length} Claims</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Claims Audited</span>
+              <span className="text-xs font-black text-forest-950">{analysisResult.detectedClaims.length} Claims</span>
             </div>
           </div>
 
           <div className="space-y-3.5">
             {analysisResult.detectedClaims.length === 0 ? (
-              <div className="p-8 rounded-[2rem] bg-[#121217] border border-white/10 text-center space-y-2">
-                <ShieldCheck className="w-8 h-8 text-zinc-500 mx-auto" />
-                <p className="text-sm font-bold text-white">No front-pack marketing claims detected</p>
-                <p className="text-xs text-zinc-400">Add front label text like "Clinically Proven" or "100% Natural" to test credibility.</p>
+              <div className="p-8 rounded-[2rem] bg-white border border-mint-200/80 text-center space-y-2 shadow-card">
+                <ShieldCheck className="w-8 h-8 text-charcoal-400 mx-auto" />
+                <p className="text-sm font-bold text-forest-950">No front-pack marketing claims detected</p>
+                <p className="text-xs text-charcoal-500">Add front label text like "Clinically Proven" or "100% Natural" to test credibility.</p>
               </div>
             ) : (
               analysisResult.detectedClaims.map((claim) => (
                 <div
                   key={claim.id}
-                  className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-3.5"
+                  className="p-5 rounded-[2rem] bg-white border border-mint-200/80 shadow-card space-y-3.5"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                      <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider font-mono">
                         Audited Claim Statement
                       </span>
-                      <h4 className="text-base font-black text-white mt-0.5">
+                      <h4 className="text-base font-black text-forest-950 mt-0.5">
                         "{claim.displayName}"
                       </h4>
                     </div>
                     <VerdictBadge verdict={claim.verdict} size="sm" />
                   </div>
 
-                  <div className="space-y-2 text-xs text-zinc-300">
-                    <div className="p-3.5 rounded-2xl bg-[#181822] border border-white/5 space-y-1">
-                      <strong className="text-white font-bold block text-xs">
+                  <div className="space-y-2 text-xs text-charcoal-800">
+                    <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1">
+                      <strong className="text-forest-950 font-bold block text-xs">
                         What this phrase usually means:
                       </strong>
-                      <p className="text-zinc-400 leading-relaxed">{claim.whatItMeans}</p>
+                      <p className="text-charcoal-600 leading-relaxed">{claim.whatItMeans}</p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-[#181822] border border-white/5 space-y-1">
-                      <strong className="text-white font-bold block text-xs">
+                    <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-1">
+                      <strong className="text-forest-950 font-bold block text-xs">
                         What clinical evidence or data is missing:
                       </strong>
-                      <p className="text-zinc-400 leading-relaxed">{claim.missingInformation}</p>
+                      <p className="text-charcoal-600 leading-relaxed">{claim.missingInformation}</p>
                     </div>
                   </div>
 
-                  <p className="text-xs text-zinc-500 italic pt-2 border-t border-white/10">
+                  <p className="text-xs text-charcoal-500 italic pt-2 border-t border-mint-100">
                     {claim.supportRationale}
                   </p>
                 </div>
@@ -459,17 +459,17 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'alternatives' && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Formulation Matches</span>
-              <span className="text-xs font-black text-white">{matchingFormulations.length} Upgrades</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Formulation Matches</span>
+              <span className="text-xs font-black text-forest-950">{matchingFormulations.length} Upgrades</span>
             </div>
           </div>
 
@@ -486,17 +486,17 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'samples' && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Sample Library</span>
-              <span className="text-xs font-black text-white">{SAMPLE_PRODUCTS.length} Benchmarks</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Sample Library</span>
+              <span className="text-xs font-black text-forest-950">{SAMPLE_PRODUCTS.length} Benchmarks</span>
             </div>
           </div>
 
@@ -508,24 +508,24 @@ export const LabelLensView: React.FC = () => {
                   key={sample.id}
                   className={`p-5 rounded-[2rem] border transition-all duration-200 flex flex-col justify-between ${
                     isSelected
-                      ? 'bg-white text-black border-white shadow-2xl'
-                      : 'bg-[#121217] text-zinc-300 border-white/10 hover:border-white/20'
+                      ? 'bg-mint-50/80 text-charcoal-900 border-mint-400 shadow-card'
+                      : 'bg-white text-charcoal-800 border-mint-200/80 hover:border-mint-400 shadow-soft'
                   }`}
                 >
                   <div className="space-y-2">
-                    <span className={`text-[10px] font-extrabold uppercase tracking-widest font-mono ${isSelected ? 'text-[#FF3B30]' : 'text-zinc-400'}`}>
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest font-mono text-forest-700">
                       {sample.category}
                     </span>
-                    <h4 className={`text-base font-black ${isSelected ? 'text-black' : 'text-white'}`}>
+                    <h4 className="text-base font-black text-forest-950">
                       {sample.name}
                     </h4>
-                    <p className={`text-xs ${isSelected ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                      Brand: <span className="font-bold">{sample.brandSuggestion}</span>
+                    <p className="text-xs text-charcoal-600">
+                      Brand: <span className="font-bold text-forest-900">{sample.brandSuggestion}</span>
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-current/10 mt-4 flex items-center justify-between">
-                    <span className={`text-[11px] font-bold ${isSelected ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                  <div className="pt-4 border-t border-mint-100 mt-4 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-charcoal-500">
                       {sample.suggestedClaims.length} Claims Included
                     </span>
                     <button
@@ -534,11 +534,7 @@ export const LabelLensView: React.FC = () => {
                         handleSelectSample(sample);
                         setActiveSubView('audit_sheet');
                       }}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold transition active:scale-95 ${
-                        isSelected
-                          ? 'bg-black text-white hover:bg-zinc-800'
-                          : 'bg-white text-black hover:bg-zinc-200'
-                      }`}
+                      className="px-3.5 py-1.5 rounded-full text-xs font-extrabold transition active:scale-95 bg-forest-900 text-white hover:bg-forest-800 shadow-soft"
                     >
                       Audit This Sample ›
                     </button>
@@ -555,29 +551,29 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {activeSubView === 'ai_inspector' && latestDebugTrace && (
         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-mint-200/80 shadow-soft sticky top-0 z-20 backdrop-blur-md">
             <button
               onClick={() => setActiveSubView('hub')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <ArrowLeft className="w-4 h-4 text-forest-800" />
               <span>‹ Label Lens Hub</span>
             </button>
             <div className="text-right">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Model Trace</span>
-              <span className="text-xs font-black text-white">{latestDebugTrace.model || 'Vision AI'}</span>
+              <span className="text-[10px] font-mono font-bold text-charcoal-500 uppercase block">Model Trace</span>
+              <span className="text-xs font-black text-forest-950">{latestDebugTrace.model || 'Vision AI'}</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="p-6 rounded-[2rem] bg-white border border-mint-200/80 shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-white/10 text-[#FF3B30]">
+                <div className="p-2.5 rounded-xl bg-mint-100 text-forest-900">
                   <Terminal className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">Live AI Extraction Trace</h3>
-                  <p className="text-xs text-zinc-400">Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}</p>
+                  <h3 className="text-sm font-black text-forest-950">Live AI Extraction Trace</h3>
+                  <p className="text-xs text-charcoal-500">Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}</p>
                 </div>
               </div>
 
@@ -587,9 +583,9 @@ export const LabelLensView: React.FC = () => {
                   setHasCopiedRaw(true);
                   setTimeout(() => setHasCopiedRaw(false), 2000);
                 }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-cream-50 hover:bg-mint-100 border border-mint-200 text-xs font-bold text-forest-900 transition"
               >
-                {hasCopiedRaw ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {hasCopiedRaw ? <Check className="w-3.5 h-3.5 text-forest-800" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{hasCopiedRaw ? 'Copied' : 'Copy JSON'}</span>
               </button>
             </div>
@@ -598,7 +594,7 @@ export const LabelLensView: React.FC = () => {
               <button
                 onClick={() => setDebugTab('response')}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
-                  debugTab === 'response' ? 'bg-white text-black font-extrabold' : 'bg-[#181822] text-zinc-400'
+                  debugTab === 'response' ? 'bg-forest-900 text-white font-extrabold shadow-soft' : 'bg-cream-50 text-charcoal-600 border border-mint-200'
                 }`}
               >
                 Raw LLM Response
@@ -606,14 +602,14 @@ export const LabelLensView: React.FC = () => {
               <button
                 onClick={() => setDebugTab('prompt')}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
-                  debugTab === 'prompt' ? 'bg-white text-black font-extrabold' : 'bg-[#181822] text-zinc-400'
+                  debugTab === 'prompt' ? 'bg-forest-900 text-white font-extrabold shadow-soft' : 'bg-cream-50 text-charcoal-600 border border-mint-200'
                 }`}
               >
                 Prompt Instructions Sent
               </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-black/60 border border-white/5 font-mono text-xs text-emerald-400 whitespace-pre-wrap max-h-96 overflow-y-auto">
+            <div className="p-4 rounded-2xl bg-forest-950 border border-forest-900 font-mono text-xs text-mint-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
               {debugTab === 'response' ? (latestDebugTrace.rawResponse || 'No response recorded') : (latestDebugTrace.prompt || 'No prompt recorded')}
             </div>
           </div>
@@ -629,97 +625,95 @@ export const LabelLensView: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-wider font-mono border border-white/10">
+                <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 text-[10px] font-extrabold uppercase tracking-wider font-mono border border-mint-200">
                   Scientific Audit Suite
                 </span>
-                <span className="text-xs text-zinc-400 font-mono font-medium">Hero Hub</span>
+                <span className="text-xs text-charcoal-500 font-mono font-medium">Hero Hub</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">
+              <h2 className="text-3xl sm:text-4xl font-black text-forest-950 tracking-tight mt-1">
                 Label Lens
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 max-w-xl">
+              <p className="text-xs sm:text-sm text-charcoal-600 max-w-xl">
                 Audit wellness labels against published literature, PubMed trials, and clinical dosages.
               </p>
             </div>
 
             <button
               onClick={() => setSaveModalOpen(true)}
-              className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs shadow-lg transition active:scale-95"
+              className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 font-extrabold text-xs shadow-soft transition active:scale-95"
             >
-              <BookmarkPlus className="w-4 h-4 text-[#FF3B30]" />
+              <BookmarkPlus className="w-4 h-4 text-mint-300" />
               <span>Save to Smart Shelf</span>
             </button>
           </div>
 
           {/* ACTIVE AUDITED PRODUCT CARD */}
-          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-44 h-44 bg-[#FF3B30]/10 rounded-full blur-3xl pointer-events-none" />
-
+          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card relative overflow-hidden group">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">
+                  <span className="text-[10px] font-bold text-forest-700 uppercase tracking-widest font-mono">
                     Currently Loaded Product
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200 text-[10px] font-mono font-bold">
                     Audited
                   </span>
                 </div>
-                <h3 className="text-2xl font-black text-white tracking-tight">
+                <h3 className="text-2xl font-black text-forest-950 tracking-tight">
                   {productName}
                 </h3>
-                <p className="text-xs text-zinc-400 font-medium">
-                  Brand: <span className="text-white font-bold">{saveBrand}</span> • Category: <span className="text-white font-bold">{analysisResult.category}</span>
+                <p className="text-xs text-charcoal-600 font-medium">
+                  Brand: <span className="text-forest-950 font-bold">{saveBrand}</span> • Category: <span className="text-forest-950 font-bold">{analysisResult.category}</span>
                 </p>
               </div>
 
               {/* 4 Quick Badges */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
-                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Relevance</span>
-                  <span className="text-xs font-black text-white">{analysisResult.summary.goalRelevanceScore}</span>
+                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
+                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Relevance</span>
+                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.goalRelevanceScore}</span>
                 </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
-                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Evidence</span>
-                  <span className="text-xs font-black text-white">{analysisResult.summary.evidenceQualityScore}</span>
+                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
+                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Evidence</span>
+                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.evidenceQualityScore}</span>
                 </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
-                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Dose Clarity</span>
-                  <span className="text-xs font-black text-white">{analysisResult.summary.doseTransparencyScore}</span>
+                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
+                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Dose Clarity</span>
+                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.doseTransparencyScore}</span>
                 </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
-                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Claims</span>
-                  <span className="text-xs font-black text-white">{analysisResult.summary.claimCredibilityScore}</span>
+                <div className="px-3.5 py-2 rounded-2xl bg-cream-50/70 border border-mint-100 text-center">
+                  <span className="text-[9px] font-mono uppercase text-charcoal-500 block">Claims</span>
+                  <span className="text-xs font-black text-forest-950">{analysisResult.summary.claimCredibilityScore}</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Action Button into Audit Sheet */}
-            <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <FlaskConical className="w-4 h-4 text-[#FF3B30]" />
-                <span><strong className="text-white">{analysisResult.detectedIngredients.length}</strong> active compounds identified</span>
+            <div className="mt-5 pt-4 border-t border-mint-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-charcoal-600">
+                <FlaskConical className="w-4 h-4 text-forest-800" />
+                <span><strong className="text-forest-950">{analysisResult.detectedIngredients.length}</strong> active compounds identified</span>
               </div>
               <button
                 onClick={() => setActiveSubView('audit_sheet')}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition active:scale-95 shadow-md"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-forest-900 text-white font-extrabold text-xs hover:bg-forest-800 transition active:scale-95 shadow-soft"
               >
                 <span>View Rx Audit Sheet</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#FF3B30]" />
+                <ChevronRight className="w-3.5 h-3.5 text-mint-300" />
               </button>
             </div>
           </div>
 
           {/* INSTANT SCAN ACTION BAR */}
-          <div className="p-5 rounded-[2rem] bg-[#0C0C10] border border-white/10 shadow-2xl space-y-3.5">
+          <div className="p-6 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#FF3B30]" />
+              <span className="text-xs font-bold text-forest-950 uppercase tracking-wider font-mono flex items-center gap-2">
+                <Camera className="w-4 h-4 text-forest-800" />
                 <span>Scan New Physical Product</span>
               </span>
               <button
                 onClick={() => setShowManualEditor(!showManualEditor)}
-                className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white transition"
+                className="flex items-center gap-1 text-xs font-bold text-charcoal-600 hover:text-forest-900 transition"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>{showManualEditor ? 'Hide Editor' : 'Edit Ingredients'}</span>
@@ -731,9 +725,9 @@ export const LabelLensView: React.FC = () => {
               type="button"
               onClick={() => setIsBarcodeModalOpen(true)}
               disabled={isScanning}
-              className="w-full p-4 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center gap-2.5 text-xs font-extrabold shadow-lg transition active:scale-[0.99]"
+              className="w-full p-4 rounded-full bg-forest-900 text-white hover:bg-forest-800 flex items-center justify-center gap-2.5 text-xs font-extrabold shadow-soft transition active:scale-[0.99]"
             >
-              <ScanBarcode className="w-4 h-4 text-[#FF3B30] animate-pulse" />
+              <ScanBarcode className="w-4 h-4 text-mint-300" />
               <span>Scan Barcode (Instant Optical Barcode Match)</span>
             </button>
 
@@ -742,9 +736,9 @@ export const LabelLensView: React.FC = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isScanning}
-                className="p-3.5 rounded-full bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-white flex items-center justify-center gap-2 text-xs font-bold transition disabled:opacity-50"
+                className="p-3.5 rounded-full bg-cream-50 hover:bg-mint-50 border border-mint-200 text-forest-950 flex items-center justify-center gap-2 text-xs font-bold transition disabled:opacity-50"
               >
-                <Upload className="w-4 h-4 text-[#FF3B30]" />
+                <Upload className="w-4 h-4 text-forest-800" />
                 <span>Scan Bottle Photo</span>
               </button>
 
@@ -753,24 +747,24 @@ export const LabelLensView: React.FC = () => {
                 onClick={() => setIsQuickPasteOpen(!isQuickPasteOpen)}
                 className={`p-3.5 rounded-full border text-xs font-bold flex items-center justify-center gap-2 transition ${
                   isQuickPasteOpen
-                    ? 'bg-white text-black border-white shadow-md'
-                    : 'bg-[#14141C] hover:bg-[#1E1E28] text-white border-white/10'
+                    ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
+                    : 'bg-cream-50 hover:bg-mint-50 text-forest-950 border-mint-200'
                 }`}
               >
-                <ClipboardPaste className="w-4 h-4 text-[#FF3B30]" />
+                <ClipboardPaste className="w-4 h-4" />
                 <span>Paste Text from Web</span>
               </button>
             </div>
 
             {/* Quick Paste Box */}
             {isQuickPasteOpen && (
-              <div className="p-4 rounded-2xl bg-[#14141C] border border-white/10 space-y-3 animate-in fade-in duration-200">
+              <div className="p-4 rounded-2xl bg-cream-50/70 border border-mint-200 space-y-3 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#FF3B30]" />
+                  <span className="text-xs font-bold text-forest-950 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-forest-800" />
                     Paste Product Ingredients / E-Commerce text
                   </span>
-                  <span className="text-[10px] text-zinc-400">Auto AI Denoise</span>
+                  <span className="text-[10px] text-charcoal-500">Auto AI Denoise</span>
                 </div>
 
                 <textarea
@@ -778,23 +772,23 @@ export const LabelLensView: React.FC = () => {
                   onChange={(e) => setQuickPasteInput(e.target.value)}
                   placeholder="Paste ingredients (e.g. 'Melatonin 5mg, L-Theanine 100mg, Pectin, Glucose Syrup, Citric Acid...')"
                   rows={3}
-                  className="w-full p-3 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-[#FF3B30] placeholder:text-zinc-500"
+                  className="w-full p-3 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-900 font-mono focus:outline-none focus:ring-2 focus:ring-mint-500 placeholder:text-charcoal-400"
                 />
 
                 <button
                   type="button"
                   onClick={() => handleQuickPasteClean()}
                   disabled={isCleaningText || !quickPasteInput.trim()}
-                  className="w-full py-2.5 px-3 rounded-full bg-white text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50 hover:bg-zinc-200"
+                  className="w-full py-2.5 px-3 rounded-full bg-forest-900 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-soft transition disabled:opacity-50 hover:bg-forest-800"
                 >
                   {isCleaningText ? (
                     <>
-                      <Sparkles className="w-3.5 h-3.5 animate-spin text-[#FF3B30]" />
+                      <Sparkles className="w-3.5 h-3.5 animate-spin text-mint-300" />
                       <span>Isolating Actives with AI...</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-3.5 h-3.5 text-[#FF3B30]" />
+                      <CheckCircle className="w-3.5 h-3.5 text-mint-300" />
                       <span>Clean & Debunk On Canvas</span>
                     </>
                   )}
@@ -804,17 +798,17 @@ export const LabelLensView: React.FC = () => {
 
             {/* OCR Progress */}
             {isScanning && (
-              <div className="p-4 rounded-2xl bg-[#14141C] border border-white/10 space-y-2 animate-in fade-in duration-200">
+              <div className="p-4 rounded-2xl bg-cream-50/70 border border-mint-200 space-y-2 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-300 font-medium flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin text-[#FF3B30]" />
+                  <span className="text-charcoal-700 font-medium flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-forest-800" />
                     {scanProgress.status}
                   </span>
-                  <span className="font-bold text-white">{scanProgress.percent}%</span>
+                  <span className="font-bold text-forest-950">{scanProgress.percent}%</span>
                 </div>
-                <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-mint-100 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="bg-[#FF3B30] h-1.5 rounded-full transition-all duration-300"
+                    className="bg-forest-900 h-1.5 rounded-full transition-all duration-300"
                     style={{ width: `${scanProgress.percent}%` }}
                   />
                 </div>
@@ -823,9 +817,9 @@ export const LabelLensView: React.FC = () => {
 
             {/* Manual Editor */}
             {showManualEditor && (
-              <div className="pt-3 border-t border-white/10 space-y-3 animate-in fade-in duration-200">
+              <div className="pt-3 border-t border-mint-100 space-y-3 animate-in fade-in duration-200">
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-charcoal-600 uppercase tracking-wider mb-1">
                     Product Name
                   </label>
                   <input
@@ -835,12 +829,12 @@ export const LabelLensView: React.FC = () => {
                       setProductName(e.target.value);
                       handleReanalyze(ingredientText, frontClaimText, e.target.value);
                     }}
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                    className="w-full px-3 py-2 rounded-xl bg-cream-50 border border-mint-200 text-xs text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-charcoal-600 uppercase tracking-wider mb-1">
                     Raw Ingredient List
                   </label>
                   <textarea
@@ -851,7 +845,7 @@ export const LabelLensView: React.FC = () => {
                       handleReanalyze(e.target.value, frontClaimText, productName);
                     }}
                     rows={4}
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                    className="w-full px-3 py-2 rounded-xl bg-cream-50 border border-mint-200 text-xs text-charcoal-900 font-mono focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
               </div>
@@ -860,7 +854,7 @@ export const LabelLensView: React.FC = () => {
 
           {/* NESTED MOBILE APP DRILL-DOWN TILES */}
           <div className="space-y-3">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+            <span className="text-xs font-bold text-forest-700 uppercase tracking-wider block font-mono">
               Deep-Dive Scientific Modules
             </span>
 
@@ -869,22 +863,22 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveSubView('audit_sheet')}
-                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                     <FileText className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-white group-hover:text-white">
+                    <h4 className="text-base font-black text-forest-950">
                       Clinical Rx Audit Sheet
                     </h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-charcoal-600 mt-0.5">
                       {analysisResult.detectedIngredients.length} actives • PubMed trials & evidence tiers
                     </p>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -893,22 +887,22 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveSubView('matrix')}
-                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                     <Activity className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-white group-hover:text-white">
+                    <h4 className="text-base font-black text-forest-950">
                       4-Dimension Matrix
                     </h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-charcoal-600 mt-0.5">
                       Relevance, evidence, dose & claim scorecards
                     </p>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -917,22 +911,22 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveSubView('claims')}
-                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-white group-hover:text-white">
+                    <h4 className="text-base font-black text-forest-950">
                       Claim Credibility Audit
                     </h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-charcoal-600 mt-0.5">
                       {analysisResult.detectedClaims.length} marketing claims verified
                     </p>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -941,22 +935,22 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveSubView('alternatives')}
-                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                     <Zap className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-white group-hover:text-white">
+                    <h4 className="text-base font-black text-forest-950">
                       Alternative Formulations
                     </h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-charcoal-600 mt-0.5">
                       {matchingFormulations.length} clinically matched formulations
                     </p>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -965,22 +959,22 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveSubView('samples')}
-                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                     <Layers className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-white group-hover:text-white">
+                    <h4 className="text-base font-black text-forest-950">
                       Sample Benchmark Library
                     </h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-charcoal-600 mt-0.5">
                       Test Hair, Sleep & Recovery reference labs
                     </p>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -990,22 +984,22 @@ export const LabelLensView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveSubView('ai_inspector')}
-                  className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                  className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 text-left transition-all duration-200 flex items-center justify-between group shadow-card"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <div className="w-12 h-12 rounded-2xl bg-mint-100 border border-mint-200 flex items-center justify-center text-forest-900 group-hover:scale-105 transition-transform">
                       <Terminal className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="text-base font-black text-white group-hover:text-white">
+                      <h4 className="text-base font-black text-forest-950">
                         AI Model Inspector
                       </h4>
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className="text-xs text-charcoal-600 mt-0.5">
                         Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}
                       </p>
                     </div>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <div className="w-8 h-8 rounded-full bg-cream-50 border border-mint-100 flex items-center justify-center text-charcoal-400 group-hover:text-forest-900 transition">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
@@ -1019,16 +1013,16 @@ export const LabelLensView: React.FC = () => {
 
       {/* Save To Smart Shelf Modal */}
       {saveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#121218] rounded-[2rem] max-w-sm w-full p-6 shadow-2xl border border-white/10 space-y-4 text-white">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] max-w-sm w-full p-6 shadow-modal border border-mint-200 space-y-4 text-charcoal-900">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div className="flex items-center gap-2">
-                <BookmarkPlus className="w-5 h-5 text-[#FF3B30]" />
-                <h3 className="text-base font-black text-white">Save to Smart Shelf</h3>
+                <BookmarkPlus className="w-5 h-5 text-forest-800" />
+                <h3 className="text-base font-black text-forest-950">Save to Smart Shelf</h3>
               </div>
               <button
                 onClick={() => setSaveModalOpen(false)}
-                className="p-1 rounded-full text-zinc-400 hover:text-white"
+                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
               >
                 ✕
               </button>
@@ -1036,27 +1030,27 @@ export const LabelLensView: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-zinc-400 mb-1">Product Title</label>
+                <label className="block font-bold text-charcoal-600 mb-1">Product Title</label>
                 <input
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-zinc-400 mb-1">Brand Name</label>
+                <label className="block font-bold text-charcoal-600 mb-1">Brand Name</label>
                 <input
                   type="text"
                   value={saveBrand}
                   onChange={(e) => setSaveBrand(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-zinc-400 mb-1">Recommended Usage Time</label>
+                <label className="block font-bold text-charcoal-600 mb-1">Recommended Usage Time</label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {(['morning', 'evening', 'both'] as const).map((t) => (
                     <button
@@ -1065,8 +1059,8 @@ export const LabelLensView: React.FC = () => {
                       onClick={() => setSaveTimeOfDay(t)}
                       className={`py-2 rounded-xl border text-center font-bold capitalize transition ${
                         saveTimeOfDay === t
-                          ? 'bg-white text-black border-white'
-                          : 'bg-black/40 text-zinc-400 border-white/5 hover:bg-white/5'
+                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
+                          : 'bg-cream-50 text-charcoal-600 border-mint-200 hover:bg-mint-50'
                       }`}
                     >
                       {t}
@@ -1080,14 +1074,14 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSaveModalOpen(false)}
-                className="flex-1 py-3 rounded-full bg-white/10 text-zinc-300 font-bold text-xs hover:bg-white/20 transition"
+                className="flex-1 py-3 rounded-full bg-cream-50 text-charcoal-700 font-bold text-xs hover:bg-mint-100 border border-mint-200 transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveToShelf}
-                className="flex-1 py-3 rounded-full bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition"
+                className="flex-1 py-3 rounded-full bg-forest-900 text-white font-extrabold text-xs shadow-soft hover:bg-forest-800 transition"
               >
                 Save Product
               </button>

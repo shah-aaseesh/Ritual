@@ -54,7 +54,7 @@ export const GymTrackerView: React.FC = () => {
   const totalIntervals = activeTemplate?.intervals || 20;
 
   // Filter for Challenge Cards
-  const [challengeFilter, setChallengeFilter] = useState<'All' | 'Starter' | 'Sweat Mode' | 'Strength' | 'Body Map'>('All');
+  const [challengeFilter, setChallengeFilter] = useState<'All' | 'Starter' | 'Sweat Mode' | 'Strength'>('All');
 
   // Exercise picker modal
   const [showAddExerciseModal, setShowAddExerciseModal] = useState<boolean>(false);
@@ -245,7 +245,7 @@ export const GymTrackerView: React.FC = () => {
   };
 
   const filteredChallenges = PRESET_ROUTINE_TEMPLATES.filter(t => {
-    if (challengeFilter === 'All' || challengeFilter === 'Body Map') return true;
+    if (challengeFilter === 'All') return true;
     return t.category === challengeFilter;
   });
 
@@ -265,22 +265,22 @@ export const GymTrackerView: React.FC = () => {
     : 0.25;
 
   return (
-    <div className="space-y-6 pb-24 text-white">
+    <div className="space-y-6 pb-24 text-charcoal-900">
       {/* ========================================================================= */}
       {/* 🧭 NESTED VIEW HEADER & NAVIGATION BAR                                     */}
       {/* ========================================================================= */}
       {subView !== 'hub' && (
-        <div className="flex items-center justify-between bg-[#121217] p-3.5 sm:p-4 rounded-3xl border border-white/10 shadow-lg">
+        <div className="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-3xl border border-mint-200/80 shadow-soft">
           <button
             type="button"
             onClick={() => setSubView('hub')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-black text-white transition active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-black text-forest-900 transition active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Gym Hub</span>
           </button>
 
-          <span className="text-xs font-mono font-black uppercase text-zinc-300 tracking-wider">
+          <span className="text-xs font-mono font-black uppercase text-forest-950 tracking-wider">
             {subView === 'workout' && '⚡ Live Workout Session'}
             {subView === 'challenges' && '🏆 Challenges & Routines'}
             {subView === 'bodymap' && '🧬 Muscle Readiness'}
@@ -294,7 +294,7 @@ export const GymTrackerView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSubView('workout')}
-                className="px-3 py-1.5 rounded-full bg-[#FF3B30] text-white text-xs font-black flex items-center gap-1.5 animate-pulse shadow-md"
+                className="px-3 py-1.5 rounded-full bg-forest-900 text-white text-xs font-black flex items-center gap-1.5 animate-pulse shadow-md"
               >
                 <Activity className="w-3.5 h-3.5" />
                 <span>Live HUD</span>
@@ -313,45 +313,45 @@ export const GymTrackerView: React.FC = () => {
           {isWorkoutActive && (
             <div 
               onClick={() => setSubView('workout')}
-              className="p-5 rounded-[2rem] bg-gradient-to-r from-[#FF3B30]/20 via-[#181822] to-[#121217] border border-[#FF3B30]/50 shadow-xl flex items-center justify-between cursor-pointer group hover:border-[#FF3B30] transition"
+              className="p-5 rounded-[2rem] bg-gradient-to-r from-mint-50 via-white to-mint-50 border border-mint-400 shadow-card flex items-center justify-between cursor-pointer group hover:border-mint-600 transition"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF3B30] text-white flex items-center justify-center font-mono font-black shadow-lg shadow-[#FF3B30]/30 animate-pulse">
+                <div className="w-12 h-12 rounded-2xl bg-forest-900 text-white flex items-center justify-center font-mono font-black shadow-md animate-pulse">
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-black uppercase tracking-wider text-[#FF3B30] block">
+                  <span className="text-[10px] font-mono font-black uppercase tracking-wider text-forest-700 block">
                     Session In Progress • Interval {activeInterval}/{totalIntervals}
                   </span>
-                  <h3 className="text-base font-black text-white">
+                  <h3 className="text-base font-black text-forest-950">
                     {activeWorkoutSubtitle} • {activeWorkoutTitle}
                   </h3>
-                  <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                  <p className="text-xs text-charcoal-600 font-mono mt-0.5">
                     ⏱️ {formatTimer(elapsedSeconds)} • {currentKcal} kcal • {currentBpm} bpm
                   </p>
                 </div>
               </div>
-              <div className="px-4 py-2 rounded-full bg-white text-black font-black text-xs group-hover:bg-zinc-200 transition shadow-md">
+              <div className="px-4 py-2 rounded-full bg-forest-900 text-white font-black text-xs group-hover:bg-forest-800 transition shadow-soft">
                 Resume HUD ›
               </div>
             </div>
           )}
 
           {/* Quick Metrics Header Card */}
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-4">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                   ATHLETIC PERFORMANCE HUB
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
+                <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-0.5">
                   Performance & Recovery
                 </h1>
               </div>
               <button
                 type="button"
                 onClick={() => startRoutine(PRESET_ROUTINE_TEMPLATES[0].id)}
-                className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-lg flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-forest-900 text-white hover:bg-forest-800 font-black text-xs transition shadow-soft flex items-center gap-1.5"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Quick Start</span>
@@ -360,17 +360,17 @@ export const GymTrackerView: React.FC = () => {
 
             {/* Metric Strip */}
             <div className="grid grid-cols-3 gap-3 pt-1 font-mono text-center">
-              <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-zinc-400 uppercase block">Total Workouts</span>
-                <span className="text-lg sm:text-xl font-black text-white">{workoutHistory.length}</span>
+              <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-charcoal-500 uppercase block">Total Workouts</span>
+                <span className="text-lg sm:text-xl font-black text-forest-950">{workoutHistory.length}</span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-zinc-400 uppercase block">Recovery Index</span>
-                <span className="text-lg sm:text-xl font-black text-emerald-400">88% Prime</span>
+              <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-charcoal-500 uppercase block">Recovery Index</span>
+                <span className="text-lg sm:text-xl font-black text-mint-700">88% Prime</span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-[#14141C] border border-white/5 space-y-0.5">
-                <span className="text-[10px] text-zinc-400 uppercase block">Adherence</span>
-                <span className="text-lg sm:text-xl font-black text-[#FF3B30]">14 Days</span>
+              <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-0.5">
+                <span className="text-[10px] text-charcoal-500 uppercase block">Adherence</span>
+                <span className="text-lg sm:text-xl font-black text-forest-900">14 Days</span>
               </div>
             </div>
           </div>
@@ -383,142 +383,142 @@ export const GymTrackerView: React.FC = () => {
                 if (!isWorkoutActive) startRoutine(PRESET_ROUTINE_TEMPLATES[0].id);
                 else setSubView('workout');
               }}
-              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between"
+              className="group p-6 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-card flex items-center justify-between"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF3B30] to-rose-700 text-white flex items-center justify-center shadow-lg shadow-[#FF3B30]/20 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-forest-800 to-forest-600 text-white flex items-center justify-center shadow-md shadow-forest-900/15 group-hover:scale-105 transition-transform">
                   <Dumbbell className="w-7 h-7" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-wider">
+                  <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider">
                     {isWorkoutActive ? 'Live Session Active' : 'Live Workout HUD'}
                   </span>
-                  <h3 className="text-lg font-black text-white mt-0.5">
+                  <h3 className="text-lg font-black text-forest-950 mt-0.5">
                     {isWorkoutActive ? 'Interactive Set Logger' : 'Start Training Session'}
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     Hevy-grade logger, auto rest timer & heart rate HUD
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+              <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
             </div>
 
             {/* Tile 2: Pick a Challenge */}
             <div
               onClick={() => setSubView('challenges')}
-              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between"
+              className="group p-6 rounded-[2rem] bg-white hover:bg-amber-50/20 border border-mint-200/80 hover:border-amber-400/60 transition-all cursor-pointer shadow-card flex items-center justify-between"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-600/15 group-hover:scale-105 transition-transform">
                   <Flame className="w-7 h-7" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-black uppercase text-amber-400 tracking-wider">
+                  <span className="text-[10px] font-mono font-black uppercase text-amber-700 tracking-wider">
                     6 Athletic Challenges
                   </span>
-                  <h3 className="text-lg font-black text-white mt-0.5">
+                  <h3 className="text-lg font-black text-forest-950 mt-0.5">
                     Pick a Challenge
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     HIIT cycles, fat melt, muscle hypertrophy routines
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+              <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
             </div>
 
             {/* Tile 3: Anatomical Body Map & Heatmap */}
             <div
               onClick={() => setSubView('bodymap')}
-              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between"
+              className="group p-6 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-card flex items-center justify-between"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mint-600 to-teal-700 text-white flex items-center justify-center shadow-md shadow-mint-600/15 group-hover:scale-105 transition-transform">
                   <Activity className="w-7 h-7" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-black uppercase text-emerald-400 tracking-wider">
+                  <span className="text-[10px] font-mono font-black uppercase text-mint-700 tracking-wider">
                     Kinetic Bio-Readiness
                   </span>
-                  <h3 className="text-lg font-black text-white mt-0.5">
+                  <h3 className="text-lg font-black text-forest-950 mt-0.5">
                     Anatomical Body Map
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     3D silhouette muscle heatmaps & recovery diagnostics
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+              <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
             </div>
 
             {/* Tile 4: Longevity Milestones & Adherence */}
             <div
               onClick={() => setSubView('milestones')}
-              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between"
+              className="group p-6 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-card flex items-center justify-between"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-700 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-700 to-forest-800 text-white flex items-center justify-center shadow-md shadow-teal-700/15 group-hover:scale-105 transition-transform">
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-black uppercase text-indigo-400 tracking-wider">
+                  <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider">
                     Longevity Milestones
                   </span>
-                  <h3 className="text-lg font-black text-white mt-0.5">
+                  <h3 className="text-lg font-black text-forest-950 mt-0.5">
                     Adherence & Gamification
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     Daily objectives, habit streaks, and certified tiers
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+              <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
             </div>
 
             {/* Tile 5: Evidence-Based Performance Formulations */}
             <div
               onClick={() => setSubView('supplements')}
-              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between md:col-span-2"
+              className="group p-6 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-card flex items-center justify-between md:col-span-2"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF3B30] via-rose-600 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-[#FF3B30]/20 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-forest-800 via-mint-700 to-teal-600 text-white flex items-center justify-center shadow-md shadow-forest-900/15 group-hover:scale-105 transition-transform">
                   <Zap className="w-7 h-7" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-wider">
+                    <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider">
                       Clinical Grade Formulations
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-bold text-zinc-300">
+                    <span className="px-2 py-0.5 rounded-full bg-mint-100 text-[9px] font-bold text-forest-800 border border-mint-200">
                       Creapure® • Native Whey • Electrolytes
                     </span>
                   </div>
-                  <h3 className="text-lg font-black text-white mt-0.5">
+                  <h3 className="text-lg font-black text-forest-950 mt-0.5">
                     Athletic Supplements & Formulations
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     Explore evidence-backed ergogenic aids, micronutrient matrices, and recovery kinetic dosages
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+              <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
             </div>
           </div>
 
           {/* Tile 5: Session History Bar */}
           <div
             onClick={() => setSubView('history')}
-            className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 flex items-center justify-between cursor-pointer transition shadow-md"
+            className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 flex items-center justify-between cursor-pointer transition shadow-soft"
           >
             <div className="flex items-center gap-3">
-              <History className="w-5 h-5 text-[#FF3B30]" />
+              <History className="w-5 h-5 text-forest-800" />
               <div>
-                <h4 className="text-sm font-black text-white">Workout Session History</h4>
-                <p className="text-xs text-zinc-400">{workoutHistory.length} recorded workouts • Volume & PR tracking</p>
+                <h4 className="text-sm font-black text-forest-950">Workout Session History</h4>
+                <p className="text-xs text-charcoal-600">{workoutHistory.length} recorded workouts • Volume & PR tracking</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-xs font-bold text-zinc-400">
+            <div className="flex items-center gap-1 text-xs font-bold text-forest-900">
               <span>View Logs</span>
               <ChevronRight className="w-4 h-4" />
             </div>
@@ -531,29 +531,29 @@ export const GymTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'workout' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-[#FF3B30]/40 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6 relative overflow-hidden">
             {/* Top Session Status Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-4">
               <div className="flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full bg-[#FF3B30] animate-pulse" />
+                <span className="w-3 h-3 rounded-full bg-mint-500 animate-pulse" />
                 <div>
-                  <span className="text-[10px] font-black uppercase text-[#FF3B30] tracking-widest font-mono">
+                  <span className="text-[10px] font-black uppercase text-forest-700 tracking-widest font-mono">
                     LIVE WORKOUT INTERVALS
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                  <h2 className="text-xl sm:text-2xl font-black text-forest-950">
                     {activeWorkoutSubtitle} • {activeWorkoutTitle}
                   </h2>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-mono font-bold text-zinc-300">
+                <span className="px-3 py-1 rounded-full bg-mint-100 text-xs font-mono font-bold text-forest-800 border border-mint-200">
                   Interval {activeInterval} of {totalIntervals}
                 </span>
                 <button
                   type="button"
                   onClick={finishWorkout}
-                  className="px-4 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs transition active:scale-95"
+                  className="px-4 py-1.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 font-extrabold text-xs transition active:scale-95 shadow-soft"
                 >
                   End Session
                 </button>
@@ -562,50 +562,50 @@ export const GymTrackerView: React.FC = () => {
 
             {/* Metric Displays */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+              <div className="bg-cream-50/70 p-4 rounded-2xl border border-mint-100 space-y-1">
+                <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider block font-mono">
                   Heart Rate
                 </span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  <span className="text-2xl sm:text-3xl font-black text-forest-950 font-mono">
                     {currentBpm}
                   </span>
-                  <span className="text-xs font-bold text-[#FF3B30]">bpm</span>
+                  <span className="text-xs font-bold text-coral-600">bpm</span>
                 </div>
               </div>
 
-              <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+              <div className="bg-cream-50/70 p-4 rounded-2xl border border-mint-100 space-y-1">
+                <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider block font-mono">
                   Active Burn
                 </span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  <span className="text-2xl sm:text-3xl font-black text-forest-950 font-mono">
                     {currentKcal}
                   </span>
-                  <span className="text-xs font-bold text-amber-400">kcal</span>
+                  <span className="text-xs font-bold text-amber-600">kcal</span>
                 </div>
               </div>
 
-              <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+              <div className="bg-cream-50/70 p-4 rounded-2xl border border-mint-100 space-y-1">
+                <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider block font-mono">
                   Total Elapsed
                 </span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  <span className="text-2xl sm:text-3xl font-black text-forest-950 font-mono">
                     {formatTimer(elapsedSeconds)}
                   </span>
                 </div>
               </div>
 
-              <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+              <div className="bg-cream-50/70 p-4 rounded-2xl border border-mint-100 space-y-1">
+                <span className="text-[10px] font-bold text-charcoal-500 uppercase tracking-wider block font-mono">
                   Total Exercises
                 </span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  <span className="text-2xl sm:text-3xl font-black text-forest-950 font-mono">
                     {activeExercises.length}
                   </span>
-                  <span className="text-xs text-zinc-400 font-bold">movements</span>
+                  <span className="text-xs text-charcoal-500 font-bold">movements</span>
                 </div>
               </div>
             </div>
@@ -619,7 +619,7 @@ export const GymTrackerView: React.FC = () => {
                     cx="100"
                     cy="100"
                     r="76"
-                    stroke="#262633"
+                    stroke="#E1EBE6"
                     strokeWidth="8"
                     fill="none"
                     strokeDasharray="4 6"
@@ -628,7 +628,7 @@ export const GymTrackerView: React.FC = () => {
                     cx="100"
                     cy="100"
                     r="76"
-                    stroke="#FF3B30"
+                    stroke="#317353"
                     strokeWidth="10"
                     strokeLinecap="round"
                     fill="none"
@@ -640,21 +640,21 @@ export const GymTrackerView: React.FC = () => {
 
                 {/* Digital Timer Readout Inside Radial Dial */}
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-4xl sm:text-5xl font-black text-white tracking-tight font-mono">
+                  <span className="text-4xl sm:text-5xl font-black text-forest-950 tracking-tight font-mono">
                     {timerDisplay}
                   </span>
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 font-mono">
+                  <span className="text-xs font-bold text-charcoal-500 uppercase tracking-widest mt-1 font-mono">
                     {isRestTimerRunning ? 'Rest Interval' : 'Remaining'}
                   </span>
                 </div>
               </div>
 
               {/* Bottom Frosted Pill Control Bar */}
-              <div className="flex items-center gap-3 p-2 bg-[#181822]/90 backdrop-blur-md rounded-full border border-white/10 shadow-2xl">
+              <div className="flex items-center gap-3 p-2 bg-white/95 backdrop-blur-md rounded-full border border-mint-200 shadow-card">
                 <button
                   type="button"
                   onClick={() => setActiveInterval(prev => Math.max(1, prev - 1))}
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95"
+                  className="w-12 h-12 rounded-full bg-cream-50 hover:bg-mint-100 text-forest-950 flex items-center justify-center transition active:scale-95 border border-mint-100"
                   title="Previous Interval"
                 >
                   <span className="font-mono font-black text-sm">|←</span>
@@ -663,7 +663,7 @@ export const GymTrackerView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsPaused(prev => !prev)}
-                  className="px-6 h-12 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center gap-2 font-mono font-black text-sm transition active:scale-95 shadow-lg"
+                  className="px-6 h-12 rounded-full bg-forest-900 text-white hover:bg-forest-800 flex items-center justify-center gap-2 font-mono font-black text-sm transition active:scale-95 shadow-soft"
                 >
                   <span>{isPaused ? '▶ RESUME' : '00 PAUSE'}</span>
                 </button>
@@ -674,7 +674,7 @@ export const GymTrackerView: React.FC = () => {
                     startRestTimer(60);
                     setActiveInterval(prev => Math.min(totalIntervals, prev + 1));
                   }}
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95"
+                  className="w-12 h-12 rounded-full bg-cream-50 hover:bg-mint-100 text-forest-950 flex items-center justify-center transition active:scale-95 border border-mint-100"
                   title="Next Interval"
                 >
                   <span className="font-mono font-black text-sm">→|</span>
@@ -683,31 +683,31 @@ export const GymTrackerView: React.FC = () => {
             </div>
 
             {/* Interactive Set & Exercise Logger */}
-            <div className="space-y-3 pt-4 border-t border-white/10">
+            <div className="space-y-3 pt-4 border-t border-mint-100">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider font-mono">
+                <h3 className="text-sm font-black text-forest-950 uppercase tracking-wider font-mono">
                   Active Workout Set Logger
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowAddExerciseModal(true)}
-                  className="px-3 py-1.5 rounded-full bg-[#181822] hover:bg-[#22222E] border border-white/15 text-xs font-bold text-zinc-300 hover:text-white flex items-center gap-1.5 transition"
+                  className="px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 border border-mint-200 text-xs font-bold text-forest-900 flex items-center gap-1.5 transition"
                 >
-                  <Plus className="w-3.5 h-3.5 text-[#FF3B30]" />
+                  <Plus className="w-3.5 h-3.5 text-forest-800" />
                   <span>Add Movement</span>
                 </button>
               </div>
 
               <div className="space-y-3">
                 {activeExercises.map((ex, exIdx) => (
-                  <div key={ex.id} className="p-4 rounded-2xl bg-[#14141C] border border-white/5 space-y-3">
+                  <div key={ex.id} className="p-4 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black px-2 py-0.5 rounded-md bg-[#FF3B30]/20 text-[#FF3B30] font-mono">
+                        <span className="text-xs font-black px-2 py-0.5 rounded-md bg-mint-100 text-forest-800 font-mono border border-mint-200">
                           #{exIdx + 1}
                         </span>
-                        <h4 className="text-sm font-black text-white">{ex.exerciseName}</h4>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase bg-white/5 px-2 py-0.5 rounded-full font-mono">
+                        <h4 className="text-sm font-black text-forest-950">{ex.exerciseName}</h4>
+                        <span className="text-[10px] font-bold text-charcoal-500 uppercase bg-white px-2 py-0.5 rounded-full font-mono border border-mint-100">
                           {ex.muscleGroup}
                         </span>
                       </div>
@@ -715,7 +715,7 @@ export const GymTrackerView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setActiveExercises(prev => prev.filter(item => item.id !== ex.id))}
-                        className="p-1 rounded-lg text-zinc-400 hover:text-[#FF3B30] transition"
+                        className="p-1 rounded-lg text-charcoal-400 hover:text-rose-600 transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -723,7 +723,7 @@ export const GymTrackerView: React.FC = () => {
 
                     {/* Sets Table */}
                     <div className="space-y-1.5">
-                      <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-zinc-400 uppercase px-2 font-mono">
+                      <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-charcoal-500 uppercase px-2 font-mono">
                         <div className="col-span-2 text-center">Set</div>
                         <div className="col-span-4 text-center">Weight (kg)</div>
                         <div className="col-span-4 text-center">Reps</div>
@@ -734,10 +734,10 @@ export const GymTrackerView: React.FC = () => {
                         <div
                           key={set.id}
                           className={`grid grid-cols-12 gap-2 items-center p-2 rounded-xl text-xs transition ${
-                            set.isCompleted ? 'bg-[#FF3B30]/20 border border-[#FF3B30]/40' : 'bg-black/30'
+                            set.isCompleted ? 'bg-mint-100/90 border border-mint-300' : 'bg-white border border-mint-100'
                           }`}
                         >
-                          <div className="col-span-2 text-center font-black font-mono text-zinc-300">
+                          <div className="col-span-2 text-center font-black font-mono text-charcoal-700">
                             {set.setNumber}
                           </div>
 
@@ -746,7 +746,7 @@ export const GymTrackerView: React.FC = () => {
                               type="number"
                               value={set.weightKg}
                               onChange={(e) => updateSet(ex.id, set.id, 'weightKg', parseFloat(e.target.value) || 0)}
-                              className="w-full text-center bg-black/50 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                              className="w-full text-center bg-cream-50 border border-mint-200 rounded-lg py-1 font-mono font-bold text-forest-950 focus:outline-none focus:ring-1 focus:ring-mint-500"
                             />
                           </div>
 
@@ -755,7 +755,7 @@ export const GymTrackerView: React.FC = () => {
                               type="number"
                               value={set.reps}
                               onChange={(e) => updateSet(ex.id, set.id, 'reps', parseInt(e.target.value) || 0)}
-                              className="w-full text-center bg-black/50 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                              className="w-full text-center bg-cream-50 border border-mint-200 rounded-lg py-1 font-mono font-bold text-forest-950 focus:outline-none focus:ring-1 focus:ring-mint-500"
                             />
                           </div>
 
@@ -765,8 +765,8 @@ export const GymTrackerView: React.FC = () => {
                               onClick={() => toggleSetComplete(ex.id, set.id)}
                               className={`w-7 h-7 rounded-lg flex items-center justify-center transition ${
                                 set.isCompleted
-                                  ? 'bg-[#FF3B30] text-white scale-105'
-                                  : 'bg-white/10 text-zinc-400 hover:bg-white/20'
+                                  ? 'bg-forest-900 text-white scale-105'
+                                  : 'bg-mint-100 text-charcoal-400 hover:bg-mint-200'
                               }`}
                             >
                               <Check className="w-4 h-4 stroke-[3]" />
@@ -780,25 +780,25 @@ export const GymTrackerView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => addSetToExercise(ex.id)}
-                        className="text-xs font-bold text-[#FF3B30] hover:text-[#FF6961] flex items-center gap-1"
+                        className="text-xs font-bold text-forest-800 hover:text-forest-950 flex items-center gap-1"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add Set</span>
                       </button>
 
-                      <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-mono">
+                      <div className="flex items-center gap-1.5 text-[10px] text-charcoal-500 font-mono">
                         <span>Rest:</span>
                         <button
                           type="button"
                           onClick={() => startRestTimer(60)}
-                          className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
+                          className="px-2 py-0.5 rounded-md bg-white hover:bg-mint-100 text-charcoal-700 font-bold border border-mint-200"
                         >
                           60s
                         </button>
                         <button
                           type="button"
                           onClick={() => startRestTimer(90)}
-                          className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
+                          className="px-2 py-0.5 rounded-md bg-white hover:bg-mint-100 text-charcoal-700 font-bold border border-mint-200"
                         >
                           90s
                         </button>
@@ -817,11 +817,11 @@ export const GymTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'challenges' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black text-white">Select a Challenge</h2>
-                <p className="text-xs text-zinc-400">Choose an athletic challenge to load intervals</p>
+                <h2 className="text-2xl font-black text-forest-950">Select a Challenge</h2>
+                <p className="text-xs text-charcoal-600">Choose an athletic challenge to load intervals</p>
               </div>
             </div>
 
@@ -834,8 +834,8 @@ export const GymTrackerView: React.FC = () => {
                   onClick={() => setChallengeFilter(tab)}
                   className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
                     challengeFilter === tab
-                      ? 'bg-white text-black font-extrabold shadow-lg'
-                      : 'bg-[#181822] text-zinc-400 hover:text-white border border-white/5'
+                      ? 'bg-forest-900 text-white font-extrabold shadow-soft'
+                      : 'bg-cream-50 text-charcoal-700 hover:text-forest-900 border border-mint-200'
                   }`}
                 >
                   {tab}
@@ -848,22 +848,22 @@ export const GymTrackerView: React.FC = () => {
               {filteredChallenges.map((challenge, idx) => (
                 <div
                   key={challenge.id}
-                  className="group relative bg-[#13131A] hover:bg-[#181822] rounded-[2rem] p-6 border border-white/10 hover:border-[#FF3B30]/40 transition-all duration-300 shadow-card flex flex-col justify-between overflow-hidden min-h-[260px]"
+                  className="group relative bg-white hover:bg-cream-50/40 rounded-[2rem] p-6 border border-mint-200/80 hover:border-mint-400 transition-all duration-300 shadow-card flex flex-col justify-between overflow-hidden min-h-[260px]"
                 >
                   <div className="relative z-10 space-y-1">
-                    <span className="text-xs font-semibold text-zinc-400 block tracking-wide">
+                    <span className="text-xs font-semibold text-charcoal-500 block tracking-wide">
                       {challenge.subtitle}
                     </span>
-                    <h3 className="text-2xl font-black text-white tracking-tight">
+                    <h3 className="text-2xl font-black text-forest-950 tracking-tight">
                       {challenge.title}
                     </h3>
 
-                    <div className="pt-3 space-y-1 text-xs text-zinc-400 font-medium">
+                    <div className="pt-3 space-y-1 text-xs text-charcoal-600 font-medium">
                       <p className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B30]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-mint-500" />
                         <span>{challenge.intervals} Intervals</span>
                       </p>
-                      <p className="text-zinc-200 font-bold text-sm">
+                      <p className="text-forest-900 font-bold text-sm">
                         {challenge.durationMinutes} min
                       </p>
                     </div>
@@ -873,17 +873,17 @@ export const GymTrackerView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => startRoutine(challenge.id)}
-                      className="flex items-center gap-2 p-1 pl-3.5 pr-1.5 rounded-full bg-[#20202B] hover:bg-[#282836] border border-white/10 group-hover:border-[#FF3B30]/40 transition-all"
+                      className="flex items-center gap-2 p-1 pl-3.5 pr-1.5 rounded-full bg-cream-50 hover:bg-mint-100 border border-mint-200 group-hover:border-mint-400 transition-all"
                     >
-                      <span className="text-[11px] font-extrabold text-zinc-200 group-hover:text-white">
+                      <span className="text-[11px] font-extrabold text-forest-900">
                         Start Mode
                       </span>
-                      <div className="w-8 h-8 rounded-full bg-[#FF3B30] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                      <div className="w-8 h-8 rounded-full bg-forest-900 text-white flex items-center justify-center shadow-soft group-hover:scale-110 transition-transform">
                         <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                       </div>
                     </button>
 
-                    <div className="w-20 h-20 opacity-40 group-hover:opacity-85 transition-all text-[#FF3B30] flex items-center justify-center">
+                    <div className="w-20 h-20 opacity-20 group-hover:opacity-60 transition-all text-forest-900 flex items-center justify-center">
                       {idx % 3 === 0 ? <Activity className="w-16 h-16 stroke-[1.2]" /> : idx % 3 === 1 ? <Flame className="w-16 h-16 stroke-[1.2]" /> : <Dumbbell className="w-16 h-16 stroke-[1.2]" />}
                     </div>
                   </div>
@@ -924,19 +924,19 @@ export const GymTrackerView: React.FC = () => {
       {/* 📜 SUB-VIEW: SESSION HISTORY                                              */}
       {/* ========================================================================= */}
       {subView === 'history' && (
-        <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-card space-y-4 animate-in fade-in duration-200">
+        <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <History className="w-5 h-5 text-[#FF3B30]" />
+            <h2 className="text-lg font-black text-forest-950 flex items-center gap-2">
+              <History className="w-5 h-5 text-forest-800" />
               <span>Athletic Session History</span>
             </h2>
-            <span className="text-xs text-zinc-400 font-mono font-bold">
+            <span className="text-xs text-charcoal-500 font-mono font-bold">
               {workoutHistory.length} Recorded
             </span>
           </div>
 
           {workoutHistory.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-[#14141C] border border-white/5 text-center text-xs text-zinc-400">
+            <div className="p-8 rounded-2xl bg-cream-50/70 border border-mint-100 text-center text-xs text-charcoal-600">
               No completed workouts yet. Launch a challenge above!
             </div>
           ) : (
@@ -944,21 +944,21 @@ export const GymTrackerView: React.FC = () => {
               {workoutHistory.map((session) => (
                 <div
                   key={session.id}
-                  className="p-4 sm:p-5 rounded-2xl bg-[#14141C] border border-white/5 hover:border-white/15 transition space-y-3"
+                  className="p-4 sm:p-5 rounded-2xl bg-cream-50/70 border border-mint-100 hover:border-mint-300 transition space-y-3"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-mint-200/60 pb-3">
                     <div>
-                      <span className="text-[10px] font-black uppercase text-[#FF3B30] bg-[#FF3B30]/10 px-2.5 py-0.5 rounded-full border border-[#FF3B30]/20 font-mono">
+                      <span className="text-[10px] font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200 font-mono">
                         {session.date} • {session.startTime}
                       </span>
-                      <h3 className="text-base font-black text-white mt-1">{session.title}</h3>
+                      <h3 className="text-base font-black text-forest-950 mt-1">{session.title}</h3>
                     </div>
 
                     <div className="flex items-center gap-3 text-xs font-mono">
-                      <div className="px-3 py-1 rounded-xl bg-white/5 text-zinc-200 font-bold">
+                      <div className="px-3 py-1 rounded-xl bg-white border border-mint-100 text-charcoal-800 font-bold shadow-soft">
                         ⏱️ {session.durationMinutes} mins
                       </div>
-                      <div className="px-3 py-1 rounded-xl bg-[#FF3B30]/20 text-[#FF3B30] font-black">
+                      <div className="px-3 py-1 rounded-xl bg-mint-100 text-forest-800 border border-mint-200 font-black">
                         ⚡ {session.totalVolumeKg.toLocaleString()} kg Lifted
                       </div>
                     </div>
@@ -966,9 +966,9 @@ export const GymTrackerView: React.FC = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {session.exercises.map((ex) => (
-                      <div key={ex.id} className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-1">
-                        <span className="font-black text-zinc-200 block">{ex.exerciseName}</span>
-                        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-mono">
+                      <div key={ex.id} className="p-2.5 rounded-xl bg-white border border-mint-100 text-xs space-y-1">
+                        <span className="font-black text-forest-950 block">{ex.exerciseName}</span>
+                        <div className="flex items-center gap-1.5 text-[11px] text-charcoal-500 font-mono">
                           <span>{ex.sets.filter(s => s.isCompleted).length} sets</span>
                           <span>•</span>
                           <span>Max {Math.max(...ex.sets.map(s => s.weightKg), 0)} kg</span>
@@ -988,23 +988,23 @@ export const GymTrackerView: React.FC = () => {
       {/* ========================================================================= */}
       {subView === 'supplements' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
               <div>
-                <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
                   EVIDENCE-BASED PROTOCOLS
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
+                <h2 className="text-xl sm:text-2xl font-black text-forest-950 mt-1">
                   Athletic Formulations & Ergogenic Matrix
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-charcoal-600 mt-0.5">
                   Peer-reviewed athletic nutrition formulations calibrated for hypertrophy, intra-workout hydration, and rapid CNS recovery.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-black flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="px-3 py-1.5 rounded-full bg-mint-100 border border-mint-200 text-forest-800 text-xs font-mono font-black flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-mint-600" />
                   <span>100% Third-Party Tested</span>
                 </span>
               </div>
@@ -1017,20 +1017,20 @@ export const GymTrackerView: React.FC = () => {
               ).map((prod) => (
                 <div
                   key={prod.id}
-                  className="p-5 rounded-[2rem] bg-[#14141C] border border-white/10 hover:border-[#FF3B30]/40 transition space-y-4 flex flex-col justify-between group"
+                  className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 hover:border-mint-400 transition space-y-4 flex flex-col justify-between group shadow-soft"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] bg-[#FF3B30]/10 px-2.5 py-0.5 rounded-full border border-[#FF3B30]/20">
+                      <span className="text-[10px] font-mono font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
                         {prod.category}
                       </span>
-                      <span className="text-xs font-mono font-bold text-zinc-400">
+                      <span className="text-xs font-mono font-bold text-forest-900">
                         ₹{prod.sitePrice}
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3.5">
-                      <div className="w-16 h-16 rounded-2xl bg-black/50 border border-white/10 shrink-0 overflow-hidden relative flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-mint-200 shrink-0 overflow-hidden relative flex items-center justify-center">
                         {prod.imageUrl && (
                           <img
                             src={prod.imageUrl}
@@ -1044,36 +1044,36 @@ export const GymTrackerView: React.FC = () => {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-black text-white group-hover:text-[#FF3B30] transition leading-tight">
+                        <h3 className="text-base font-black text-forest-950 group-hover:text-forest-800 transition leading-tight">
                           {prod.product}
                         </h3>
-                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed line-clamp-2">
+                        <p className="text-xs text-charcoal-600 mt-1 leading-relaxed line-clamp-2">
                           {prod.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1 text-xs">
-                      <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+                    <div className="p-3 rounded-xl bg-white border border-mint-100 space-y-1 text-xs">
+                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
                         <span>Key Actives & Dosing</span>
-                        <span className="font-mono text-zinc-300">{prod.keyIngredients.join(' • ')}</span>
+                        <span className="font-mono text-forest-950 font-bold">{prod.keyIngredients.join(' • ')}</span>
                       </div>
-                      <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
                         <span>Clinical Advantage</span>
-                        <span className="font-mono text-emerald-400 font-bold">{prod.clinicalAdvantage || 'Bio-enhanced formulation'}</span>
+                        <span className="font-mono text-mint-700 font-bold">{prod.clinicalAdvantage || 'Bio-enhanced formulation'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="pt-2 border-t border-mint-100 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-charcoal-600">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                       <span>{prod.potencyBadge || 'Clinical Grade'}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => showToast(`Added ${prod.product} to your athletic protocol!`, 'success')}
-                      className="px-4 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-black transition active:scale-95 shadow-md flex items-center gap-1"
+                      className="px-4 py-1.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 text-xs font-black transition active:scale-95 shadow-soft flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add to Protocol</span>
@@ -1084,17 +1084,17 @@ export const GymTrackerView: React.FC = () => {
             </div>
 
             {/* Clinical Evidence Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-[#181822] to-transparent border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="p-4 rounded-2xl bg-mint-50 border border-mint-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-zinc-300">
+                <ShieldCheck className="w-5 h-5 text-mint-700 shrink-0" />
+                <span className="text-charcoal-700">
                   All athletic supplements adhere to clinical threshold dosing with published bio-availability trials.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => showToast('Displaying research references and clinical trials', 'info')}
-                className="text-emerald-400 font-mono font-bold hover:underline shrink-0"
+                className="text-forest-900 font-mono font-bold hover:underline shrink-0"
               >
                 View Study References ›
               </button>
@@ -1107,17 +1107,17 @@ export const GymTrackerView: React.FC = () => {
       {/* 🔎 ADD EXERCISE MODAL                                                     */}
       {/* ========================================================================= */}
       {showAddExerciseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#121218] rounded-[2rem] max-w-lg w-full p-6 shadow-2xl border border-white/10 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[2rem] max-w-lg w-full p-6 shadow-modal border border-mint-200 space-y-4 max-h-[85vh] flex flex-col text-charcoal-900">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div>
-                <h3 className="text-lg font-black text-white">Movement Library</h3>
-                <p className="text-xs text-zinc-400">Select an exercise to add to your live workout</p>
+                <h3 className="text-lg font-black text-forest-950">Movement Library</h3>
+                <p className="text-xs text-charcoal-600">Select an exercise to add to your live workout</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddExerciseModal(false)}
-                className="p-1 rounded-full text-zinc-400 hover:text-white"
+                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
               >
                 ✕
               </button>
@@ -1132,8 +1132,8 @@ export const GymTrackerView: React.FC = () => {
                   onClick={() => setSelectedMuscleFilter(group)}
                   className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition ${
                     selectedMuscleFilter === group
-                      ? 'bg-white text-black'
-                      : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'
+                      ? 'bg-forest-900 text-white'
+                      : 'bg-cream-50 text-charcoal-600 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
                   }`}
                 >
                   {group}
@@ -1147,7 +1147,7 @@ export const GymTrackerView: React.FC = () => {
               placeholder="Search exercise (e.g. Bench Press, Squat)..."
               value={exerciseSearch}
               onChange={(e) => setExerciseSearch(e.target.value)}
-              className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+              className="w-full p-3 rounded-xl bg-cream-50 border border-mint-200 text-xs font-bold text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
             />
 
             {/* Exercise List */}
@@ -1156,18 +1156,18 @@ export const GymTrackerView: React.FC = () => {
                 <div
                   key={def.id}
                   onClick={() => handleAddExercise(def)}
-                  className="p-3 rounded-xl bg-[#181822] hover:bg-[#20202C] border border-white/5 hover:border-[#FF3B30]/40 transition cursor-pointer flex items-center justify-between"
+                  className="p-3 rounded-xl bg-cream-50 hover:bg-mint-50 border border-mint-100 hover:border-mint-300 transition cursor-pointer flex items-center justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-white">{def.name}</span>
-                      <span className="text-[9px] font-bold text-zinc-400 px-2 py-0.5 bg-white/5 rounded-full">
+                      <span className="text-xs font-black text-forest-950">{def.name}</span>
+                      <span className="text-[9px] font-bold text-forest-800 px-2 py-0.5 bg-mint-100 border border-mint-200 rounded-full">
                         {def.category}
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">{def.instructions}</p>
+                    <p className="text-[11px] text-charcoal-600 mt-0.5">{def.instructions}</p>
                   </div>
-                  <Plus className="w-4 h-4 text-[#FF3B30] shrink-0" />
+                  <Plus className="w-4 h-4 text-forest-800 shrink-0" />
                 </div>
               ))}
             </div>

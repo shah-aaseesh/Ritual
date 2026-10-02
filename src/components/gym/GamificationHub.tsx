@@ -119,36 +119,36 @@ export const GamificationHub: React.FC = () => {
   const completionPercentage = Math.round((completedCount / objectives.length) * 100);
 
   return (
-    <div className="rounded-3xl bg-[#121217] border border-white/10 p-6 sm:p-8 shadow-xl space-y-6 font-sans">
+    <div className="rounded-3xl bg-white border border-mint-200/80 p-6 sm:p-8 shadow-card space-y-6 font-sans text-charcoal-900">
       {/* Formal Header: Consistency & Longevity Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md bg-[#181822] text-[#FF3B30] text-[10px] font-black uppercase tracking-wider font-mono border border-white/10">
+            <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
               LONGEVITY & ADHERENCE INDEX
             </span>
-            <span className="text-xs text-zinc-400 font-semibold font-mono">
+            <span className="text-xs text-charcoal-500 font-semibold font-mono">
               Evidence-Based Performance
             </span>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-black text-forest-950 tracking-tight">
             Daily Biological Objectives & Milestones
           </h3>
         </div>
 
         {/* Consistency Stat Badges */}
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-2xl bg-[#09090D] border border-white/10 text-left">
-            <span className="text-[10px] font-bold uppercase text-zinc-400 block font-mono">
+          <div className="px-3.5 py-2 rounded-2xl bg-cream-50 border border-mint-200 text-left shadow-soft">
+            <span className="text-[10px] font-bold uppercase text-charcoal-500 block font-mono">
               Habit Streak
             </span>
-            <span className="text-sm font-black text-white flex items-center gap-1 font-mono">
+            <span className="text-sm font-black text-forest-950 flex items-center gap-1 font-mono">
               <span>{activeStreakDays} Consecutive Days</span>
             </span>
           </div>
 
-          <div className="px-3.5 py-2 rounded-2xl bg-[#FF3B30] text-white text-left shadow-lg shadow-[#FF3B30]/20">
-            <span className="text-[10px] font-bold uppercase text-white/80 block font-mono">
+          <div className="px-3.5 py-2 rounded-2xl bg-forest-900 text-white text-left shadow-soft">
+            <span className="text-[10px] font-bold uppercase text-mint-200 block font-mono">
               Adherence Index
             </span>
             <span className="text-sm font-black text-white font-mono">
@@ -164,11 +164,11 @@ export const GamificationHub: React.FC = () => {
         {/* Left: Daily Objectives */}
         <div className="lg:col-span-7 space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 font-mono">
-              <Target className="w-4 h-4 text-[#FF3B30]" />
+            <h4 className="text-sm font-black text-forest-950 uppercase tracking-wider flex items-center gap-2 font-mono">
+              <Target className="w-4 h-4 text-forest-800" />
               <span>Today's Evidence-Based Objectives</span>
             </h4>
-            <span className="text-xs font-mono font-bold text-zinc-400">
+            <span className="text-xs font-mono font-bold text-charcoal-500">
               {completedCount} of {objectives.length} Complete ({completionPercentage}%)
             </span>
           </div>
@@ -180,8 +180,8 @@ export const GamificationHub: React.FC = () => {
                 onClick={() => toggleObjective(obj.id)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
                   obj.isCompleted
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
-                    : 'bg-[#181822] border-white/10 hover:border-white/25 text-zinc-300'
+                    ? 'bg-mint-100/70 border-mint-300 text-forest-950 shadow-soft'
+                    : 'bg-cream-50/70 border-mint-100 hover:border-mint-300 text-charcoal-800'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -189,24 +189,24 @@ export const GamificationHub: React.FC = () => {
                     type="button"
                     className={`mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center transition shrink-0 ${
                       obj.isCompleted
-                        ? 'bg-emerald-500 text-black'
-                        : 'border border-white/20 bg-[#09090D] text-transparent hover:border-white/40'
+                        ? 'bg-forest-900 text-white'
+                        : 'border border-mint-300 bg-white text-transparent hover:border-mint-500'
                     }`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" />
                   </button>
 
                   <div className="space-y-0.5">
-                    <span className={`text-xs font-black block ${obj.isCompleted ? 'text-emerald-300' : 'text-white'}`}>
+                    <span className={`text-xs font-black block ${obj.isCompleted ? 'text-forest-950' : 'text-charcoal-900'}`}>
                       {obj.title}
                     </span>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+                    <p className="text-[11px] text-charcoal-600 leading-relaxed font-sans">
                       {obj.impactDescription}
                     </p>
                   </div>
                 </div>
 
-                <span className="text-[10px] font-mono font-bold text-zinc-300 shrink-0 bg-[#09090D] px-2.5 py-1 rounded-md border border-white/10">
+                <span className="text-[10px] font-mono font-bold text-forest-900 shrink-0 bg-white px-2.5 py-1 rounded-md border border-mint-200 shadow-soft">
                   {obj.progressText}
                 </span>
               </div>
@@ -217,11 +217,11 @@ export const GamificationHub: React.FC = () => {
         {/* Right: Longevity Milestones */}
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 font-mono">
-              <Award className="w-4 h-4 text-[#FF3B30]" />
+            <h4 className="text-sm font-black text-forest-950 uppercase tracking-wider flex items-center gap-2 font-mono">
+              <Award className="w-4 h-4 text-forest-800" />
               <span>Verified Longevity Milestones</span>
             </h4>
-            <span className="text-xs font-mono font-bold text-zinc-400">
+            <span className="text-xs font-mono font-bold text-charcoal-500">
               3 Verified
             </span>
           </div>
@@ -232,22 +232,22 @@ export const GamificationHub: React.FC = () => {
                 key={m.id}
                 className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
                   m.isUnlocked
-                    ? 'bg-[#181822] border-white/10 shadow-md'
-                    : 'bg-[#09090D] border-dashed border-white/10 opacity-50'
+                    ? 'bg-cream-50/80 border-mint-200 shadow-soft'
+                    : 'bg-cream-50/30 border-dashed border-mint-200 opacity-50'
                 }`}
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-white">{m.title}</span>
+                    <span className="text-xs font-black text-forest-950">{m.title}</span>
                     <span className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-md ${
-                      m.tier === 'Platinum' ? 'bg-white text-black' :
-                      m.tier === 'Gold' ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' :
-                      'bg-zinc-800 text-zinc-400'
+                      m.tier === 'Platinum' ? 'bg-forest-900 text-white' :
+                      m.tier === 'Gold' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                      'bg-cream-200 text-charcoal-700'
                     }`}>
                       {m.tier} Tier
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-400 leading-snug">
+                  <p className="text-[11px] text-charcoal-600 leading-snug">
                     {m.description}
                   </p>
                 </div>
