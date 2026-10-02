@@ -3,13 +3,13 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
+  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash (Direct Google AI Studio - Free & Instant)' },
+  { id: 'google/gemini-3.8-flash', name: 'Google: Gemini 3.8 Flash (Direct Google AI Studio - Frontier)' },
   { id: 'openai/gpt-4o', name: 'OpenAI: GPT-4o (Frontier Vision - Exact ChatGPT Engine)' },
   { id: 'openai/gpt-4o-2024-11-20', name: 'OpenAI: GPT-4o Latest (High-Res Packaging Vision)' },
   { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 (Clinical Grade Extraction & Reasoning)' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Deep Clinical Reasoning & Actives Isolation)' },
   { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek Vision V4.1 (Multimodal Vision)' },
-  { id: 'inclusionai/ling-3.0-flash-sante:free', name: 'Ling 3.0 Flash Sante (Medical Specialist - Free)' },
-  { id: 'nvidia/nemotron-3-super-120b-a12b:free', name: 'NVIDIA Nemotron 3 Super (High Accuracy - Free)' },
   { id: 'openrouter/free', name: 'OpenRouter Auto Router (Free)' }
 ];
 
@@ -33,7 +33,176 @@ export interface VisionLabelExtractionResult {
 }
 
 /**
- * Resizes and compresses image to max 2048px with high clarity for GPT-4o multi-tile vision
+ * Direct Google AI Studio Gemini 3.5/3.8 Flash Multimodal Vision
+ * High-speed, 100% free multimodal vision directly from Google
+ */
+export async function extractLabelWithGeminiDirect(
+  base64DataUrl: string,
+  userGoal: WellnessGoal = 'hair_health',
+  geminiApiKey?: string,
+  modelName: string = 'gemini-3.5-flash',
+  onProgress?: (percent: number, status: string) => void
+): Promise<VisionLabelExtractionResult | null> {
+  const effectiveKey = (geminiApiKey && geminiApiKey.trim().length > 5)
+    ? geminiApiKey.trim()
+    : (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+
+  if (!effectiveKey) return null;
+
+  if (onProgress) onProgress(35, `Reading packaging with Google Gemini ${modelName.includes('3.8') ? '3.8 Flash' : '3.5 Flash'} (Free AI Studio)...`);
+
+  const prompt = `You are an expert cosmetic dermatologist, clinical pharmacologist, and INCI ingredient transcriber.
+Look closely at this product packaging photo. Your critical task is to transcribe the COMPLETE and EXACT ingredient list from the "Ingredients:" or "Composition:" section on the bottle, word-for-word in order.
+
+STRICTLY DO NOT include:
+- Directions for use, usage instructions, or dosage recommendations (e.g. "Take 1 gummy daily", "Apply on wet hair", "Massage gently into scalp", "Swallow with water")
+- Storage instructions & safety warnings (e.g. "Store below 25°C", "Keep away from direct sunlight", "Keep out of reach of children", "Not for medicinal use", "Consult physician")
+- Manufacturer, marketing & distributor info (e.g. "Marketed by", "Manufactured by", "FSSAI Lic No", "Batch No", "Mfg Date", "Best Before", "Expiry", "MRP", "Net Quantity", customer care emails, phone numbers, addresses)
+- General macronutrient facts (e.g. "Energy", "Calories", "Total Carbohydrate", "Protein", "Total Sugar", "Fat", "Saturated Fat", "Trans Fat", "Sodium", "RDA%")
+- Generic marketing boilerplate and packaging text
+
+DO EXTRACT:
+1. "productName": Exact product name (e.g. "NIVEA Rich Nourishing Body Cream", "Beet Root Sleep Gummies").
+2. "brand": Brand name if visible (e.g. "NIVEA", "Mosaic", "Man Matters").
+3. "ingredients": Array of EVERY SINGLE ingredient from the "INGREDIENTS:" or "COMPOSITION:" section word-for-word in the exact order listed on the bottle (e.g. ["Aqua", "Glycerin", "C15-19 Alkane", "Cetearyl Alcohol", "Paraffinum Liquidum", "Isopropyl Palmitate", "Glyceryl Stearate SE", "Butyrospermum Parkii Butter", "Dimethicone", "Hydrogenated Coco-Glycerides", "Sodium Cetearyl Sulfate", "Carbomer", "Sodium Hydroxide", "Ethylhexylglycerin", "Phenoxyethanol", "Linalool", "Citronellol", "Alpha-Isomethyl Ionone", "Benzyl Alcohol", "Limonene", "Parfum"]). Do NOT summarize or skip any chemical name.
+4. "activesWithDose": Array of any active ingredients with numeric doses/percentages if stated in a table or on the pack (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}]).
+5. "claims": Array of key front-of-pack claims.
+6. "clinicalSynthesis": Concise 1-2 sentence evidence synthesis of how the core active ingredients function together.
+
+Return ONLY valid JSON matching this schema without markdown fences:
+{
+  "productName": "string",
+  "brand": "string",
+  "ingredients": ["string"],
+  "activesWithDose": [{"name": "string", "dose": "string"}],
+  "claims": ["string"],
+  "clinicalSynthesis": "string"
+}`;
+
+  const base64Pure = base64DataUrl.replace(/^data:image\/\w+;base64,/, '');
+  const mimeMatch = base64DataUrl.match(/^data:(image\/\w+);base64,/);
+  const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+  const candidateGeminiModels = [modelName, 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  const uniqueModels = [...new Set(candidateGeminiModels.map(m => m.replace(/^models\//, '').replace(/^google\//, '')))];
+
+  for (const geminiModel of uniqueModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${effectiveKey}`;
+      const startTime = Date.now();
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Pure
+                }
+              }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 2048
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const durationMs = Date.now() - startTime;
+        const candidate = data.candidates?.[0];
+        const rawText = candidate?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n') || '';
+
+        let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+        let parsed: any = {};
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch (e) {
+          const jsonMatch = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+          if (jsonMatch) {
+            try { parsed = JSON.parse(jsonMatch[0]); } catch (err) { /* fallback */ }
+          }
+        }
+
+        const harvestedTokens: string[] = [];
+        if (Array.isArray(parsed)) {
+          harvestedTokens.push(...parsed.map(String));
+        } else if (parsed && typeof parsed === 'object') {
+          const candidateKeys = ['ingredients', 'fullIngredientsList', 'extractedIngredientsText', 'ingredientsList', 'ingredientList', 'allIngredients', 'composition'];
+          for (const key of candidateKeys) {
+            const val = parsed[key];
+            if (typeof val === 'string' && val.trim().length > 2) {
+              harvestedTokens.push(...val.split(/[,;\n•·]/));
+            } else if (Array.isArray(val)) {
+              harvestedTokens.push(...val.map(String));
+            }
+          }
+
+          if (Array.isArray(parsed.activesWithDose)) {
+            parsed.activesWithDose.forEach((item: any) => {
+              const name = item.name || item.ingredient || '';
+              const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+              if (name) harvestedTokens.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+            });
+          }
+        }
+
+        if (harvestedTokens.length < 2) {
+          const rawFallback = cleanAndNormalizeOCRText(rawText);
+          if (rawFallback) harvestedTokens.push(...rawFallback.split(/[,;\n•·]/));
+        }
+
+        const sanitized = sanitizeIngredientList(harvestedTokens);
+        const finalIngText = sanitized.length > 0 ? sanitized.join(', ') : cleanAndNormalizeOCRText(rawText);
+        const prodName = parsed.productName || 'Scanned Product';
+        const brand = parsed.brand || '';
+        const claims = Array.isArray(parsed.claims) ? parsed.claims.join(', ') : (parsed.claims || '');
+
+        if (finalIngText && finalIngText.trim().length > 3) {
+          const analysis = analyzeLabelText(finalIngText, claims, userGoal, prodName);
+          if (parsed.clinicalSynthesis) {
+            analysis.summary.synthesisText = parsed.clinicalSynthesis;
+          }
+
+          if (onProgress) onProgress(100, 'Gemini 3.5 Flash Vision Analysis Complete!');
+
+          return {
+            productName: prodName,
+            brand,
+            ingredientText: finalIngText,
+            claimText: claims,
+            analysis,
+            source: 'openrouter_vision',
+            debugTrace: {
+              model: `Google AI Studio: ${geminiModel}`,
+              prompt,
+              rawResponse: rawText,
+              parsedJson: parsed,
+              imageThumbnail: base64DataUrl,
+              durationMs,
+              timestamp: new Date().toLocaleTimeString()
+            }
+          };
+        }
+      }
+    } catch (err) {
+      console.warn(`Gemini direct extraction with ${geminiModel} failed, trying next:`, err);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resizes and compresses image to max 2048px with high clarity for GPT-4o / Gemini multi-tile vision
  */
 export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 2048): Promise<string> {
   return new Promise((resolve) => {
@@ -81,33 +250,48 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
 }
 
 /**
- * High-Resolution Multimodal Extraction using GPT-4o (ChatGPT Vision Engine):
- * Sends the high-res packaging photo directly to GPT-4o with multi-tile detail inspection.
- * GPT-4o reads dense 4pt-6pt ingredient typography, extracts active doses & excipients,
- * and discards all non-ingredient noise.
+ * High-Resolution Multimodal Extraction:
+ * Prioritizes Direct Google AI Studio Gemini 3.5 Flash (Free & Instant)
+ * or Direct GPT-4o Vision, extracting active doses & excipients and discarding packaging noise.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
-  model: string = 'openai/gpt-4o',
+  model: string = 'google/gemini-3.5-flash',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
-  if (onProgress) onProgress(15, 'Enhancing high-res packaging photo for GPT-4o Vision...');
+  if (onProgress) onProgress(15, 'Enhancing high-res packaging photo for AI Vision...');
   const base64DataUrl = await optimizeImageForVisionAI(imageSource);
+
+  // 1. Direct Google AI Studio Gemini 3.5 Flash (100% Free)
+  const geminiEnvKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+  const isGeminiRequested = model.includes('gemini') || model === 'google/gemini-3.5-flash' || (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza')));
+
+  if (geminiEnvKey || isGeminiRequested) {
+    const geminiResult = await extractLabelWithGeminiDirect(
+      base64DataUrl,
+      userGoal,
+      (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza'))) ? apiKey : geminiEnvKey,
+      model.replace('google/', ''),
+      onProgress
+    );
+    if (geminiResult) {
+      return geminiResult;
+    }
+  }
 
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 1. Direct Multimodal GPT-4o Vision AI (ChatGPT Engine)
+  // 2. Multimodal Vision via OpenRouter (GPT-4o, DeepSeek, etc.)
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
       model && model !== 'local' ? model : 'openai/gpt-4o',
       'openai/gpt-4o',
       'openai/gpt-4o-2024-11-20',
       'deepseek/deepseek-v4.1-flash',
-      'dots-studio/dots-3-note-preview:free',
       'openrouter/free'
     ];
     const uniqueModels = [...new Set(candidateModels)];
