@@ -1,7 +1,6 @@
 import React from 'react';
 import { MosaicProduct } from '../../types';
-import { Sparkles, ExternalLink, ShieldCheck, Plus, Check, Award, Zap } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { Sparkles, ExternalLink, ShieldCheck, Award, Zap } from 'lucide-react';
 
 interface ClinicalRecommendationsProps {
   products: MosaicProduct[];
@@ -16,32 +15,9 @@ export const ClinicalRecommendations: React.FC<ClinicalRecommendationsProps> = (
   subtitle = "Based on the actives detected on your packaging, here are higher-bioavailability, clean-label clinical formulations.",
   className = ""
 }) => {
-  const { addShelfProduct, showToast, shelfProducts } = useApp();
-
   if (!products || products.length === 0) {
     return null;
   }
-
-  const handleSaveToShelf = (p: MosaicProduct) => {
-    const isAlreadyOnShelf = shelfProducts.some(sp => sp.name.toLowerCase() === p.product.toLowerCase());
-    if (isAlreadyOnShelf) {
-      showToast(`${p.product} is already in your Smart Shelf`, 'info');
-      return;
-    }
-
-    addShelfProduct({
-      name: p.product,
-      brand: p.brand,
-      category: p.category.includes('Hair') ? 'Hair' : p.category.includes('Sleep') || p.category.includes('Recovery') ? 'Sleep' : 'Body',
-      relevantGoal: p.targetGoal,
-      activeIngredients: p.keyIngredients,
-      evidenceSummary: p.whyItFits,
-      evidenceTier: 'strong_evidence',
-      timeOfDay: p.timeOfDay,
-      officialUrl: p.officialUrl
-    });
-    showToast(`Added ${p.product} to your Smart Shelf!`, 'success');
-  };
 
   return (
     <div className={`space-y-4 pt-5 animate-in fade-in duration-300 ${className}`}>
@@ -70,8 +46,6 @@ export const ClinicalRecommendations: React.FC<ClinicalRecommendationsProps> = (
       {/* Luxury Product Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {products.map((p) => {
-          const isSaved = shelfProducts.some(sp => sp.name.toLowerCase() === p.product.toLowerCase());
-
           return (
             <div
               key={p.id}
@@ -161,53 +135,26 @@ export const ClinicalRecommendations: React.FC<ClinicalRecommendationsProps> = (
                   </div>
                 </div>
 
-                {/* Bottom Section: Price & 2-Column Action Buttons */}
-                <div className="pt-3.5 border-t border-cream-200/80 space-y-2.5">
-                  {/* Price Row */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider">
+                {/* Bottom Section: Clean Price & View Product Button */}
+                <div className="pt-3.5 border-t border-cream-200/80 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider block">
                       Price
                     </span>
-                    <span className="text-lg sm:text-xl font-black text-forest-950">
+                    <span className="text-xl sm:text-2xl font-black text-forest-950">
                       {p.currency}{p.sitePrice}
                     </span>
                   </div>
 
-                  {/* Balanced 2-Column Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSaveToShelf(p)}
-                      className={`w-full py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition ${
-                        isSaved
-                          ? 'bg-mint-100 text-forest-900 border border-mint-300 shadow-xs'
-                          : 'bg-cream-100 hover:bg-cream-200 text-forest-950 border border-cream-300/80 shadow-xs'
-                      }`}
-                      title="Save to Smart Shelf"
-                    >
-                      {isSaved ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                          <span>Saved</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-3.5 h-3.5 text-forest-900" />
-                          <span>Add to Shelf</span>
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      href={p.officialUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-2.5 px-3 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center justify-center gap-1.5 shadow-card transition transform active:scale-98"
-                    >
-                      <span>Explore</span>
-                      <ExternalLink className="w-3.5 h-3.5 text-mint-300" />
-                    </a>
-                  </div>
+                  <a
+                    href={p.officialUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-5 py-2.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-2 shadow-card transition transform active:scale-98 shrink-0"
+                  >
+                    <span>View Product</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-mint-300" />
+                  </a>
                 </div>
               </div>
             </div>
