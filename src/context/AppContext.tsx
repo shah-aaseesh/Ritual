@@ -4,7 +4,6 @@ import {
   ShelfProduct, 
   RoutineStep, 
   ProgressEntry, 
-  WellnessGoal, 
   DuplicateIngredientAlert,
   AISettings,
   OnboardingProduct,
@@ -18,9 +17,8 @@ import {
   getMissedAdherenceHistory 
 } from '../data/demoState';
 import { DEMO_HEALTH_DOCUMENTS } from '../data/demoDocuments';
-import { generateRoutineFromProfile } from '../services/routineGenerator';
 
-export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'routine' | 'progress';
+export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'progress';
 export type AppPillar = 'wellness' | 'health';
 
 interface ToastState {
@@ -61,9 +59,6 @@ interface AppContextType {
   editRoutineStep: (stepId: string, updates: Partial<RoutineStep>) => void;
   removeRoutineStep: (stepId: string) => void;
   reorderRoutineSteps: (fromIndex: number, toIndex: number) => void;
-  regenerateRoutine: (goal?: WellnessGoal) => void;
-  acceptRescueRoutine: (rescueSteps: RoutineStep[]) => void;
-  dismissRescueRoutine: () => void;
   addProgressEntry: (entry: Omit<ProgressEntry, 'id'>) => void;
   
   // Demo & State
@@ -284,14 +279,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setShelfProducts(currentShelf);
     }
 
-    // Auto-generate fresh routine for the chosen goal with these products
-    const newRoutine = generateRoutineFromProfile(
-      updated.primaryGoal, 
-      updated.dailyTime, 
-      currentShelf
-    );
-    setRoutineSteps(newRoutine);
-    setActiveTab('routine'); // Send user straight to their generated routine as requested!
+    setActiveTab('home');
     showToast(`Welcome to Ritual, ${updated.name || 'friend'}!`, 'success');
   };
 
@@ -303,10 +291,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setShelfProducts(prev => [newProduct, ...prev]);
     showToast(`Saved "${newProduct.name}" to Smart Shelf`, 'success');
-
-    // Also auto-refresh routine with the new shelf item if applicable
-    const updatedRoutine = generateRoutineFromProfile(profile.primaryGoal, profile.dailyTime, [newProduct, ...shelfProducts]);
-    setRoutineSteps(updatedRoutine);
   };
 
   const editShelfProduct = (id: string, updates: Partial<ShelfProduct>) => {
@@ -410,22 +394,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const regenerateRoutine = (goal: WellnessGoal = profile.primaryGoal) => {
-    const fresh = generateRoutineFromProfile(goal, profile.dailyTime, shelfProducts);
-    setRoutineSteps(fresh);
-    showToast('Routine recalculated based on current shelf and goal', 'success');
-  };
-
-  const acceptRescueRoutine = (rescueSteps: RoutineStep[]) => {
-    setRoutineSteps(rescueSteps);
-    setShowRoutineRescue(false);
-    showToast('Simplified routine activated! Momentum starts small.', 'success');
-  };
-
-  const dismissRescueRoutine = () => {
-    setShowRoutineRescue(false);
-  };
-
   const addProgressEntry = (entry: Omit<ProgressEntry, 'id'>) => {
     const newEntry: ProgressEntry = {
       ...entry,
@@ -527,9 +495,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       editRoutineStep,
       removeRoutineStep,
       reorderRoutineSteps,
-      regenerateRoutine,
-      acceptRescueRoutine,
-      dismissRescueRoutine,
       addProgressEntry,
       isDemoMode,
       loadDemoState,

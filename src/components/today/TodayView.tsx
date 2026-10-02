@@ -8,7 +8,6 @@ import {
   Moon, 
   ArrowRight, 
   Clock, 
-  HeartHandshake,
   Dumbbell,
   Camera,
   ChevronRight
@@ -22,8 +21,6 @@ export const TodayView: React.FC = () => {
     toggleRoutineStep, 
     setActiveTab, 
     progressHistory,
-    showRoutineRescue,
-    setShowRoutineRescue,
     activePillar,
     setActivePillar
   } = useApp();
@@ -49,38 +46,7 @@ export const TodayView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-24 animate-in fade-in duration-200 text-charcoal-900 max-w-4xl mx-auto">
-      {/* Routine Rescue Banner if triggered */}
-      {showRoutineRescue && (
-        <div className="p-4 sm:p-5 rounded-[2rem] bg-amber-50/80 border border-amber-200 shadow-card">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0 mt-0.5">
-              <HeartHandshake className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-extrabold text-forest-950">
-                Simplify your routine?
-              </h4>
-              <p className="text-xs text-charcoal-700 mt-0.5 leading-relaxed">
-                Consistency dropped recently. Switch to a 1-step morning & evening ritual to rebuild momentum effortlessly.
-              </p>
-              <div className="flex items-center gap-2 mt-2.5">
-                <button
-                  onClick={() => setShowRoutineRescue(true)}
-                  className="px-3.5 py-1.5 rounded-full bg-forest-900 text-white font-extrabold text-xs hover:bg-forest-800 shadow-soft transition"
-                >
-                  Simplify Routine
-                </button>
-                <button
-                  onClick={() => setShowRoutineRescue(false)}
-                  className="px-3.5 py-1.5 rounded-full bg-cream-50 text-charcoal-700 font-bold text-xs hover:bg-mint-100 border border-mint-200 transition"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* ========================================================================= */}
       {/* 🎯 CATEGORY CHOOSER AT THE BEGINNING (FRONT & CENTER)                     */}

@@ -4,7 +4,7 @@ import { WellnessGoal, HealthGoal, DailyTimeCommitment } from '../../types';
 import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Leaf } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, healthDocuments, activePillar } = useApp();
+  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar } = useApp();
   const [showSettings, setShowSettings] = useState(false);
   const [tempGoal, setTempGoal] = useState<WellnessGoal>(profile.primaryGoal);
   const [tempHealthGoal, setTempHealthGoal] = useState<HealthGoal>(profile.healthGoal || 'hypertrophy_strength');
@@ -39,9 +39,6 @@ export const Header: React.FC = () => {
       healthGoal: tempHealthGoal,
       dailyTime: tempTime
     });
-    if (tempGoal !== profile.primaryGoal) {
-      regenerateRoutine(tempGoal);
-    }
     setShowSettings(false);
   };
 

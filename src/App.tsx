@@ -13,9 +13,7 @@ import { LabelLensView } from './components/labellens/LabelLensView';
 import { GymTrackerView } from './components/gym/GymTrackerView';
 import { CalorieTrackerView } from './components/calories/CalorieTrackerView';
 import { SmartShelfView } from './components/smartshelf/SmartShelfView';
-import { RoutineView } from './components/routine/RoutineView';
 import { ProgressView } from './components/progress/ProgressView';
-import { RoutineRescueModal } from './components/rescue/RoutineRescueModal';
 
 const MainLayout: React.FC = () => {
   const { profile, activeTab } = useApp();
@@ -50,14 +48,12 @@ const MainLayout: React.FC = () => {
         {activeTab === 'documents' && <DocumentStoreAIView />}
         {activeTab === 'today' && <TodayView />}
         {activeTab === 'smartshelf' && <SmartShelfView />}
-        {activeTab === 'routine' && <RoutineView />}
         {activeTab === 'progress' && <ProgressView />}
       </main>
 
       {/* Mobile-only Bottom Navigation */}
       <BottomNav />
       <InstallPrompt />
-      <RoutineRescueModal />
     </div>
   );
 };
