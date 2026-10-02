@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Check, 
-  X, 
   RotateCcw, 
-  Sparkles, 
   ExternalLink, 
-  Eye,
-  PenTool,
-  Award,
-  Zap,
-  Flame
+  PenTool, 
+  Zap, 
+  Trophy, 
+  Info,
+  X
 } from 'lucide-react';
 import { ProductAnalysisResult, DetectedIngredient, EvidenceTier } from '../../types';
 
@@ -38,7 +36,7 @@ interface ParsedItem {
 }
 
 /**
- * Specifically calls out marketing gimmicks, fairy dusting, synthetic scent masking,
+ * Specifically categorizes marketing gimmicks, fairy dusting, synthetic scent masking,
  * candy syrup bulkers, and cheap inert fillers without sugarcoating.
  */
 function getSpecificDebunkVerdict(token: string): { strikeTag: string; strikeReason: string } {
@@ -47,87 +45,87 @@ function getSpecificDebunkVerdict(token: string): { strikeTag: string; strikeRea
   // 1. Synthetic Fragrances, Perfume, and Allergen Scents
   if (/fragrance|parfum|perfume|aroma|linalool|limonene|citronellol|geraniol|eugenol|cinnamal|coumarin|benzyl alcohol|benzyl benzoate|hexyl cinnamal/i.test(norm)) {
     return {
-      strikeTag: '⚠️ Sensitizing Fragrance (Zero Skin Benefit)',
-      strikeReason: 'Pure scent masking. Added purely so the product smells nice; #1 clinical cause of contact dermatitis, scalp irritation, and barrier redness.'
+      strikeTag: '⚠️ Sensitizing Fragrance',
+      strikeReason: 'Scent masking only. #1 clinical cause of skin barrier redness, irritation & contact dermatitis.'
     };
   }
 
   // 2. Added Sugars & Glucose Candy Syrups in Wellness Gummies
   if (/liquid glucose|glucose syrup|cane sugar|sucrose|fructose|corn syrup|maltitol syrup|dextrose|invert sugar/i.test(norm)) {
     return {
-      strikeTag: '🍬 Added Sugar / Candy Base Matrix',
-      strikeReason: 'Gummy candy bulk filler. Adds 2–4g of unnecessary refined sugar disguised as daily "wellness" healthcare.'
+      strikeTag: '🍬 Candy Sugar Bulker',
+      strikeReason: 'Adds 2–4g of refined sugar matrix disguised as "wellness healthcare".'
     };
   }
 
   // 3. Silicones (Cosmetic Smoothness Illusion)
   if (/dimethicone|cyclomethicone|cyclopentasiloxane|amodimethicone|dimethiconol|phenyl trimethicone/i.test(norm)) {
     return {
-      strikeTag: '🎭 Synthetic Slip Layer (Temporary Illusion)',
-      strikeReason: 'Cosmetic silicone film-former that coats the surface for an instant slick feel. Does not repair hair roots, follicles, or cellular damage.'
+      strikeTag: '🎭 Cosmetic Silicone Film',
+      strikeReason: 'Coats surfaces for an instant artificial slip. Zero deep cellular or follicle repair.'
     };
   }
 
   // 4. Fairy-Dusted Micro-Exotics & Gold / Diamond / Pearl / Exotic Stem Cell Gimmicks
   if (/gold|diamond|pearl|caviar|ruby|platinum|rare apple stem|exotic orchid|snake venom|snail mucin extract \d*ppm|black truffle|meteorite/i.test(norm)) {
     return {
-      strikeTag: '🚩 Fairy Dusting (Marketing Gimmick)',
-      strikeReason: 'Straight-up marketing gimmick added at <0.001% homeopathic micro-doses purely to justify luxury claims on the box. Zero clinical biological activity.'
+      strikeTag: '🚩 Fairy-Dusting Gimmick',
+      strikeReason: 'Added at <0.001% homeopathic trace levels purely for marketing box claims. Zero bioactivity.'
     };
   }
 
   // 5. Cheap Synthetic Dyes & Food Colorings
   if (/ci\s*\d+|fd&c|d&c|yellow\s*\d+|blue\s*\d+|red\s*\d+|caramel color|titanium dioxide|iron oxides/i.test(norm)) {
     return {
-      strikeTag: '🎨 Synthetic Dye (Visual Illusion)',
-      strikeReason: 'Artificial food dye added to trick your eyes into thinking the formulation is "berry fresh" or "clinical". Zero active therapeutic value.'
+      strikeTag: '🎨 Artificial Color Dye',
+      strikeReason: 'Visual food dye added to simulate fresh color. Zero therapeutic potency.'
     };
   }
 
   // 6. Water / Aqua Dilution
   if (/^(aqua|water|purified water|demineralized water)$/i.test(norm.trim())) {
     return {
-      strikeTag: '💧 85%+ Plain Water Dilution',
-      strikeReason: 'Basic solvent making up 80-90% of bottle volume. Essential liquid vehicle, but contains zero proprietary miracle active.'
+      strikeTag: '💧 85%+ Water Dilution',
+      strikeReason: 'Essential solvent vehicle, but provides zero proprietary active power.'
     };
   }
 
   // 7. Standard Chemical Thickeners & Binders
   if (/carbomer|xanthan gum|acrylates|cellulose|hydroxyethylcellulose|magnesium stearate|stearic acid|guar gum|carrageenan|polyacrylate/i.test(norm)) {
     return {
-      strikeTag: '📦 Bulking Excipient / Thickener',
-      strikeReason: 'Inactive industrial binder and gelling agent used to thicken fluid into a gel or bind tablets. Zero therapeutic action.'
+      strikeTag: '📦 Bulking Thickener',
+      strikeReason: 'Inactive gelling agent to thicken fluid or bind tablets. Zero therapeutic action.'
     };
   }
 
   // 8. Chelating agents & Chemical Preservatives
   if (/disodium edta|tetrasodium edta|bht|bha|phenoxyethanol|sodium benzoate|potassium sorbate|methylparaben|propylparaben|ethylhexylglycerin/i.test(norm)) {
     return {
-      strikeTag: '🛡️ Shelf-Life Preservative (Inactive)',
-      strikeReason: 'Chemical stabilizer required to prevent mold and bacterial growth for 24 months. Contains zero targeted wellness actives.'
+      strikeTag: '🛡️ Shelf Stabilizer',
+      strikeReason: 'Chemical stabilizer required for 24-month shelf life. Zero active wellness benefit.'
     };
   }
 
   // 9. Fatty Alcohols & Emulsifying Vehicles
   if (/cetearyl alcohol|cetyl alcohol|stearyl alcohol|polysorbate|ceteareth|peg-\d+|glyceryl stearate|sorbitan|isostearate/i.test(norm)) {
     return {
-      strikeTag: '🧴 Emulsifier / Texture Carrier',
-      strikeReason: 'Chemical binder that keeps oil and water from separating on the shelf. Inactive emulsion vehicle.'
+      strikeTag: '🧴 Emulsifier Vehicle',
+      strikeReason: 'Keeps oil and water blended on shelf. Inactive formulation carrier.'
     };
   }
 
   // 10. Generic unverified marketing herbal extracts
   if (/extract|juice|oil|leaf|root|bark|flower|seed/i.test(norm)) {
     return {
-      strikeTag: '📢 Unverified Buzzword Extract',
-      strikeReason: 'Unstandardized botanical listed without active compound percentages. Often added at trace amounts (<0.01%) for label marketing.'
+      strikeTag: '📢 Unverified Botanical',
+      strikeReason: 'Unstandardized botanical with undisclosed active percentage. Often added at trace amounts.'
     };
   }
 
   // Default fallback for other fillers
   return {
-    strikeTag: '🚫 Inactive Filler / Excipient',
-    strikeReason: 'Non-therapeutic excipient providing no biological activity for your target wellness goal.'
+    strikeTag: '🚫 Inactive Excipient',
+    strikeReason: 'Non-therapeutic filler providing zero clinical activity for your wellness goal.'
   };
 }
 
@@ -141,7 +139,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
   const [animationStep, setAnimationStep] = useState<'writing' | 'marking' | 'complete'>('complete');
   const [displayedCount, setDisplayedCount] = useState<number>(100);
   const [markedCount, setMarkedCount] = useState<number>(100);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'actives' | 'fillers'>('all');
+  const [purgeFluffMode, setPurgeFluffMode] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<ParsedItem | null>(null);
 
   // Parse items from raw ingredient text and match with detected ingredients
@@ -150,7 +148,6 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
       return [];
     }
 
-    // Split raw ingredient text
     const rawTokens = rawIngredientText
       .split(/[,;\n•·|]/)
       .map(t => t.trim())
@@ -242,7 +239,6 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
     const total = parsedItems.length;
     let current = 0;
 
-    // Phase 1: Write down ingredients one by one
     const writeTimer = setInterval(() => {
       current += 1;
       setDisplayedCount(current);
@@ -251,7 +247,6 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         clearInterval(writeTimer);
         setAnimationStep('marking');
 
-        // Phase 2: Circle actives in green and strikethrough unvaluable in red
         let marked = 0;
         const markTimer = setInterval(() => {
           marked += 1;
@@ -261,9 +256,9 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
             clearInterval(markTimer);
             setAnimationStep('complete');
           }
-        }, 70);
+        }, 50);
       }
-    }, 35);
+    }, 25);
   };
 
   useEffect(() => {
@@ -281,247 +276,171 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
   const totalCount = parsedItems.length || 1;
   const activePercentage = Math.round((provenActivesCount / totalCount) * 100);
 
-  const visibleItems = parsedItems.filter(item => {
-    if (activeFilter === 'actives') return item.isActive;
-    if (activeFilter === 'fillers') return item.isStruckThrough;
-    return true;
-  });
+  // Compute Gamified Formulation Grade
+  const formulationGrade = useMemo(() => {
+    if (activePercentage >= 50) return { grade: 'A', label: 'Clinical Grade Potency', color: 'text-emerald-400', ring: '#10B981', bg: 'bg-emerald-500/10' };
+    if (activePercentage >= 25) return { grade: 'B', label: 'Moderate Active Density', color: 'text-mint-400', ring: '#34D399', bg: 'bg-mint-500/10' };
+    if (activePercentage >= 15) return { grade: 'C', label: 'Commercial Standard (High Fluff)', color: 'text-amber-400', ring: '#F59E0B', bg: 'bg-amber-500/10' };
+    return { grade: 'D-', label: 'Extreme Marketing Gimmick / Dilution', color: 'text-rose-400', ring: '#EF4444', bg: 'bg-rose-500/10' };
+  }, [activePercentage]);
+
+  const visibleItems = useMemo(() => {
+    if (purgeFluffMode) {
+      return parsedItems.filter(p => p.isActive);
+    }
+    return parsedItems;
+  }, [parsedItems, purgeFluffMode]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* ========================================================================= */}
-      {/* SAAS TELEMETRY & DIAGNOSTIC HUD                                           */}
+      {/* 🎮 GAMIFIED FORMULATION SCOREBOARD & BS METER                             */}
       {/* ========================================================================= */}
-      <div className="rounded-3xl bg-gradient-to-r from-forest-950 via-forest-900 to-forest-950 border border-emerald-500/20 p-4 sm:p-5 text-cream-50 shadow-card space-y-4 relative overflow-hidden">
-        {/* Ambient background shimmer glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer-sweep pointer-events-none" />
+      <div className="rounded-3xl bg-gradient-to-br from-forest-950 via-forest-900 to-forest-950 border border-emerald-500/30 p-4 sm:p-5 text-cream-50 shadow-card relative overflow-hidden">
+        {/* Shimmer Ambient Glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer-sweep pointer-events-none" />
 
-        {/* Top Status Bar: Engine & Latency */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-500/15 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-            <span className="text-[11px] font-black tracking-widest uppercase text-mint-300 font-mono">
-              FORMULATION NLP SCANNER v3.1
-            </span>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+          {/* Left: Score Dial & Formulation Grade */}
+          <div className="flex items-center gap-3.5 w-full sm:w-auto">
+            {/* Circular Gamified Score Ring */}
+            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center animate-score-glow rounded-full bg-forest-950 border border-emerald-500/30">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="19" stroke="rgba(255,255,255,0.1)" strokeWidth="3.5" fill="none" />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="19"
+                  stroke={formulationGrade.ring}
+                  strokeWidth="3.5"
+                  strokeDasharray="119.38"
+                  strokeDashoffset={119.38 - (119.38 * Math.max(activePercentage, 10)) / 100}
+                  strokeLinecap="round"
+                  fill="none"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xs font-black font-mono leading-none">{activePercentage}%</span>
+                <span className="text-[8px] font-bold text-cream-300 uppercase tracking-tighter">Purity</span>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-3 text-[11px] text-cream-200 font-mono">
-            <span className="flex items-center gap-1 text-emerald-400">
-              <Zap className="w-3.5 h-3.5" />
-              <span>0.38s Audit Engine</span>
-            </span>
-            <span className="text-cream-400">•</span>
-            <span>100% InChI Clinical Match</span>
-          </div>
-        </div>
-
-        {/* 3 Interactive SaaS Metric Readouts */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Metric 1: Real Actives Ratio */}
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1.5 backdrop-blur-xs">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-cream-300 text-[10px] font-bold uppercase tracking-wider">
-                Active Potency Ratio
-              </span>
-              <span className="text-emerald-400 font-black font-mono">{activePercentage}%</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-black/30 overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-500 to-mint-400 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${Math.max(activePercentage, 8)}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-cream-300 font-medium">
-              {provenActivesCount} real biological actives identified
-            </p>
-          </div>
-
-          {/* Metric 2: Gimmicks & Fillers Stripped */}
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1.5 backdrop-blur-xs">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-rose-300 text-[10px] font-bold uppercase tracking-wider">
-                Marketing Fluff Purged
-              </span>
-              <span className="text-rose-400 font-black font-mono">{fillersCount} Struck</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-black/30 overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-rose-500 to-coral-400 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${Math.min((fillersCount / totalCount) * 100, 100)}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-rose-300/80 font-medium">
-              Dyes, candy syrups & micro-dusting filtered
-            </p>
-          </div>
-
-          {/* Metric 3: Scientific Formulation Integrity */}
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1.5 backdrop-blur-xs">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-mint-300 text-[10px] font-bold uppercase tracking-wider">
-                Scientific Sense-Check
-              </span>
-              <span className="text-mint-300 font-black font-mono">
-                {provenActivesCount > 0 ? 'Verified' : 'Flagged'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 pt-0.5">
-              {provenActivesCount > 0 ? (
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30 flex items-center gap-1">
-                  <Check className="w-3 h-3 stroke-[3]" />
-                  <span>Therapeutic Dose Supported</span>
+            {/* Score & Verdict Pill */}
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <span className={`text-base sm:text-lg font-black tracking-tight ${formulationGrade.color}`}>
+                  Grade {formulationGrade.grade}
                 </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[10px] font-extrabold border border-rose-500/30 flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-rose-400" />
-                  <span>Mostly Fillers & Buzzwords</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-cream-200 font-extrabold uppercase font-mono tracking-wider">
+                  BS Meter
                 </span>
-              )}
+              </div>
+              <p className="text-xs text-cream-200 font-medium line-clamp-1">
+                {formulationGrade.label}
+              </p>
             </div>
-            <p className="text-[10px] text-cream-300 font-medium">
-              Cross-referenced with PubMed DB
-            </p>
+          </div>
+
+          {/* Right: Gamified Stats + Zapper Control */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            {/* 3 Gamified Stat Badges */}
+            <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/10">
+              <div className="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-center">
+                <span className="block text-emerald-400 font-black font-mono text-xs leading-none">
+                  {provenActivesCount}
+                </span>
+                <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-tight">Actives</span>
+              </div>
+
+              <div className="px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-center">
+                <span className="block text-rose-400 font-black font-mono text-xs leading-none">
+                  {fillersCount}
+                </span>
+                <span className="text-[9px] font-bold text-rose-300 uppercase tracking-tight">Purged</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={startAnimation}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-cream-200 transition active:scale-95"
+                title="Replay Scanner Animation"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-mint-300" />
+              </button>
+            </div>
+
+            {/* Gamified "ZAP THE FLUFF" Switch */}
+            <button
+              type="button"
+              onClick={() => setPurgeFluffMode(!purgeFluffMode)}
+              className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
+                purgeFluffMode
+                  ? 'bg-gradient-to-r from-emerald-500 to-mint-400 text-forest-950 ring-2 ring-emerald-300 ring-offset-2 ring-offset-forest-950'
+                  : 'bg-gradient-to-r from-amber-500 to-rose-500 text-white hover:brightness-110'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              <span>{purgeFluffMode ? '✨ Pure Actives View' : '⚡ Zap Marketing Fluff'}</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Top Controls & Counter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Minimalist Filter Pill Group */}
-        <div className="inline-flex p-1 bg-cream-200/80 rounded-2xl border border-cream-300 text-xs shadow-xs">
-          <button
-            type="button"
-            onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-              activeFilter === 'all'
-                ? 'bg-forest-900 text-cream-50 shadow-sm'
-                : 'text-charcoal-700 hover:text-forest-950'
-            }`}
-          >
-            All Ingredients ({parsedItems.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('actives')}
-            className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all ${
-              activeFilter === 'actives'
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'text-emerald-900 hover:text-emerald-950'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Circled Actives ({provenActivesCount})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('fillers')}
-            className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all ${
-              activeFilter === 'fillers'
-                ? 'bg-rose-700 text-white shadow-sm'
-                : 'text-rose-800 hover:text-rose-950'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-rose-400" />
-            <span>Struck Gimmicks ({fillersCount})</span>
-          </button>
-        </div>
-
-        {/* Replay Handwriting Animation Button */}
-        <button
-          type="button"
-          onClick={startAnimation}
-          className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-cream-100 border border-cream-300 text-charcoal-800 text-xs font-bold flex items-center gap-1.5 transition shadow-soft active:scale-95"
-          title="Replay handwriting & debunk audit"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-forest-800" />
-          <span>Replay Handwriting Audit</span>
-        </button>
-      </div>
-
       {/* ========================================================================= */}
-      {/* THE CLINICAL DEBUNK PRESCRIPTION PAPER SHEET                              */}
+      {/* 📜 CLEAN PRESCRIPTION AUDIT SHEET (COMPACT & BITE-SIZED)                  */}
       {/* ========================================================================= */}
-      <div className="relative rounded-3xl rx-paper-ruled border-2 border-[#E2DAC8] shadow-card overflow-hidden p-6 sm:p-8 font-sans transition-all">
+      <div className="relative rounded-3xl rx-paper-ruled border-2 border-[#E2DAC8] shadow-card overflow-hidden p-4 sm:p-6 font-sans transition-all">
         
         {/* Dynamic Scanning Laser Beam Overlay */}
         {(animationStep === 'writing' || animationStep === 'marking') && (
           <div className="animate-laser-beam" />
         )}
 
-        {/* Paper Notebook Header Stamp */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-dashed border-[#CFC5B0]">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-forest-950 text-mint-300 text-[10px] font-black uppercase tracking-widest font-mono">
-                Rx FORMULATION SENSE-CHECK
+        {/* Top Paper Header */}
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-dashed border-[#CFC5B0]">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 rounded-md bg-forest-950 text-mint-300 text-[9px] font-black uppercase font-mono tracking-widest">
+                Rx AUDIT SHEET
               </span>
-              <span className="text-[10px] font-extrabold text-charcoal-400 uppercase tracking-widest font-mono">
-                NO-BULLSHIT AUDIT
+              <span className="text-[10px] font-extrabold text-charcoal-500 uppercase tracking-wider font-mono">
+                {productName} {brand ? `• ${brand}` : ''}
               </span>
             </div>
-            <h3 className="text-lg sm:text-xl font-black text-forest-950 tracking-tight">
-              {productName}
-            </h3>
-            {brand && (
-              <p className="text-xs text-charcoal-600 font-medium">
-                Audited Brand: <span className="font-bold text-forest-900">{brand}</span>
-              </p>
-            )}
           </div>
 
-          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xs px-3.5 py-2 rounded-2xl border border-cream-300 self-start sm:self-auto shadow-xs">
-            <div className="text-left">
-              <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider block">
-                REAL ACTIVES
-              </span>
-              <span className="text-xs font-extrabold text-emerald-800 flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                {provenActivesCount} Circled Green
-              </span>
-            </div>
-            <div className="w-px h-6 bg-cream-300" />
-            <div className="text-left">
-              <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider block">
-                MARKETING / FILLERS
-              </span>
-              <span className="text-xs font-extrabold text-rose-700 flex items-center gap-1">
-                <X className="w-3.5 h-3.5 text-rose-600 stroke-[3]" />
-                {fillersCount} Struck Red
-              </span>
-            </div>
-          </div>
+          <span className="text-[11px] font-mono text-charcoal-500 font-bold">
+            {visibleItems.length} {visibleItems.length === 1 ? 'item' : 'items'}
+          </span>
         </div>
 
         {/* Live Writing / Marking Progress Banner */}
-        {animationStep === 'writing' && (
-          <div className="mb-4 p-2.5 rounded-2xl bg-amber-900/10 text-amber-950 text-xs font-bold flex items-center justify-between animate-pulse">
-            <div className="flex items-center gap-2">
-              <PenTool className="w-4 h-4 text-amber-800 animate-bounce" />
-              <span>Transcribing packaging ingredients onto paper...</span>
+        {animationStep !== 'complete' && (
+          <div className="mb-3 p-2 rounded-2xl bg-amber-900/10 text-amber-950 text-xs font-bold flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-1.5">
+              <PenTool className="w-3.5 h-3.5 text-amber-800 animate-bounce" />
+              <span>Scanning packaging ingredients & circling active compounds...</span>
             </div>
-            <span className="text-[11px] font-mono">{displayedCount} / {parsedItems.length}</span>
+            <span className="text-[10px] font-mono">{displayedCount} / {parsedItems.length}</span>
           </div>
         )}
 
-        {animationStep === 'marking' && (
-          <div className="mb-4 p-2.5 rounded-2xl bg-emerald-900/10 text-emerald-950 text-xs font-bold flex items-center justify-between animate-pulse">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
-              <span>Sense-checking actives: Circling proven actives & striking marketing fillers in red...</span>
-            </div>
-            <span className="text-[11px] font-mono">{markedCount} / {parsedItems.length}</span>
-          </div>
-        )}
-
-        {/* Paper Body: Handwritten Ingredients List */}
-        <div className="space-y-3 min-h-[180px] pt-1">
+        {/* ========================================================================= */}
+        {/* COMPACT INTERACTIVE INGREDIENT LIST (NO BLOAT / NO DENSE TEXT WALLS)      */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
           {visibleItems.length === 0 ? (
-            <p className="text-xs text-charcoal-400 italic py-8 text-center font-serif">
-              No ingredients match the selected filter.
-            </p>
+            <div className="text-center py-8 text-charcoal-400 space-y-1">
+              <p className="text-xs font-serif italic">Zero proven active ingredients found in this formulation.</p>
+              <button
+                type="button"
+                onClick={() => setPurgeFluffMode(false)}
+                className="text-xs font-bold text-forest-900 underline"
+              >
+                View all packaging fillers
+              </button>
+            </div>
           ) : (
             visibleItems.map((item, idx) => {
               const isWritten = animationStep === 'complete' || idx < displayedCount;
@@ -535,103 +454,69 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 <div
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  className={`group relative p-3 sm:p-3.5 rounded-2xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 ${
+                  className={`group relative px-3.5 py-2.5 rounded-2xl transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 animate-pop-card ${
                     isProven
-                      ? 'bg-emerald-500/10 border-2 border-emerald-500/40 shadow-xs hover:border-emerald-600'
+                      ? 'bg-emerald-500/10 border-2 border-emerald-500/50 shadow-xs hover:border-emerald-600 hover:bg-emerald-500/15'
                       : isStruck
-                      ? 'bg-white/50 border border-cream-200/60 hover:bg-rose-50/50 hover:border-rose-300'
-                      : 'bg-white/70 border border-cream-200'
+                      ? 'bg-white/60 border border-cream-200/80 hover:bg-rose-50/70 hover:border-rose-300 opacity-80 hover:opacity-100'
+                      : 'bg-white/80 border border-cream-200'
                   }`}
                 >
-                  {/* Left Column: Ingredient with Handwritten Script & Animated Marking */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Ingredient Text Container with SVG Circle or Red Strikethrough */}
-                      <div className="relative inline-flex items-center py-0.5 px-1">
-                        {/* 1. ANIMATED GREEN HAND-DRAWN CIRCLE/OVAL FOR VALUABLE ACTIVES */}
-                        {isProven && (
-                          <svg
-                            className="absolute -inset-x-2.5 -inset-y-1.5 w-[calc(100%+20px)] h-[calc(100%+12px)] pointer-events-none z-0"
-                            viewBox="0 0 160 50"
-                            preserveAspectRatio="none"
-                          >
-                            <path
-                              d="M 12 25 C 10 10, 35 4, 80 4 C 135 4, 154 10, 154 25 C 154 38, 125 46, 75 46 C 25 46, 6 36, 6 22 C 6 15, 20 8, 45 6"
-                              fill="none"
-                              stroke="#059669"
-                              strokeWidth="2.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="animate-green-circle drop-shadow-xs"
-                            />
-                          </svg>
-                        )}
-
-                        {/* Text: Circled Green or Struck in Red */}
-                        <span
-                          className={`relative z-10 text-sm sm:text-base font-bold tracking-tight transition-all duration-300 font-sans ${
-                            isProven
-                              ? 'text-emerald-950 font-black'
-                              : isStruck
-                              ? 'text-charcoal-400 animate-red-strike font-medium'
-                              : 'text-forest-950 font-bold'
-                          }`}
-                        >
-                          {item.rawText}
-                        </span>
-                      </div>
-
-                      {/* Active Circled Status Badge */}
+                  {/* Left: Ingredient Name with Handwritten Circling or Strikethrough */}
+                  <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+                    <div className="relative inline-flex items-center py-0.5 px-1">
+                      {/* Green Hand-Drawn Oval Circle for Actives */}
                       {isProven && (
-                        <span className="relative z-10 inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                          <span>Proven Active</span>
-                        </span>
+                        <svg
+                          className="absolute -inset-x-2 -inset-y-1 w-[calc(100%+16px)] h-[calc(100%+8px)] pointer-events-none z-0"
+                          viewBox="0 0 160 50"
+                          preserveAspectRatio="none"
+                        >
+                          <path
+                            d="M 12 25 C 10 10, 35 4, 80 4 C 135 4, 154 10, 154 25 C 154 38, 125 46, 75 46 C 25 46, 6 36, 6 22 C 6 15, 20 8, 45 6"
+                            fill="none"
+                            stroke="#059669"
+                            strokeWidth="2.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="animate-green-circle"
+                          />
+                        </svg>
                       )}
 
-                      {/* Red Specific Debunk Tag */}
-                      {isStruck && item.strikeTag && (
-                        <span className="text-[10px] font-extrabold text-rose-800 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200/80 font-sans shadow-2xs">
-                          {item.strikeTag}
-                        </span>
-                      )}
+                      {/* Text */}
+                      <span
+                        className={`relative z-10 text-xs sm:text-sm font-bold tracking-tight font-sans ${
+                          isProven
+                            ? 'text-emerald-950 font-black'
+                            : isStruck
+                            ? 'text-charcoal-400 animate-red-strike font-medium'
+                            : 'text-forest-950 font-bold'
+                        }`}
+                      >
+                        {item.rawText}
+                      </span>
                     </div>
 
-                    {/* Active Pharmacological Role or Struck Debunk Explanation */}
-                    {isProven && item.purpose && (
-                      <p className="text-xs text-emerald-950 font-semibold leading-relaxed pl-1">
-                        ✦ {item.purpose}
-                      </p>
+                    {/* Quick Active Badge or Snappy Debunk Pill */}
+                    {isProven && (
+                      <span className="relative z-10 inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        <span>Active</span>
+                      </span>
                     )}
 
-                    {isStruck && item.strikeReason && (
-                      <p className="text-[11px] text-charcoal-600 font-medium leading-relaxed pl-1">
-                        {item.strikeReason}
-                      </p>
+                    {isStruck && item.strikeTag && (
+                      <span className="text-[9px] font-extrabold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200/80 shadow-2xs">
+                        {item.strikeTag}
+                      </span>
                     )}
                   </div>
 
-                  {/* Right Action: Evidence Tag / Info */}
-                  <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-center">
-                    {item.sourceUrl && (
-                      <a
-                        href={item.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 rounded-lg text-emerald-800 hover:bg-emerald-200/70 transition"
-                        title="View published clinical evidence on PubMed"
-                      >
-                        <ExternalLink className="w-4 h-4 text-emerald-700" />
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      className="text-xs text-charcoal-400 group-hover:text-forest-900 transition p-1"
-                      title="Inspect clinical breakdown"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                  {/* Right: Quick Action Pill */}
+                  <div className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-charcoal-400 group-hover:text-forest-900 transition">
+                    <span className="hidden sm:inline">Tap for details</span>
+                    <Info className="w-3.5 h-3.5" />
                   </div>
                 </div>
               );
@@ -639,37 +524,32 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
           )}
         </div>
 
-        {/* Paper Footer: Clinical Summary Verdict */}
-        <div className="mt-6 pt-5 border-t border-dashed border-[#CFC5B0] bg-[#F4EFE6]/60 -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 p-6 sm:p-8 rounded-b-3xl">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-forest-900 text-mint-300 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-              <Award className="w-4 h-4 text-mint-300" />
-            </div>
-            <div className="space-y-1 text-xs">
-              <span className="font-black text-forest-950 uppercase tracking-wider block text-xs">
-                Clinical Pharmacological Synthesis
-              </span>
-              <p className="text-charcoal-800 leading-relaxed font-sans text-xs sm:text-sm">
-                "{analysis.summary.synthesisText}"
-              </p>
-            </div>
+        {/* Minimalist Gamified Bottom Line Verdict */}
+        <div className="mt-4 pt-3 border-t border-dashed border-[#CFC5B0] flex items-center justify-between text-xs text-charcoal-600 gap-2">
+          <div className="flex items-center gap-1.5 font-bold text-forest-950 shrink-0">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span>Reality Verdict:</span>
           </div>
+          <span className="text-charcoal-700 font-medium text-right text-[11px] truncate">
+            {analysis.summary.synthesisText}
+          </span>
         </div>
-
       </div>
 
-      {/* Item Details Drawer Modal */}
+      {/* ========================================================================= */}
+      {/* 🔍 CLEAN QUICK-DETAILS MODAL (OPENS ON TAP)                               */}
+      {/* ========================================================================= */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-cream-300 space-y-4">
-            <div className="flex items-start justify-between gap-2">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-cream-300 space-y-3.5">
+            <div className="flex items-start justify-between gap-2 border-b border-cream-200 pb-3">
               <div>
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
                   selectedItem.isActive ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-rose-100 text-rose-900 border border-rose-200'
                 }`}>
                   {selectedItem.isActive ? 'Clinically Active Compound' : (selectedItem.strikeTag || 'Inactive Filler')}
                 </span>
-                <h4 className="text-base sm:text-lg font-black text-forest-950 mt-1.5">
+                <h4 className="text-base font-black text-forest-950 mt-1">
                   {selectedItem.cleanName}
                 </h4>
               </div>
@@ -682,48 +562,48 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-charcoal-700">
+            <div className="space-y-2.5 text-xs text-charcoal-700">
               {selectedItem.purpose && (
-                <div className="p-3 rounded-2xl bg-cream-50 border border-cream-200">
-                  <span className="font-bold text-forest-950 block text-xs mb-0.5">Clinical Purpose:</span>
-                  <p className="text-charcoal-700">{selectedItem.purpose}</p>
+                <div className="p-2.5 rounded-xl bg-cream-50 border border-cream-200">
+                  <span className="font-bold text-forest-950 block text-[11px] mb-0.5">Clinical Purpose:</span>
+                  <p className="text-charcoal-700 leading-relaxed">{selectedItem.purpose}</p>
                 </div>
               )}
 
               {selectedItem.explanation && (
                 <div>
-                  <span className="font-bold text-forest-950 block mb-0.5">Mechanism of Action:</span>
+                  <span className="font-bold text-forest-950 block text-[11px] mb-0.5">Pharmacological Action:</span>
                   <p className="leading-relaxed text-charcoal-600">{selectedItem.explanation}</p>
                 </div>
               )}
 
               {selectedItem.strikeReason && (
-                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1">
-                  <span className="font-extrabold block text-xs">Reality Check:</span>
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1">
+                  <span className="font-extrabold block text-[11px]">Reality Check:</span>
                   <p className="text-xs text-rose-900 leading-relaxed">{selectedItem.strikeReason}</p>
                 </div>
               )}
             </div>
 
-            <div className="pt-2 flex items-center justify-between">
+            <div className="pt-2 flex items-center justify-between border-t border-cream-200">
               {selectedItem.sourceUrl ? (
                 <a
                   href={selectedItem.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-bold text-forest-800 hover:text-mint-600 flex items-center gap-1.5 underline"
+                  className="text-xs font-bold text-forest-800 hover:text-mint-600 flex items-center gap-1 underline"
                 >
-                  <span>View PubMed Evidence</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>PubMed Study</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               ) : <div />}
 
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold shadow-soft transition"
+                className="px-4 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold shadow-soft transition"
               >
-                Close
+                Done
               </button>
             </div>
           </div>
