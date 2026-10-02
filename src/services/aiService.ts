@@ -3,14 +3,8 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
-  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash (Direct Google AI Studio - Free & Instant)' },
-  { id: 'google/gemini-3.8-flash', name: 'Google: Gemini 3.8 Flash (Direct Google AI Studio - Frontier)' },
-  { id: 'openai/gpt-4o', name: 'OpenAI: GPT-4o (Frontier Vision - Exact ChatGPT Engine)' },
-  { id: 'openai/gpt-4o-2024-11-20', name: 'OpenAI: GPT-4o Latest (High-Res Packaging Vision)' },
-  { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 (Clinical Grade Extraction & Reasoning)' },
-  { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Deep Clinical Reasoning & Actives Isolation)' },
-  { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek Vision V4.1 (Multimodal Vision)' },
-  { id: 'openrouter/free', name: 'OpenRouter Auto Router (Free)' }
+  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash (Direct Google AI Studio - Free & Fast)' },
+  { id: 'google/gemini-3.8-flash', name: 'Google: Gemini 3.8 Flash (Direct Google AI Studio - Frontier)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -531,26 +525,22 @@ Return ONLY valid JSON matching this schema:
   };
 }
 
-/**
- * Uses DeepSeek Clinical Reasoning AI to de-noise raw label text,
- * isolate ONLY pure ingredients and active doses, and discard all packaging noise.
- */
 export async function denoiseAndStructureOCRWithLLM(
   rawOCRText: string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
   onProgress?: (percent: number, status: string) => void,
-  preferredModel?: string
+  preferredModel: string = 'gemini-3.5-flash'
 ): Promise<VisionLabelExtractionResult | null> {
-  const effectiveKey = (apiKey && apiKey.trim().length > 5)
+  const effectiveGeminiKey = (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza')))
     ? apiKey.trim()
-    : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+    : (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
 
-  if (!effectiveKey || !rawOCRText || rawOCRText.trim().length < 10) {
+  if (!rawOCRText || rawOCRText.trim().length < 5) {
     return null;
   }
 
-  if (onProgress) onProgress(50, 'DeepSeek AI isolating pure ingredients & dosages...');
+  if (onProgress) onProgress(50, 'Google Gemini isolating pure ingredients & dosages...');
 
   const prompt = `You are an expert clinical pharmacologist, cosmetic chemist, and label transcriber.
 Extract ONLY pure ingredients and active substances with exact dosages from this label text.
@@ -563,180 +553,157 @@ ${rawOCRText}
 CRITICAL EXTRACTION RULES:
 1. "productName": Clean name of the product.
 2. "brand": Brand name if present.
-3. "activesWithDose": Array of active ingredients, botanicals, and nutrients with their exact numeric dose and unit (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}, {"name": "L-Theanine", "dose": "10.0 mg"}, {"name": "Chamomile Extract", "dose": "10 mg"}, {"name": "Vitamin D2", "dose": "15.0 mcg"}]).
-   - STRICTLY EXCLUDE: Energy, Calories, Protein, Carbohydrates, Sugar, Fat, Saturated Fat, Sodium, Cholesterol.
-4. "fullIngredientsList": Array of pure individual chemical/botanical/carrier ingredient names (e.g. ["Liquid Glucose", "Cane Sugar", "Pectin", "Citric Acid", "Tart Cherry Extract", "Medium Chain Triglycerides", "Beet Root Powder"]).
+3. "ingredients": Array of pure individual chemical/botanical/carrier ingredient names in exact order.
    - STRICTLY DISCARD and EXCLUDE:
      * Usage / dosage instructions (e.g. "Take 1 gummy", "Apply 2-3 drops", "Massage gently", "Swallow with water")
      * Warnings and storage notes (e.g. "Store in cool dry place below 25C", "Keep out of reach of children", "Not for medicinal use", "Consult physician")
      * Manufacturer, distributor & packaging boilerplate (e.g. "Marketed by", "Manufactured by", "FSSAI Lic No", "Batch No", "Mfg Date", "Best Before", "MRP", "Net Quantity", "Customer Care")
-     * RDA guidelines, overages statement, single character OCR artifacts
-5. "claims": Array of key front-of-pack claims (e.g. ["Supports Deep Sleep", "Non-Habit Forming"]).
+     * Macronutrient facts table (Energy, Calories, Protein, Carbohydrates, Sugar, Fat, Saturated Fat, Sodium, Cholesterol)
+4. "activesWithDose": Array of active ingredients with their exact numeric dose and unit (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}]).
+5. "claims": Array of key front-of-pack claims.
 6. "clinicalSynthesis": Concise 1-2 sentence evidence synthesis of how these active ingredients function together.
 
-Return ONLY a valid JSON object matching this schema without markdown fences or additional text:
+Return ONLY a valid JSON object matching this schema without markdown fences:
 {
   "productName": "string",
   "brand": "string",
+  "ingredients": ["string"],
   "activesWithDose": [
     { "name": "string", "dose": "string" }
   ],
-  "fullIngredientsList": ["string"],
   "claims": ["string"],
   "clinicalSynthesis": "string"
 }`;
 
-  const candidateModels = [
-    preferredModel && preferredModel !== 'local' ? preferredModel : 'deepseek/deepseek-chat',
-    'deepseek/deepseek-chat',
-    'deepseek/deepseek-r1',
-    'inclusionai/ling-3.0-flash-sante:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'openrouter/free'
-  ];
-  const uniqueModels = [...new Set(candidateModels)];
+  const geminiModels = [preferredModel.replace('google/', ''), 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  const uniqueModels = [...new Set(geminiModels)];
 
-  for (const model of uniqueModels) {
-    try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${effectiveKey.trim()}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://ritual-wellness.app',
-          'X-Title': 'Ritual Wellness AI'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert clinical pharmacologist and cosmetic chemist. Extract ONLY pure ingredients and discard all marketing, directions, warnings, and non-ingredient packaging noise. Output ONLY valid JSON.'
-            },
-            {
-              role: 'user',
-              content: prompt
+  if (effectiveGeminiKey) {
+    for (const model of uniqueModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveGeminiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const rawContent = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n') || '';
+          let cleaned = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+          let parsed: any = null;
+          try {
+            parsed = JSON.parse(cleaned);
+          } catch (jsonErr) {
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+            if (jsonMatch) {
+              try { parsed = JSON.parse(jsonMatch[0]); } catch (e) { /* fallback */ }
             }
-          ],
-          max_tokens: 1500,
-          temperature: 0.1
-        })
-      });
+          }
 
-      if (response.ok) {
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content || '';
-        
-        // Strip DeepSeek R1 reasoning thinking tags and markdown fences
-        let cleaned = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
+          if (parsed) {
+            const prodName = parsed.productName || 'Audited Product';
+            const brandName = parsed.brand || '';
+            const claims = Array.isArray(parsed.claims) ? parsed.claims.join(', ') : (parsed.claims || '');
 
-        let parsed: any = null;
-        try {
-          parsed = JSON.parse(cleaned);
-        } catch (jsonErr) {
-          const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-        }
+            const activeDoseStrings: string[] = [];
+            const candidateArrayKeys = [
+              'ingredients',
+              'fullIngredientsList',
+              'ingredientsList',
+              'ingredientList',
+              'allIngredients',
+              'extractedIngredients',
+              'rawIngredients',
+              'composition'
+            ];
 
-        if (parsed) {
-          const prodName = parsed.productName || 'Audited Product';
-          const brandName = parsed.brand || '';
-          const claims = Array.isArray(parsed.claims) ? parsed.claims.join(', ') : (parsed.claims || '');
+            const harvestedList: string[] = [];
 
-          const activeDoseStrings: string[] = [];
-          const candidateArrayKeys = [
-            'fullIngredientsList',
-            'ingredients',
-            'ingredientsList',
-            'ingredientList',
-            'allIngredients',
-            'extractedIngredients',
-            'rawIngredients',
-            'composition'
-          ];
-
-          const harvestedList: string[] = [];
-
-          if (Array.isArray(parsed)) {
-            parsed.forEach((item: any) => {
-              if (typeof item === 'string') harvestedList.push(item);
-              else if (item && typeof item === 'object') {
-                const name = item.name || item.ingredient || item.active || '';
-                const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
-                if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+            if (Array.isArray(parsed)) {
+              parsed.forEach((item: any) => {
+                if (typeof item === 'string') harvestedList.push(item);
+                else if (item && typeof item === 'object') {
+                  const name = item.name || item.ingredient || item.active || '';
+                  const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                  if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+                }
+              });
+            } else if (parsed && typeof parsed === 'object') {
+              for (const key of candidateArrayKeys) {
+                const val = parsed[key];
+                if (typeof val === 'string' && val.trim().length > 2) {
+                  harvestedList.push(...val.split(/[,;\n•·]/));
+                } else if (Array.isArray(val)) {
+                  val.forEach((item: any) => {
+                    if (typeof item === 'string') harvestedList.push(item);
+                    else if (item && typeof item === 'object') {
+                      const name = item.name || item.ingredient || item.active || '';
+                      const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
+                      if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+                    }
+                  });
+                }
               }
-            });
-          } else if (parsed && typeof parsed === 'object') {
-            for (const key of candidateArrayKeys) {
-              const val = parsed[key];
-              if (typeof val === 'string' && val.trim().length > 2) {
-                harvestedList.push(...val.split(/[,;\n•·]/));
-              } else if (Array.isArray(val)) {
-                val.forEach((item: any) => {
-                  if (typeof item === 'string') harvestedList.push(item);
-                  else if (item && typeof item === 'object') {
-                    const name = item.name || item.ingredient || item.active || '';
-                    const dose = item.dose || (item.amount ? `${item.amount} ${item.unit || ''}` : '');
-                    if (name) activeDoseStrings.push(dose ? `${name.trim()} (${dose.trim()})` : name.trim());
+
+              if (parsed.extractedIngredientsText && typeof parsed.extractedIngredientsText === 'string') {
+                harvestedList.push(...parsed.extractedIngredientsText.split(/[,;\n•·]/));
+              }
+
+              if (Array.isArray(parsed.activesWithDose)) {
+                parsed.activesWithDose.forEach((act: any) => {
+                  if (act.name && act.dose && isPureIngredient(act.name)) {
+                    activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
+                  } else if (act.name && isPureIngredient(act.name)) {
+                    activeDoseStrings.push(act.name.trim());
                   }
                 });
               }
             }
 
-            if (parsed.extractedIngredientsText && typeof parsed.extractedIngredientsText === 'string') {
-              harvestedList.push(...parsed.extractedIngredientsText.split(/[,;\n•·]/));
+            if (harvestedList.length < 2 && activeDoseStrings.length < 2) {
+              const rawFallbackText = cleanAndNormalizeOCRText(rawContent);
+              if (rawFallbackText) {
+                harvestedList.push(...rawFallbackText.split(/[,;\n•·]/));
+              }
             }
 
-            if (Array.isArray(parsed.activesWithDose)) {
-              parsed.activesWithDose.forEach((act: any) => {
-                if (act.name && act.dose && isPureIngredient(act.name)) {
-                  activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
-                } else if (act.name && isPureIngredient(act.name)) {
-                  activeDoseStrings.push(act.name.trim());
-                }
-              });
+            const combinedList: string[] = [...activeDoseStrings, ...harvestedList];
+            const sanitizedItems = sanitizeIngredientList(combinedList);
+            const finalIngredientText = sanitizedItems.length > 0 ? sanitizedItems.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
+            const analysis = analyzeLabelText(finalIngredientText, claims, userGoal, prodName);
+
+            if (parsed.clinicalSynthesis) {
+              analysis.summary.synthesisText = parsed.clinicalSynthesis;
             }
+
+            return {
+              productName: prodName,
+              brand: brandName,
+              ingredientText: finalIngredientText,
+              claimText: claims,
+              analysis,
+              source: 'openrouter_vision',
+              debugTrace: {
+                model: `Google AI Studio: ${model}`,
+                prompt,
+                rawResponse: rawContent,
+                parsedJson: parsed,
+                tokens: data.usageMetadata,
+                timestamp: new Date().toLocaleTimeString()
+              }
+            };
           }
-
-          // If JSON extraction found nothing or only 1 item, parse entire raw LLM content
-          if (harvestedList.length < 2 && activeDoseStrings.length < 2) {
-            const rawFallbackText = cleanAndNormalizeOCRText(rawContent);
-            if (rawFallbackText) {
-              harvestedList.push(...rawFallbackText.split(/[,;\n•·]/));
-            }
-          }
-
-          // Merge active doses with full ingredients list cleanly
-          const combinedList: string[] = [...activeDoseStrings, ...harvestedList];
-          const sanitizedItems = sanitizeIngredientList(combinedList);
-          const finalIngredientText = sanitizedItems.length > 0 ? sanitizedItems.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
-          const analysis = analyzeLabelText(finalIngredientText, claims, userGoal, prodName);
-
-          if (parsed.clinicalSynthesis) {
-            analysis.summary.synthesisText = parsed.clinicalSynthesis;
-          }
-
-          return {
-            productName: prodName,
-            brand: brandName,
-            ingredientText: finalIngredientText,
-            claimText: claims,
-            analysis,
-            source: 'openrouter_vision',
-            debugTrace: {
-              model,
-              prompt,
-              rawResponse: rawContent,
-              parsedJson: parsed,
-              tokens: data.usage,
-              timestamp: new Date().toLocaleTimeString()
-            }
-          };
         }
+      } catch (err) {
+        console.warn(`Gemini extraction with ${model} failed, trying next:`, err);
       }
-    } catch (err) {
-      console.warn(`DeepSeek extraction with ${model} failed, trying fallback:`, err);
     }
   }
 
