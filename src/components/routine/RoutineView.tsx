@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { RoutineStep } from '../../types';
-import { MOSAIC_PRODUCTS_CATALOG, LITTLE_JOYS_PREVIEW } from '../../data/mosaicProducts';
+import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
+import { findMatchingMosaicProducts } from '../../services/aiService';
+import { ClinicalRecommendations } from '../recommendations/ClinicalRecommendations';
 import { 
   Sun, 
   Moon, 
@@ -14,7 +16,6 @@ import {
   Circle, 
   Clock, 
   RotateCcw, 
-  ExternalLink, 
   X
 } from 'lucide-react';
 
@@ -28,8 +29,7 @@ export const RoutineView: React.FC = () => {
     removeRoutineStep, 
     reorderRoutineSteps, 
     regenerateRoutine,
-    shelfProducts,
-    setActiveTab
+    shelfProducts
   } = useApp();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -42,10 +42,15 @@ export const RoutineView: React.FC = () => {
   const [formProductId, setFormProductId] = useState<string>('');
   const [formIsHabit, setFormIsHabit] = useState<boolean>(true);
 
-  // Filter Mosaic catalog matching user's primary goal
-  const contextualMosaicProducts = MOSAIC_PRODUCTS_CATALOG.filter(
-    p => p.targetGoal === profile.primaryGoal
-  );
+  // Filter catalog matching user's active ingredients or primary goal
+  const contextualFormulations = useMemo(() => {
+    const shelfActives = shelfProducts.flatMap(p => p.activeIngredients || []);
+    if (shelfActives.length > 0) {
+      const matches = findMatchingMosaicProducts(shelfActives, profile.primaryGoal);
+      if (matches.length > 0) return matches;
+    }
+    return MOSAIC_PRODUCTS_CATALOG.filter(p => p.targetGoal === profile.primaryGoal).slice(0, 2);
+  }, [shelfProducts, profile.primaryGoal]);
 
   const morningSteps = routineSteps.filter(s => s.timeOfDay === 'morning');
   const eveningSteps = routineSteps.filter(s => s.timeOfDay === 'evening');
@@ -401,116 +406,13 @@ export const RoutineView: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* SUBTLE BRAND-NEUTRAL MOSAIC CONTEXTUAL RECOMMENDATION SECTION             */}
-      {/* ========================================================================= */}
-      <div className="pt-6 border-t border-cream-300 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-500">
-              Optional Contextual Reference
-            </span>
-            <h3 className="text-lg font-bold text-forest-950">
-              Products that may fit this step
-            </h3>
-          </div>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-cream-100 text-charcoal-600 border border-cream-200">
-            Brand Neutral
-          </span>
-        </div>
-
-        {/* Primary Option: Use what you own */}
-        <div className="p-4 rounded-3xl bg-mint-50 border border-mint-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏡</span>
-            <div>
-              <strong className="text-forest-950 font-bold block">
-                Option 1: Use a product you already own
-              </strong>
-              <span className="text-charcoal-600">
-                Any gentle product with verified actives fits your daily schedule.
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setActiveTab('smartshelf')}
-            className="self-start sm:self-center px-4 py-2 rounded-2xl bg-forest-900 text-cream-50 font-semibold text-xs shrink-0 hover:bg-forest-800 transition shadow-soft"
-          >
-            My Smart Shelf
-          </button>
-        </div>
-
-        {/* Mosaic Catalog Examples in a responsive grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {contextualMosaicProducts.map((p) => (
-            <div
-              key={p.id}
-              className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-200 shadow-soft space-y-3 text-xs flex flex-col justify-between"
-            >
-              <div className="flex items-start gap-3">
-                {p.imageUrl && (
-                  <img
-                    src={p.imageUrl}
-                    alt={p.product}
-                    className="w-14 h-14 rounded-2xl object-cover bg-cream-100 border border-cream-200 shrink-0"
-                    loading="lazy"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider">
-                      {p.brand}
-                    </span>
-                    <span className="font-bold text-forest-900 text-xs shrink-0">
-                      {p.currency}{p.sitePrice}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-forest-950 mt-0.5 line-clamp-2">
-                    {p.product}
-                  </h4>
-                </div>
-              </div>
-
-              <p className="text-charcoal-600 text-[11px] leading-relaxed">
-                <strong className="text-forest-900 font-semibold">Why it fits:</strong> {p.whyItFits}
-              </p>
-
-              <div className="flex items-center justify-between pt-1.5 border-t border-cream-100 text-[11px]">
-                <span className="text-charcoal-500 truncate max-w-[170px]">
-                  Actives: {p.keyIngredients.join(', ')}
-                </span>
-                <a
-                  href={p.officialUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1 font-semibold text-forest-800 hover:text-mint-600 transition shrink-0"
-                >
-                  <span>Official site</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Future Little Joys Family Preview */}
-        <div className="p-4 rounded-2xl bg-cream-100/70 border border-cream-300 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-forest-950">{LITTLE_JOYS_PREVIEW.title}</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cream-200 text-charcoal-700">
-              Coming Soon
-            </span>
-          </div>
-          <p className="text-xs text-charcoal-600 leading-relaxed">
-            {LITTLE_JOYS_PREVIEW.description}
-          </p>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {LITTLE_JOYS_PREVIEW.sampleProducts.map((sp, idx) => (
-              <span key={idx} className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-white text-forest-900 border border-cream-200">
-                {sp.name}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* Clinically Matched Product Formulations */}
+      <div className="pt-6 border-t border-cream-300">
+        <ClinicalRecommendations
+          products={contextualFormulations}
+          title="Evidence-Based Product Formulations"
+          subtitle="Clinical formulation alternatives with high bioavailability and clean excipients for your daily routine."
+        />
       </div>
 
       {/* Add / Edit Step Modal */}

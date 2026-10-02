@@ -148,7 +148,7 @@ export interface ProgressEntry {
 
 export interface MosaicProduct {
   id: string;
-  brand: 'Be Bodywise' | 'Man Matters' | 'Root Labs' | 'Little Joys';
+  brand: 'Be Bodywise' | 'Man Matters' | 'Root Labs' | 'Little Joys' | string;
   product: string;
   category: string;
   description: string;
@@ -160,6 +160,9 @@ export interface MosaicProduct {
   keyIngredients: string[];
   targetGoal: WellnessGoal;
   timeOfDay: 'morning' | 'evening' | 'both';
+  clinicalAdvantage?: string;
+  bioavailabilityRating?: string;
+  potencyBadge?: string;
 }
 
 export interface DuplicateIngredientAlert {

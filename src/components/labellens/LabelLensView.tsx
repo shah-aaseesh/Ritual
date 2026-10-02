@@ -1,13 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
 import { analyzeLabelText } from '../../services/analyzer';
-import { extractLabelFromImageWithAI, denoiseAndStructureOCRWithLLM } from '../../services/aiService';
+import { extractLabelFromImageWithAI, denoiseAndStructureOCRWithLLM, findMatchingMosaicProducts } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 import { VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
+import { ClinicalRecommendations } from '../recommendations/ClinicalRecommendations';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Camera, 
@@ -55,6 +56,11 @@ export const LabelLensView: React.FC = () => {
       SAMPLE_PRODUCTS[0].name
     );
   });
+
+  const matchingFormulations = useMemo(() => {
+    const activeNames = analysisResult?.detectedIngredients?.map(i => i.ingredient?.name || i.rawTextMatch) || [];
+    return findMatchingMosaicProducts(activeNames, profile.primaryGoal);
+  }, [analysisResult?.detectedIngredients, profile.primaryGoal]);
 
   const [saveModalOpen, setSaveModalOpen] = useState<boolean>(false);
   const [saveTimeOfDay, setSaveTimeOfDay] = useState<'morning' | 'evening' | 'both'>('evening');
@@ -756,6 +762,13 @@ export const LabelLensView: React.FC = () => {
               )}
             </div>
           )}
+
+          {/* Clinically Matched Alternative Formulations */}
+          <ClinicalRecommendations
+            products={matchingFormulations}
+            title="Evidence-Based Alternative Formulations"
+            subtitle="Higher-bioavailability, clean-label clinical formulations matching the active ingredients detected on this label."
+          />
         </div>
       </div>
 

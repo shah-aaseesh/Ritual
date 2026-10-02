@@ -783,18 +783,64 @@ Respond ONLY with the JSON object.`;
 
 export function findMatchingMosaicProducts(
   detectedIngredientNames: string[],
-  goal: WellnessGoal
+  goal?: WellnessGoal
 ): MosaicProduct[] {
-  const normalizedActives = detectedIngredientNames.map(n => n.toLowerCase());
-  
-  const matches = MOSAIC_PRODUCTS_CATALOG.filter(p => {
-    const goalMatches = p.targetGoal === goal;
-    const ingredientMatches = p.keyIngredients.some(ing => 
-      normalizedActives.some(act => act.includes(ing.toLowerCase()) || ing.toLowerCase().includes(act))
-    );
+  if (!detectedIngredientNames || detectedIngredientNames.length === 0) {
+    return [];
+  }
 
-    return goalMatches || ingredientMatches;
+  const normalizedInput = detectedIngredientNames.map(n => n.toLowerCase().trim()).filter(Boolean);
+  if (normalizedInput.length === 0) return [];
+
+  // Score each catalog product based STRICTLY on real active ingredient matches
+  const scored = MOSAIC_PRODUCTS_CATALOG.map(product => {
+    let matchScore = 0;
+    const matchedIngs: string[] = [];
+
+    for (const keyIng of product.keyIngredients) {
+      const keyLower = keyIng.toLowerCase();
+      // Ignore common neutral excipients from triggering artificial matches
+      if (keyLower === 'glycerin' || keyLower === 'water' || keyLower === 'aqua' || keyLower === 'fragrance') continue;
+
+      const hasMatch = normalizedInput.some(inputIng => {
+        if (inputIng === 'water' || inputIng === 'aqua' || inputIng === 'fragrance' || inputIng === 'parfum' || inputIng === 'preservative') return false;
+        
+        return inputIng.includes(keyLower) || keyLower.includes(inputIng) ||
+          (keyLower.includes('melatonin') && inputIng.includes('melatonin')) ||
+          (keyLower.includes('magnesium') && inputIng.includes('magnesium')) ||
+          (keyLower.includes('theanine') && inputIng.includes('theanine')) ||
+          (keyLower.includes('salicylic') && (inputIng.includes('salicylic') || inputIng.includes('bha'))) ||
+          (keyLower.includes('niacinamide') && (inputIng.includes('niacinamide') || inputIng.includes('nicotinamide') || inputIng.includes('vitamin b3'))) ||
+          (keyLower.includes('redensyl') && inputIng.includes('redensyl')) ||
+          (keyLower.includes('procapil') && inputIng.includes('procapil')) ||
+          (keyLower.includes('baicapil') && inputIng.includes('baicapil')) ||
+          (keyLower.includes('ketoconazole') && inputIng.includes('ketoconazole')) ||
+          (keyLower.includes('biotin') && inputIng.includes('biotin')) ||
+          (keyLower.includes('saw palmetto') && inputIng.includes('saw palmetto')) ||
+          (keyLower.includes('glycolic') && (inputIng.includes('glycolic') || inputIng.includes('aha'))) ||
+          (keyLower.includes('lactic') && (inputIng.includes('lactic') || inputIng.includes('aha')));
+      });
+
+      if (hasMatch) {
+        matchScore += 3;
+        matchedIngs.push(keyIng);
+      }
+    }
+
+    if (matchScore > 0 && goal && product.targetGoal === goal) {
+      matchScore += 1;
+    }
+
+    return {
+      product,
+      matchScore,
+      matchedIngs
+    };
   });
 
-  return matches.slice(0, 3);
+  // STRICT REQUIREMENT: Only products with genuine ingredient matches are returned
+  const filtered = scored.filter(item => item.matchScore >= 3);
+  filtered.sort((a, b) => b.matchScore - a.matchScore);
+
+  return filtered.map(item => item.product).slice(0, 3);
 }
