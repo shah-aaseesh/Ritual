@@ -2,16 +2,15 @@ import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl, cleanAndNorma
 import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
-import { extractTextWithGoogleVision } from './googleVisionService';
-
 export const POPULAR_OPENROUTER_MODELS = [
+  { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek Vision V4.1 (Direct Multimodal Photo Extraction)' },
   { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 (Clinical Grade Extraction & Reasoning)' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Deep Clinical Reasoning & Actives Isolation)' },
   { id: 'inclusionai/ling-3.0-flash-sante:free', name: 'Ling 3.0 Flash Sante (Medical Specialist - Free)' },
   { id: 'nvidia/nemotron-3-super-120b-a12b:free', name: 'NVIDIA Nemotron 3 Super (High Accuracy - Free)' },
-  { id: 'openrouter/free', name: 'OpenRouter Auto Router (Free)' },
   { id: 'dots-studio/dots-3-note-preview:free', name: 'Dots Studio: Dots-3 Note Vision (Free)' },
-  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' }
+  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
+  { id: 'openrouter/free', name: 'OpenRouter Auto Router (Free)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -72,63 +71,32 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
 }
 
 /**
- * High-Precision Label Extraction:
- * 1. Uses Google Cloud Vision OCR for sub-millimeter character fidelity on packaging text.
- * 2. Uses DeepSeek reasoning AI to discard non-ingredient noise and isolate ONLY active doses & ingredients.
- * 3. Falls back to direct multimodal vision LLMs or browser OCR if needed.
+ * Direct DeepSeek Multimodal Extraction:
+ * Sends the packaging photo directly straight to DeepSeek multimodal AI.
+ * The DeepSeek model visually inspects the label, ignores marketing/usage/warnings,
+ * and extracts ONLY the ingredients and active composition.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
-  model: string = 'deepseek/deepseek-chat',
+  model: string = 'deepseek/deepseek-v4.1-flash',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
-  if (onProgress) onProgress(15, 'Optimizing packaging image for character scan...');
+  if (onProgress) onProgress(15, 'Optimizing packaging photo for DeepSeek...');
   const base64DataUrl = await optimizeImageForVisionAI(imageSource);
 
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 1. High-Precision Two-Stage Pipeline: Google Cloud Vision OCR + DeepSeek Clinical Isolation
-  const googleVisionKey = (import.meta as any).env?.VITE_GOOGLE_VISION_API_KEY || '';
-  if (googleVisionKey && googleVisionKey.length > 5) {
-    try {
-      if (onProgress) onProgress(30, 'Scanning characters with Google Cloud Vision OCR...');
-      const googleText = await extractTextWithGoogleVision(base64DataUrl, googleVisionKey);
-      if (googleText && googleText.length > 10) {
-        if (onProgress) onProgress(60, 'Isolating pure ingredients with DeepSeek Clinical Engine...');
-        
-        // Pass raw OCR text to DeepSeek to isolate ONLY the ingredient section
-        const deepseekResult = await denoiseAndStructureOCRWithLLM(googleText, userGoal, apiKey, onProgress, model);
-        if (deepseekResult) {
-          if (onProgress) onProgress(100, 'DeepSeek Ingredient Extraction Complete!');
-          return deepseekResult;
-        }
-
-        const cleanedIngredients = cleanAndNormalizeOCRText(googleText);
-        const analysis = analyzeLabelText(cleanedIngredients, '', userGoal, 'Scanned Product');
-        
-        if (onProgress) onProgress(100, 'Google Cloud Vision OCR Complete!');
-        return {
-          productName: 'Scanned Product',
-          brand: '',
-          ingredientText: cleanedIngredients,
-          claimText: '',
-          analysis,
-          source: 'openrouter_vision'
-        };
-      }
-    } catch (gErr) {
-      console.warn('Google Cloud Vision call failed or billing pending, using fallback:', gErr);
-    }
-  }
-
-  // 2. Direct Multimodal Vision AI Pipeline (if Google Vision is unavailable)
+  // 1. Direct Multimodal DeepSeek Vision AI (Straight Image Pipeline)
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
-      model && model !== 'local' && !model.startsWith('deepseek') ? model : 'dots-studio/dots-3-note-preview:free',
+      model && model !== 'local' && (model.includes('deepseek') || model.includes('vision') || model.includes('preview')) ? model : 'deepseek/deepseek-v4.1-flash',
+      'deepseek/deepseek-v4.1-flash',
+      'deepseek/deepseek-v4-flash-vision-exp',
+      'dots-studio/dots-3-note-preview:free',
       'google/gemma-4-26b-a4b-it:free',
       'openrouter/free'
     ];
@@ -136,7 +104,8 @@ export async function extractLabelFromImageWithAI(
 
     for (const candidateModel of uniqueModels) {
       try {
-        if (onProgress) onProgress(35, `Vision AI reading label (${candidateModel.split('/')[1] || candidateModel})...`);
+        const modelLabel = candidateModel.includes('deepseek') ? 'DeepSeek Vision AI' : candidateModel.split('/')[1] || candidateModel;
+        if (onProgress) onProgress(35, `Sending photo straight to ${modelLabel}...`);
 
         const prompt = `You are an expert cosmetic dermatologist and clinical pharmacologist.
 Look at this product photo. Your critical task is to EXTRACT ONLY THE INGREDIENTS and ACTIVE SUBSTANCES from the label.
@@ -187,6 +156,7 @@ Return ONLY valid JSON matching this schema:
                 ]
               }
             ],
+            max_tokens: 1500,
             temperature: 0.1
           })
         });
@@ -195,7 +165,9 @@ Return ONLY valid JSON matching this schema:
           if (onProgress) onProgress(80, 'Cross-referencing extracted actives with PubMed evidence DB...');
           const data = await response.json();
           const rawContent = data.choices?.[0]?.message?.content || '';
-          const cleaned = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+          
+          let cleaned = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
           
           let parsed: any = {};
           try {
@@ -240,7 +212,7 @@ Return ONLY valid JSON matching this schema:
               analysis.summary.synthesisText = parsed.clinicalSynthesis;
             }
 
-            if (onProgress) onProgress(100, 'Vision AI Analysis Complete!');
+            if (onProgress) onProgress(100, 'DeepSeek Photo Extraction Complete!');
 
             return {
               productName: prodName,
@@ -253,7 +225,7 @@ Return ONLY valid JSON matching this schema:
           }
         }
       } catch (err) {
-        console.warn(`Vision AI model ${candidateModel} failed, trying next fallback:`, err);
+        console.warn(`Direct photo extraction model ${candidateModel} failed, trying next:`, err);
       }
     }
   }
