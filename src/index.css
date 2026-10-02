@@ -40,6 +40,70 @@ body {
   box-shadow: 0 0 12px -2px rgba(68, 146, 108, 0.35);
 }
 
+/* Realistic Prescription Paper Ruled Grid */
+.rx-paper-ruled {
+  background-color: #FAF8F2;
+  background-image: 
+    linear-gradient(to right, rgba(200, 70, 70, 0.12) 1px, transparent 1px),
+    repeating-linear-gradient(to bottom, transparent, transparent 35px, rgba(160, 140, 110, 0.15) 35px, rgba(160, 140, 110, 0.15) 36px);
+  background-position: 40px 0, 0 0;
+}
+
+/* Red Pen Strike-through Animation */
+@keyframes redPenStrike {
+  0% {
+    width: 0%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0.95;
+  }
+}
+
+.animate-red-strike {
+  position: relative;
+  display: inline-block;
+}
+
+.animate-red-strike::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  height: 2.5px;
+  background: linear-gradient(90deg, #DC2626, #EF4444 80%, #B91C1C);
+  border-radius: 9999px;
+  transform: translateY(-50%) rotate(-0.8deg);
+  animation: redPenStrike 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  pointer-events: none;
+  box-shadow: 0 0 3px rgba(220, 38, 38, 0.4);
+}
+
+/* Green Circle Stroke Animation */
+@keyframes drawGreenLoop {
+  0% {
+    stroke-dashoffset: 400;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-green-circle {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawGreenLoop 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Custom smooth scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
