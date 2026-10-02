@@ -8,7 +8,6 @@ import {
   ArrowUpRight, 
   Activity, 
   ChevronRight,
-  ChevronLeft,
   Award,
   Sparkles,
   Zap,
@@ -21,7 +20,8 @@ import {
   X,
   CheckCircle2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Rotate3d
 } from 'lucide-react';
 import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession } from '../../types';
 import { 
@@ -33,25 +33,25 @@ import {
 } from '../../data/gymData';
 import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { useApp } from '../../context/AppContext';
-import { BodyMapHeatmap } from './BodyMapHeatmap';
-import { GamificationHub } from './GamificationHub';
 
-type GymSubView = 'hub' | 'workout' | 'generator' | 'challenges' | 'bodymap' | 'milestones' | 'history' | 'supplements';
+type GymTab = 'builder' | 'live' | 'splits' | 'history' | 'supplements';
 
 export const GymTrackerView: React.FC = () => {
   const { showToast } = useApp();
 
-  // Navigation Subview
-  const [subView, setSubView] = useState<GymSubView>('hub');
+  // Active top-level Tab
+  const [activeTab, setActiveTab] = useState<GymTab>('builder');
 
   // ============================================================================
-  // WORKOUT GENERATOR (Workout.cool Style Muscle & Equipment Picker)
+  // WORKOUT.COOL INTERACTIVE ANATOMICAL MODEL STATE
   // ============================================================================
-  const [selectedMuscles, setSelectedMuscles] = useState<MuscleGroup[]>(['Chest', 'Triceps']);
+  const [bodyPerspective, setBodyPerspective] = useState<'front' | 'back'>('front');
+  const [selectedMuscles, setSelectedMuscles] = useState<MuscleGroup[]>(['Chest']);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentType | 'All'>('All');
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState<string>('');
 
   // ============================================================================
-  // ACTIVE WORKOUT STATE
+  // LIVE WORKOUT HUD STATE
   // ============================================================================
   const [isWorkoutActive, setIsWorkoutActive] = useState<boolean>(false);
   const [activeWorkoutTitle, setActiveWorkoutTitle] = useState<string>('Custom Workout');
@@ -73,14 +73,13 @@ export const GymTrackerView: React.FC = () => {
 
   // Exercise Picker Modal
   const [showAddExerciseModal, setShowAddExerciseModal] = useState<boolean>(false);
-  const [exercisePickerMuscle, setExercisePickerMuscle] = useState<MuscleGroup | 'All'>('All');
-  const [exercisePickerEquipment, setExercisePickerEquipment] = useState<EquipmentType | 'All'>('All');
-  const [exerciseSearch, setExerciseSearch] = useState<string>('');
+  const [pickerMuscle, setPickerMuscle] = useState<MuscleGroup | 'All'>('All');
+  const [pickerEquipment, setPickerEquipment] = useState<EquipmentType | 'All'>('All');
 
   // Finished Workout Summary Modal
   const [finishedSummary, setFinishedSummary] = useState<WorkoutSession | null>(null);
 
-  // Form Cues Expanded Accordion (key: exerciseId)
+  // Technique Cues Open Accordion Map
   const [expandedCues, setExpandedCues] = useState<Record<string, boolean>>({});
 
   // Workout History
@@ -142,10 +141,73 @@ export const GymTrackerView: React.FC = () => {
   };
 
   // ============================================================================
+  // WORKOUT.COOL INTERACTIVE ANATOMY HELPERS
+  // ============================================================================
+  const toggleMuscle = (muscle: MuscleGroup) => {
+    setSelectedMuscles(prev => {
+      if (prev.includes(muscle)) {
+        // If clicking the only selected muscle, keep or clear
+        const next = prev.filter(m => m !== muscle);
+        return next;
+      } else {
+        return [...prev, muscle];
+      }
+    });
+  };
+
+  const isMuscleSelected = (muscle: MuscleGroup) => selectedMuscles.includes(muscle);
+
+  // Filtered Exercises for the Generator List
+  const matchingGeneratorExercises = useMemo(() => {
+    return PRESET_EXERCISES.filter(ex => {
+      const matchesMuscle = selectedMuscles.length === 0 || selectedMuscles.includes(ex.muscleGroup);
+      const matchesEquip = selectedEquipment === 'All' || ex.equipment === selectedEquipment;
+      const matchesSearch = !exerciseSearchQuery || ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase());
+      return matchesMuscle && matchesEquip && matchesSearch;
+    });
+  }, [selectedMuscles, selectedEquipment, exerciseSearchQuery]);
+
+  // ============================================================================
   // WORKOUT LAUNCHERS
   // ============================================================================
 
-  // 1. Start Empty/Blank Workout
+  // 1. Start Workout from all currently filtered / selected movements
+  const startGeneratedWorkout = () => {
+    if (matchingGeneratorExercises.length === 0) {
+      showToast('Please select at least 1 muscle group with matching exercises!', 'warning');
+      return;
+    }
+
+    const initialExercises: ExerciseLog[] = matchingGeneratorExercises.slice(0, 5).map((def, idx) => {
+      const sets: WorkoutSet[] = Array.from({ length: def.defaultSets }).map((_, sIdx) => ({
+        id: `set-${Date.now()}-${idx}-${sIdx}`,
+        setNumber: sIdx + 1,
+        weightKg: def.defaultWeightKg,
+        reps: def.defaultReps,
+        isCompleted: false
+      }));
+
+      return {
+        id: `log-${Date.now()}-${idx}`,
+        exerciseId: def.id,
+        exerciseName: def.name,
+        muscleGroup: def.muscleGroup,
+        sets
+      };
+    });
+
+    const title = selectedMuscles.length > 0 ? `${selectedMuscles.join(' & ')} Workout` : 'Targeted Workout';
+    setActiveWorkoutTitle(title);
+    setActiveExercises(initialExercises);
+    setWorkoutStartTime(Date.now());
+    setElapsedSeconds(0);
+    setIsPaused(false);
+    setIsWorkoutActive(true);
+    setActiveTab('live');
+    showToast(`⚡ Started workout with ${initialExercises.length} movements!`, 'success');
+  };
+
+  // 2. Start Empty / Blank Workout
   const startEmptyWorkout = () => {
     setActiveWorkoutTitle('Quick Empty Workout');
     setActiveExercises([]);
@@ -153,12 +215,12 @@ export const GymTrackerView: React.FC = () => {
     setElapsedSeconds(0);
     setIsPaused(false);
     setIsWorkoutActive(true);
-    setSubView('workout');
-    showToast('⚡ Started empty workout session! Add your first exercise below.', 'info');
+    setActiveTab('live');
+    showToast('⚡ Started blank session! Add exercises as you go.', 'info');
   };
 
-  // 2. Start from Preset Template (Push, Pull, Legs, etc.)
-  const startRoutine = (templateId: string) => {
+  // 3. Start from Preset Template (Push, Pull, Legs)
+  const startRoutineTemplate = (templateId: string) => {
     const template = PRESET_ROUTINE_TEMPLATES.find(t => t.id === templateId) || PRESET_ROUTINE_TEMPLATES[0];
 
     const initialExercises: ExerciseLog[] = template.exerciseIds.map((exId, idx) => {
@@ -186,64 +248,12 @@ export const GymTrackerView: React.FC = () => {
     setElapsedSeconds(0);
     setIsPaused(false);
     setIsWorkoutActive(true);
-    setSubView('workout');
+    setActiveTab('live');
     showToast(`⚡ Loaded routine: ${template.title}`, 'success');
   };
 
-  // 3. Generate Custom Routine from Selected Muscles & Equipment (Workout.cool feature)
-  const generateCustomRoutine = () => {
-    if (selectedMuscles.length === 0) {
-      showToast('Please select at least 1 muscle group!', 'warning');
-      return;
-    }
-
-    const matchedExercises = PRESET_EXERCISES.filter(ex => {
-      const matchesMuscle = selectedMuscles.includes(ex.muscleGroup);
-      const matchesEquip = selectedEquipment === 'All' || ex.equipment === selectedEquipment;
-      return matchesMuscle && matchesEquip;
-    });
-
-    if (matchedExercises.length === 0) {
-      showToast('No exercises match this muscle + equipment combo. Try selecting "All Equipment".', 'warning');
-      return;
-    }
-
-    // Pick top 4-5 balanced movements
-    const chosen = matchedExercises.slice(0, 5);
-    const initialExercises: ExerciseLog[] = chosen.map((def, idx) => {
-      const sets: WorkoutSet[] = Array.from({ length: def.defaultSets }).map((_, sIdx) => ({
-        id: `set-${Date.now()}-${idx}-${sIdx}`,
-        setNumber: sIdx + 1,
-        weightKg: def.defaultWeightKg,
-        reps: def.defaultReps,
-        isCompleted: false
-      }));
-
-      return {
-        id: `log-${Date.now()}-${idx}`,
-        exerciseId: def.id,
-        exerciseName: def.name,
-        muscleGroup: def.muscleGroup,
-        sets
-      };
-    });
-
-    setActiveWorkoutTitle(`${selectedMuscles.join(' & ')} Blast`);
-    setActiveExercises(initialExercises);
-    setWorkoutStartTime(Date.now());
-    setElapsedSeconds(0);
-    setIsPaused(false);
-    setIsWorkoutActive(true);
-    setSubView('workout');
-    showToast(`🎯 Generated custom ${selectedMuscles.join(' + ')} routine!`, 'success');
-  };
-
-  // ============================================================================
-  // EXERCISE & SET MANAGEMENT
-  // ============================================================================
-
-  // Add Exercise to active workout
-  const handleAddExercise = (def: ExerciseDefinition) => {
+  // Add individual exercise from Generator into active session
+  const addExerciseToActiveWorkout = (def: ExerciseDefinition) => {
     const newLog: ExerciseLog = {
       id: `log-${Date.now()}`,
       exerciseId: def.id,
@@ -257,11 +267,16 @@ export const GymTrackerView: React.FC = () => {
     };
 
     setActiveExercises(prev => [...prev, newLog]);
-    setShowAddExerciseModal(false);
-    showToast(`Added ${def.name}`, 'success');
+    if (!isWorkoutActive) {
+      setWorkoutStartTime(Date.now());
+      setElapsedSeconds(0);
+      setIsWorkoutActive(true);
+      setActiveWorkoutTitle(`${def.muscleGroup} Focus`);
+    }
+    showToast(`Added ${def.name} to workout!`, 'success');
   };
 
-  // Swap exercise with an alternative
+  // Swap exercise with alternative
   const handleSwapExercise = (oldLogId: string, newDef: ExerciseDefinition) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== oldLogId) return ex;
@@ -281,7 +296,7 @@ export const GymTrackerView: React.FC = () => {
     showToast(`Swapped to ${newDef.name}`, 'info');
   };
 
-  // Toggle set complete & trigger rest timer
+  // Toggle set complete & auto start rest timer
   const toggleSetComplete = (exerciseId: string, setId: string) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -291,7 +306,7 @@ export const GymTrackerView: React.FC = () => {
           if (s.id !== setId) return s;
           const nextCompleted = !s.isCompleted;
           if (nextCompleted) {
-            startRestTimer(90); // Auto 90s rest timer
+            startRestTimer(90);
           }
           return { ...s, isCompleted: nextCompleted };
         })
@@ -299,7 +314,7 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Fast adjust weight (stepper)
+  // Steppers for weight & reps
   const adjustWeight = (exerciseId: string, setId: string, delta: number) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -313,7 +328,6 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Fast adjust reps (stepper)
   const adjustReps = (exerciseId: string, setId: string, delta: number) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -327,7 +341,6 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Direct set weight/reps input
   const updateSet = (exerciseId: string, setId: string, field: 'weightKg' | 'reps', val: number) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -341,7 +354,6 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Smart Add Set (Auto duplicates last set's weight & reps)
   const addSetToExercise = (exerciseId: string) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -357,7 +369,6 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Remove set from exercise
   const removeSetFromExercise = (exerciseId: string, setId: string) => {
     setActiveExercises(prev => prev.map(ex => {
       if (ex.id !== exerciseId) return ex;
@@ -370,7 +381,6 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Finish Workout & show summary modal
   const finishWorkout = () => {
     const totalVolume = activeExercises.reduce((acc, ex) => {
       return acc + ex.sets.reduce((sAcc, s) => s.isCompleted ? sAcc + (s.weightKg * s.reps) : sAcc, 0);
@@ -398,9 +408,7 @@ export const GymTrackerView: React.FC = () => {
     showToast(`🏁 Workout Complete! ${totalVolume.toLocaleString()} kg lifted!`, 'success');
   };
 
-  // ============================================================================
-  // DERIVED METRICS
-  // ============================================================================
+  // Live Metrics
   const liveTotalVolume = useMemo(() => {
     return activeExercises.reduce((acc, ex) => {
       return acc + ex.sets.reduce((sAcc, s) => s.isCompleted ? sAcc + (s.weightKg * s.reps) : sAcc, 0);
@@ -417,9 +425,9 @@ export const GymTrackerView: React.FC = () => {
     return activeExercises.reduce((acc, ex) => acc + ex.sets.length, 0);
   }, [activeExercises]);
 
-  // Plate Calculator computation
+  // Plate Calculator
   const plateBreakdown = useMemo(() => {
-    const barWeight = 20; // standard Olympic barbell
+    const barWeight = 20;
     const targetPerSide = Math.max(0, (plateCalcWeight - barWeight) / 2);
     const availablePlates = [25, 20, 15, 10, 5, 2.5, 1.25];
     
@@ -442,364 +450,556 @@ export const GymTrackerView: React.FC = () => {
     };
   }, [plateCalcWeight]);
 
-  // Muscle toggle in Generator
-  const toggleMuscle = (muscle: MuscleGroup) => {
-    setSelectedMuscles(prev => {
-      if (prev.includes(muscle)) {
-        return prev.filter(m => m !== muscle);
-      } else {
-        return [...prev, muscle];
-      }
-    });
-  };
-
-  // Filtered exercises for picker modal
-  const pickerExercises = useMemo(() => {
-    return PRESET_EXERCISES.filter(ex => {
-      const matchesMuscle = exercisePickerMuscle === 'All' || ex.muscleGroup === exercisePickerMuscle;
-      const matchesEquip = exercisePickerEquipment === 'All' || ex.equipment === exercisePickerEquipment;
-      const matchesSearch = ex.name.toLowerCase().includes(exerciseSearch.toLowerCase());
-      return matchesMuscle && matchesEquip && matchesSearch;
-    });
-  }, [exercisePickerMuscle, exercisePickerEquipment, exerciseSearch]);
-
   const allMuscles: MuscleGroup[] = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Biceps', 'Triceps', 'Core', 'Cardio'];
   const allEquipments: (EquipmentType | 'All')[] = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bodyweight'];
 
   return (
-    <div className="space-y-6 pb-28 text-charcoal-900">
+    <div className="space-y-6 pb-28 text-charcoal-900 font-sans">
       {/* ========================================================================= */}
-      {/* 🧭 TOP NAVIGATION BAR                                                      */}
+      {/* 🧭 UNIFIED WORKOUT NAVIGATION TABS                                         */}
       {/* ========================================================================= */}
-      {subView !== 'hub' && (
-        <div className="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-3xl border border-mint-200/80 shadow-card">
+      <div className="bg-white rounded-[2.5rem] p-3 sm:p-4 border border-mint-200/80 shadow-card flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
-            onClick={() => setSubView('hub')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-black text-forest-900 transition active:scale-95"
+            onClick={() => setActiveTab('builder')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'builder'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
           >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Athletic Hub</span>
+            <Sparkles className="w-4 h-4 text-mint-300" />
+            <span>Target Muscle Builder</span>
           </button>
 
-          <span className="text-xs font-mono font-black uppercase text-forest-950 tracking-wider">
-            {subView === 'workout' && '⚡ Active Session HUD'}
-            {subView === 'generator' && '🎯 Custom Muscle Builder'}
-            {subView === 'challenges' && '🏆 Science-Backed Splits'}
-            {subView === 'bodymap' && '🧬 Muscle Heatmap'}
-            {subView === 'milestones' && '🎯 Longevity Objectives'}
-            {subView === 'supplements' && '⚡ Ergogenic Formulations'}
-            {subView === 'history' && '📜 Workout Session Logs'}
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            {isWorkoutActive && subView !== 'workout' && (
-              <button
-                type="button"
-                onClick={() => setSubView('workout')}
-                className="px-3 py-1.5 rounded-full bg-forest-900 text-white text-xs font-black flex items-center gap-1.5 animate-pulse shadow-soft"
-              >
-                <Activity className="w-3.5 h-3.5 text-mint-400" />
-                <span>Resume HUD</span>
-              </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('live')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 relative ${
+              activeTab === 'live'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-mint-400" />
+            <span>Active Workout HUD</span>
+            {isWorkoutActive && (
+              <span className="w-2.5 h-2.5 rounded-full bg-mint-400 animate-ping absolute -top-1 -right-1" />
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('splits')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'splits'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <Layers className="w-4 h-4 text-forest-700" />
+            <span>Curated Splits</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'history'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <History className="w-4 h-4 text-forest-700" />
+            <span>History ({workoutHistory.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('supplements')}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+              activeTab === 'supplements'
+                ? 'bg-forest-900 text-white shadow-soft'
+                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>Formulations</span>
+          </button>
+        </div>
+
+        {/* Quick Start Blank Workout Button */}
+        <button
+          type="button"
+          onClick={startEmptyWorkout}
+          className="hidden md:flex px-4 py-2 rounded-2xl bg-mint-100 hover:bg-mint-200 border border-mint-300 text-forest-900 font-extrabold text-xs items-center gap-1.5 shrink-0 transition active:scale-95"
+        >
+          <Plus className="w-3.5 h-3.5 stroke-[3]" />
+          <span>Quick Blank Workout</span>
+        </button>
+      </div>
+
+      {/* Floating Active Session Banner (if ongoing and user is on another tab) */}
+      {isWorkoutActive && activeTab !== 'live' && (
+        <div 
+          onClick={() => setActiveTab('live')}
+          className="p-4 sm:p-5 rounded-[2rem] bg-gradient-to-r from-mint-50 via-white to-mint-50 border-2 border-mint-400 shadow-card flex items-center justify-between cursor-pointer group hover:border-mint-600 transition animate-in fade-in"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-forest-900 text-mint-300 flex items-center justify-center font-mono font-black shadow-md animate-pulse shrink-0">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-black uppercase tracking-wider text-forest-700 block">
+                Session Active • {formatTimer(elapsedSeconds)} • {liveCompletedSets}/{liveTotalSets} Sets
+              </span>
+              <h3 className="text-sm sm:text-base font-black text-forest-950">
+                {activeWorkoutTitle} ({liveTotalVolume.toLocaleString()} kg lifted)
+              </h3>
+            </div>
+          </div>
+          <div className="px-4 py-2 rounded-full bg-forest-900 text-white font-black text-xs group-hover:bg-forest-800 transition shadow-soft flex items-center gap-1 shrink-0">
+            <span>Resume HUD</span>
+            <ChevronRight className="w-4 h-4" />
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 🏠 MAIN ATHLETIC HUB (CLEAN, MODULAR & INTUITIVE)                         */}
+      {/* 🎯 TAB 1: WORKOUT.COOL INTERACTIVE ANATOMY & WORKOUT BUILDER              */}
       {/* ========================================================================= */}
-      {subView === 'hub' && (
-        <div className="space-y-5 animate-in fade-in duration-200">
-          {/* Live Workout Banner if Active */}
-          {isWorkoutActive && (
-            <div 
-              onClick={() => setSubView('workout')}
-              className="p-5 rounded-[2.5rem] bg-gradient-to-r from-mint-50 via-white to-mint-50 border-2 border-mint-400 shadow-card flex items-center justify-between cursor-pointer group hover:border-mint-600 transition"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-forest-900 text-mint-300 flex items-center justify-center font-mono font-black shadow-md animate-pulse">
-                  <Activity className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-mint-500 animate-ping" />
-                    <span className="text-[10px] font-mono font-black uppercase tracking-wider text-forest-700">
-                      Workout In Progress
-                    </span>
-                  </div>
-                  <h3 className="text-base font-black text-forest-950">
-                    {activeWorkoutTitle}
-                  </h3>
-                  <p className="text-xs text-charcoal-600 font-mono mt-0.5">
-                    ⏱️ {formatTimer(elapsedSeconds)} • {liveCompletedSets}/{liveTotalSets} sets • {liveTotalVolume.toLocaleString()} kg
-                  </p>
-                </div>
-              </div>
-              <div className="px-4 py-2 rounded-full bg-forest-900 text-white font-black text-xs group-hover:bg-forest-800 transition shadow-soft flex items-center gap-1">
-                <span>Resume</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </div>
-          )}
-
-          {/* Hero Action: Quick Start vs Generate Custom Routine */}
-          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
-                  SCIENCE-BASED PERFORMANCE
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-0.5">
-                  Workout & Strength Tracker
-                </h1>
-                <p className="text-xs text-charcoal-600 mt-1 max-w-xl">
-                  Log sets effortlessly with smart steppers, automated rest timers, and custom muscle targeting.
-                </p>
-              </div>
-
-              {/* Instant 1-Tap Start Empty Workout */}
-              <button
-                type="button"
-                onClick={startEmptyWorkout}
-                className="px-6 py-3 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-soft transition active:scale-95 shrink-0"
-              >
-                <Plus className="w-4 h-4 text-mint-300 stroke-[3]" />
-                <span>Quick Empty Workout</span>
-              </button>
-            </div>
-
-            {/* Quick Launch Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              {/* Tile 1: Workout.cool Style Muscle Routine Generator */}
-              <div
-                onClick={() => setSubView('generator')}
-                className="p-6 rounded-[2rem] bg-gradient-to-br from-mint-50/80 via-white to-mint-50/30 border border-mint-200/90 hover:border-mint-400 transition-all cursor-pointer shadow-soft hover:shadow-card group flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-mint-100 text-forest-900 flex items-center justify-center group-hover:scale-105 transition-transform border border-mint-200">
-                    <Sparkles className="w-6 h-6 text-mint-700" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-black uppercase text-mint-700 tracking-wider">
-                      Interactive Generator
-                    </span>
-                    <h3 className="text-lg font-black text-forest-950 mt-0.5">
-                      Target Specific Muscles
-                    </h3>
-                    <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                      Select target muscle groups & available equipment to build a custom routine instantly.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-4 flex items-center gap-1.5 text-xs font-extrabold text-forest-900 group-hover:text-mint-700 transition">
-                  <span>Build Custom Routine</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
-
-              {/* Tile 2: Pre-Built Curated Splits */}
-              <div
-                onClick={() => setSubView('challenges')}
-                className="p-6 rounded-[2rem] bg-white hover:bg-cream-50/50 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-soft hover:shadow-card group flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-cream-50 text-forest-900 flex items-center justify-center group-hover:scale-105 transition-transform border border-mint-200">
-                    <Layers className="w-6 h-6 text-forest-800" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider">
-                      Hypertrophy Splits
-                    </span>
-                    <h3 className="text-lg font-black text-forest-950 mt-0.5">
-                      Push / Pull / Legs
-                    </h3>
-                    <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                      Calibrated exercise splits designed for progressive overload and optimal volume.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-4 flex items-center gap-1.5 text-xs font-extrabold text-forest-900 group-hover:text-mint-700 transition">
-                  <span>Browse Routines</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
-
-              {/* Tile 3: Anatomical Heatmap & Readiness */}
-              <div
-                onClick={() => setSubView('bodymap')}
-                className="p-6 rounded-[2rem] bg-white hover:bg-cream-50/50 border border-mint-200/80 hover:border-mint-400 transition-all cursor-pointer shadow-soft hover:shadow-card group flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-cream-50 text-forest-900 flex items-center justify-center group-hover:scale-105 transition-transform border border-mint-200">
-                    <Activity className="w-6 h-6 text-teal-700" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-black uppercase text-teal-700 tracking-wider">
-                      Visual Readiness
-                    </span>
-                    <h3 className="text-lg font-black text-forest-950 mt-0.5">
-                      Body Heatmap & Recovery
-                    </h3>
-                    <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                      Interactive anatomical diagram highlighting trained muscle volume and rest status.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-4 flex items-center gap-1.5 text-xs font-extrabold text-forest-900 group-hover:text-mint-700 transition">
-                  <span>View Body Map</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats & Session History Preview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              onClick={() => setSubView('history')}
-              className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 flex items-center justify-between cursor-pointer transition shadow-soft group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-mint-100 flex items-center justify-center text-forest-900">
-                  <History className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-forest-950">Workout History & PRs</h4>
-                  <p className="text-xs text-charcoal-600 font-mono mt-0.5">
-                    {workoutHistory.length} completed sessions logged
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
-            </div>
-
-            <div
-              onClick={() => setSubView('supplements')}
-              className="p-5 rounded-[2rem] bg-white hover:bg-mint-50/30 border border-mint-200/80 flex items-center justify-between cursor-pointer transition shadow-soft group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-mint-100 flex items-center justify-center text-forest-900">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-forest-950">Athletic Nutrition & Formulations</h4>
-                  <p className="text-xs text-charcoal-600 font-mono mt-0.5">
-                    Creapure®, Electrolytes & Native Whey
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-charcoal-400 group-hover:text-forest-900 group-hover:translate-x-1 transition" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 🎯 SUB-VIEW: WORKOUT.COOL STYLE INTERACTIVE ROUTINE GENERATOR             */}
-      {/* ========================================================================= */}
-      {subView === 'generator' && (
+      {activeTab === 'builder' && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          
+          {/* Main Hero Card with Interactive Anatomical SVG & Muscle Filter */}
           <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider">
-                  WORKOUT.COOL ALGORITHM
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 text-[9px] font-black uppercase font-mono">
-                  Smart Builder
-                </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
+                    INTERACTIVE ANATOMICAL MODEL
+                  </span>
+                  <span className="text-xs text-charcoal-500 font-mono">
+                    Select muscles on the body to generate targeted movements
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
+                  Target Muscle & Equipment Builder
+                </h2>
               </div>
-              <h2 className="text-2xl font-black text-forest-950">
-                Generate Custom Workout
-              </h2>
-              <p className="text-xs text-charcoal-600">
-                Choose the target muscles you want to train and filter by available equipment.
-              </p>
+
+              {/* View Angle Switcher (Anterior Front vs Posterior Back) */}
+              <div className="inline-flex p-1.5 bg-cream-50 rounded-2xl border border-mint-200 text-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setBodyPerspective('front')}
+                  className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                    bodyPerspective === 'front'
+                      ? 'bg-forest-900 text-white shadow-soft'
+                      : 'text-charcoal-600 hover:text-forest-900'
+                  }`}
+                >
+                  <Rotate3d className="w-3.5 h-3.5" />
+                  <span>Anterior (Front)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBodyPerspective('back')}
+                  className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                    bodyPerspective === 'back'
+                      ? 'bg-forest-900 text-white shadow-soft'
+                      : 'text-charcoal-600 hover:text-forest-900'
+                  }`}
+                >
+                  <Rotate3d className="w-3.5 h-3.5" />
+                  <span>Posterior (Back)</span>
+                </button>
+              </div>
             </div>
 
-            {/* Step 1: Select Target Muscles */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono block">
-                1. Select Target Muscle Groups:
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {allMuscles.map(m => {
-                  const isSelected = selectedMuscles.includes(m);
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => toggleMuscle(m)}
-                      className={`px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-2 active:scale-95 ${
-                        isSelected
-                          ? 'bg-forest-900 text-white shadow-soft ring-2 ring-forest-900/20'
-                          : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-200'
-                      }`}
-                    >
-                      <span>{m}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-mint-300 stroke-[3]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Split View: Left Anatomical Model | Right Muscle Chips & Selected Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              
+              {/* Left: Clickable Anatomical Body SVG Model */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-cream-50/70 border border-mint-200/80 relative">
+                <span className="text-[11px] font-mono font-bold text-charcoal-600 mb-2">
+                  Tap any muscle on the model to select/unselect:
+                </span>
 
-            {/* Step 2: Select Equipment */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono block">
-                2. Filter by Available Equipment:
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {allEquipments.map(eq => (
+                <svg
+                  className="w-56 h-[370px] drop-shadow-md select-none transition-all cursor-pointer"
+                  viewBox="0 0 200 400"
+                >
+                  {/* Background Body Base */}
+                  <path
+                    d="M100 20 C90 20 82 28 82 40 C82 50 88 58 95 62 C80 68 62 85 55 105 C48 125 40 160 35 190 C32 205 38 215 45 210 C50 205 55 180 60 160 C62 180 62 210 65 240 C68 270 70 310 75 370 C77 385 85 385 88 370 C92 330 95 280 100 250 C105 280 108 330 112 370 C115 385 123 385 125 370 C130 310 132 270 135 240 C138 210 138 180 140 160 C145 180 150 205 155 210 C162 215 168 205 165 190 C160 160 152 125 145 105 C138 85 120 68 105 62 C112 58 118 50 118 40 C118 28 110 20 100 20 Z"
+                    fill="#E2EBE6"
+                    stroke="#C4D4CD"
+                    strokeWidth="2"
+                  />
+
+                  {/* ANTERIOR (FRONT) MUSCLES */}
+                  {bodyPerspective === 'front' && (
+                    <g className="transition-all">
+                      {/* Shoulders (Anterior Delts) */}
+                      <path
+                        d="M60 85 C52 92 48 105 48 118 C56 118 64 105 68 95 Z"
+                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Shoulders')}
+                      />
+                      <path
+                        d="M140 85 C148 92 152 105 152 118 C144 118 136 105 132 95 Z"
+                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Shoulders')}
+                      />
+
+                      {/* Chest (Pectoralis Major) */}
+                      <path
+                        d="M72 90 C85 92 98 96 98 120 C85 122 70 115 68 100 Z"
+                        fill={isMuscleSelected('Chest') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Chest') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Chest')}
+                      />
+                      <path
+                        d="M128 90 C115 92 102 96 102 120 C115 122 130 115 132 100 Z"
+                        fill={isMuscleSelected('Chest') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Chest') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Chest')}
+                      />
+
+                      {/* Biceps */}
+                      <path
+                        d="M48 122 C44 135 46 150 52 155 C54 145 56 130 54 122 Z"
+                        fill={isMuscleSelected('Biceps') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Biceps') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Biceps')}
+                      />
+                      <path
+                        d="M152 122 C156 135 154 150 148 155 C146 145 144 130 146 122 Z"
+                        fill={isMuscleSelected('Biceps') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Biceps') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Biceps')}
+                      />
+
+                      {/* Abs / Core */}
+                      <path
+                        d="M86 125 C94 125 106 125 114 125 C114 175 112 185 100 190 C88 185 86 175 86 125 Z"
+                        fill={isMuscleSelected('Core') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Core') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Core')}
+                      />
+
+                      {/* Quads (Quadriceps) */}
+                      <path
+                        d="M68 205 C64 225 66 265 76 270 C86 265 88 225 84 205 Z"
+                        fill={isMuscleSelected('Quads') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Quads') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Quads')}
+                      />
+                      <path
+                        d="M132 205 C136 225 134 265 124 270 C114 265 112 225 116 205 Z"
+                        fill={isMuscleSelected('Quads') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Quads') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Quads')}
+                      />
+                    </g>
+                  )}
+
+                  {/* POSTERIOR (BACK) MUSCLES */}
+                  {bodyPerspective === 'back' && (
+                    <g className="transition-all">
+                      {/* Upper Back (Traps & Rhomboids) */}
+                      <path
+                        d="M82 70 C92 78 108 78 118 70 C125 90 100 115 100 115 C100 115 75 90 82 70 Z"
+                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Back')}
+                      />
+
+                      {/* Rear Deltoids */}
+                      <path
+                        d="M60 85 C52 92 48 105 48 118 C56 118 64 105 68 95 Z"
+                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Shoulders')}
+                      />
+                      <path
+                        d="M140 85 C148 92 152 105 152 118 C144 118 136 105 132 95 Z"
+                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Shoulders')}
+                      />
+
+                      {/* Latissimus Dorsi (Lats) */}
+                      <path
+                        d="M68 110 C80 115 95 120 95 160 C80 160 68 145 62 125 Z"
+                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Back')}
+                      />
+                      <path
+                        d="M132 110 C120 115 105 120 105 160 C120 160 132 145 138 125 Z"
+                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Back')}
+                      />
+
+                      {/* Triceps */}
+                      <path
+                        d="M48 122 C44 135 46 150 52 155 C54 145 56 130 54 122 Z"
+                        fill={isMuscleSelected('Triceps') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Triceps') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Triceps')}
+                      />
+                      <path
+                        d="M152 122 C156 135 154 150 148 155 C146 145 144 130 146 122 Z"
+                        fill={isMuscleSelected('Triceps') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Triceps') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Triceps')}
+                      />
+
+                      {/* Hamstrings */}
+                      <path
+                        d="M70 215 C66 235 68 265 76 270 C84 265 86 235 84 215 Z"
+                        fill={isMuscleSelected('Hamstrings') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Hamstrings') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Hamstrings')}
+                      />
+                      <path
+                        d="M130 215 C134 235 132 265 124 270 C116 265 114 235 116 215 Z"
+                        fill={isMuscleSelected('Hamstrings') ? '#254E37' : '#88BEA3'}
+                        stroke={isMuscleSelected('Hamstrings') ? '#14291D' : '#6FA88D'}
+                        strokeWidth="1.5"
+                        onClick={() => toggleMuscle('Hamstrings')}
+                      />
+                    </g>
+                  )}
+                </svg>
+              </div>
+
+              {/* Right: Muscle Group Selectors & Equipment Filter Bar */}
+              <div className="lg:col-span-7 space-y-5">
+                {/* Muscle Group Chips */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono">
+                      Target Muscles ({selectedMuscles.length} selected):
+                    </label>
+                    {selectedMuscles.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMuscles([])}
+                        className="text-[11px] font-bold text-charcoal-500 hover:text-rose-600 underline"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {allMuscles.map(m => {
+                      const selected = isMuscleSelected(m);
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => toggleMuscle(m)}
+                          className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-95 ${
+                            selected
+                              ? 'bg-forest-900 text-white shadow-soft ring-2 ring-forest-900/20'
+                              : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-200'
+                          }`}
+                        >
+                          <span>{m}</span>
+                          {selected ? <Check className="w-3.5 h-3.5 text-mint-300 stroke-[3]" /> : <Plus className="w-3.5 h-3.5 text-charcoal-400" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Equipment Filter Bar */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono block">
+                    Available Equipment:
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allEquipments.map(eq => (
+                      <button
+                        key={eq}
+                        type="button"
+                        onClick={() => setSelectedEquipment(eq)}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                          selectedEquipment === eq
+                            ? 'bg-mint-200 text-forest-950 font-black border border-mint-400 shadow-soft'
+                            : 'bg-cream-50 text-charcoal-600 hover:bg-mint-50 border border-mint-100'
+                        }`}
+                      >
+                        {eq}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Search Bar for Exercises */}
+                <input
+                  type="text"
+                  placeholder="Search exercise name (e.g. Incline Bench, Deadlift)..."
+                  value={exerciseSearchQuery}
+                  onChange={(e) => setExerciseSearchQuery(e.target.value)}
+                  className="w-full p-3 rounded-2xl bg-cream-50 border border-mint-200 text-xs font-bold text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
+                />
+
+                {/* Generator Action Banner */}
+                <div className="p-4 rounded-2xl bg-mint-50 border border-mint-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-black text-forest-950 block">
+                      {matchingGeneratorExercises.length} Movements Matched
+                    </span>
+                    <span className="text-[11px] text-charcoal-600 font-mono">
+                      {selectedMuscles.join(' • ') || 'All Muscles'} ({selectedEquipment})
+                    </span>
+                  </div>
+
                   <button
-                    key={eq}
                     type="button"
-                    onClick={() => setSelectedEquipment(eq)}
-                    className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95 ${
-                      selectedEquipment === eq
-                        ? 'bg-mint-200 text-forest-950 font-black border border-mint-400 shadow-soft'
-                        : 'bg-cream-50 text-charcoal-600 hover:bg-mint-50 border border-mint-100'
-                    }`}
+                    onClick={startGeneratedWorkout}
+                    disabled={matchingGeneratorExercises.length === 0}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 disabled:opacity-50 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center justify-center gap-1.5"
                   >
-                    {eq}
+                    <Sparkles className="w-4 h-4 text-mint-300" />
+                    <span>Start Routine ({Math.min(matchingGeneratorExercises.length, 5)}) ›</span>
                   </button>
-                ))}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Generation Preview Banner & CTA */}
-            <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-xs font-black text-forest-950">
-                  Targeting: {selectedMuscles.length > 0 ? selectedMuscles.join(' • ') : 'None selected'}
-                </span>
-                <p className="text-[11px] text-charcoal-600 font-mono">
-                  Equipment: {selectedEquipment} • Calibrated for hypertrophy & strength
+          {/* ========================================================================= */}
+          {/* REAL-TIME MATCHED EXERCISE CARDS (Workout.cool Style Gallery)             */}
+          {/* ========================================================================= */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <h3 className="text-lg font-black text-forest-950">
+                  Targeted Movements ({matchingGeneratorExercises.length})
+                </h3>
+                <p className="text-xs text-charcoal-600">
+                  Tap + Add to Workout or launch the routine directly.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={generateCustomRoutine}
-                disabled={selectedMuscles.length === 0}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-forest-900 hover:bg-forest-800 disabled:opacity-50 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-soft transition active:scale-95"
-              >
-                <Sparkles className="w-4 h-4 text-mint-300" />
-                <span>Launch Generated Workout ›</span>
-              </button>
+              <span className="text-xs font-mono font-bold text-forest-800 bg-mint-100 px-3 py-1 rounded-full border border-mint-200">
+                {selectedMuscles.length} Muscle Focus
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {matchingGeneratorExercises.map((def) => {
+                const isOpen = !!expandedCues[def.id];
+
+                return (
+                  <div
+                    key={def.id}
+                    className="p-5 rounded-[2rem] bg-white border border-mint-200/80 hover:border-mint-400 transition shadow-soft hover:shadow-card flex flex-col justify-between space-y-3 group"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
+                            {def.muscleGroup}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-charcoal-500 bg-cream-50 px-2 py-0.5 rounded-full border border-mint-100">
+                            {def.equipment}
+                          </span>
+                        </div>
+
+                        <span className="text-xs font-mono font-bold text-forest-900">
+                          {def.defaultSets} sets × {def.defaultReps} reps
+                        </span>
+                      </div>
+
+                      <h4 className="text-base sm:text-lg font-black text-forest-950 group-hover:text-forest-800 transition">
+                        {def.name}
+                      </h4>
+
+                      <p className="text-xs text-charcoal-600 leading-relaxed">
+                        {def.instructions}
+                      </p>
+
+                      {/* Expandable Coach Cues */}
+                      {def.cues && def.cues.length > 0 && (
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedCues(prev => ({ ...prev, [def.id]: !prev[def.id] }))}
+                            className="text-[11px] font-bold text-forest-800 hover:text-forest-950 flex items-center gap-1 transition"
+                          >
+                            <Info className="w-3.5 h-3.5 text-mint-600" />
+                            <span>Technique & Form Tips ({def.cues.length})</span>
+                            {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </button>
+
+                          {isOpen && (
+                            <ul className="mt-2 p-3 rounded-xl bg-cream-50 border border-mint-100 list-disc pl-4 space-y-0.5 text-[11px] text-charcoal-700 animate-in fade-in">
+                              {def.cues.map((c, cIdx) => (
+                                <li key={cIdx}>{c}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-mint-100 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-charcoal-500 font-mono">
+                        Base load: {def.defaultWeightKg} kg
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => addExerciseToActiveWorkout(def)}
+                        className="px-4 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-mint-300 stroke-[3]" />
+                        <span>Add to Workout</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* ⚡ SUB-VIEW: ACTIVE WORKOUT HUD & SET LOGGER (STREAMLINED & POWERFUL)       */}
+      {/* ⚡ TAB 2: LIVE WORKOUT HUD & SET LOGGER (STREAMLINED & POWERFUL)          */}
       {/* ========================================================================= */}
-      {subView === 'workout' && (
+      {activeTab === 'live' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          {/* Sticky Session Control Bar */}
+          
+          {/* Top Session Control & Metrics Bar */}
           <div className="bg-white rounded-[2.5rem] p-5 sm:p-6 border border-mint-200/80 shadow-card space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-4">
               <div className="flex items-center gap-3">
@@ -814,13 +1014,13 @@ export const GymTrackerView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Top Controls: Plate Calc, Pause & Finish */}
+              {/* Action Buttons: Plate Calc, Pause & Finish */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setShowPlateCalcModal(true)}
                   className="px-3 py-1.5 rounded-full bg-cream-50 hover:bg-mint-100 text-charcoal-800 border border-mint-200 font-bold text-xs flex items-center gap-1.5 transition"
-                  title="Open Barbell Plate Calculator"
+                  title="Barbell Plate Calculator"
                 >
                   <Calculator className="w-3.5 h-3.5 text-forest-800" />
                   <span className="hidden sm:inline">Plate Calc</span>
@@ -875,7 +1075,7 @@ export const GymTrackerView: React.FC = () => {
               </div>
             </div>
 
-            {/* Smart Floating Rest Timer Banner (Integrated) */}
+            {/* Smart Integrated Rest Timer Banner */}
             {isRestTimerRunning && (
               <div className="p-3.5 rounded-2xl bg-mint-100/90 border border-mint-300 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center gap-3">
@@ -884,7 +1084,7 @@ export const GymTrackerView: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-mono font-black uppercase text-forest-800 block">
-                      Active Rest Interval
+                      Rest Interval
                     </span>
                     <span className="text-base font-black text-forest-950 font-mono">
                       {formatTimer(restSecondsRemaining)} remaining
@@ -912,7 +1112,7 @@ export const GymTrackerView: React.FC = () => {
             )}
           </div>
 
-          {/* Exercise List */}
+          {/* Active Exercise List */}
           <div className="space-y-4">
             {activeExercises.length === 0 ? (
               <div className="bg-white rounded-[2.5rem] p-10 border border-mint-200/80 shadow-card text-center space-y-4">
@@ -920,24 +1120,31 @@ export const GymTrackerView: React.FC = () => {
                   <Dumbbell className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-forest-950">No movements added yet</h3>
+                  <h3 className="text-lg font-black text-forest-950">No exercises added yet</h3>
                   <p className="text-xs text-charcoal-600 mt-1">
-                    Tap the button below to pick your first exercise from our database.
+                    Pick movements from the Target Muscle Builder or browse movements below.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowAddExerciseModal(true)}
-                  className="px-6 py-3 rounded-2xl bg-forest-900 text-white font-black text-xs sm:text-sm inline-flex items-center gap-2 shadow-soft hover:bg-forest-800 transition"
-                >
-                  <Plus className="w-4 h-4 text-mint-300 stroke-[3]" />
-                  <span>Add First Exercise</span>
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('builder')}
+                    className="px-5 py-2.5 rounded-2xl bg-forest-900 text-white font-black text-xs shadow-soft hover:bg-forest-800 transition"
+                  >
+                    Open Muscle Builder
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddExerciseModal(true)}
+                    className="px-5 py-2.5 rounded-2xl bg-cream-50 text-forest-900 font-black text-xs border border-mint-200 hover:bg-mint-100 transition"
+                  >
+                    Browse Library
+                  </button>
+                </div>
               </div>
             ) : (
               activeExercises.map((ex, exIdx) => {
                 const def = PRESET_EXERCISES.find(e => e.id === ex.exerciseId);
-                const isCuesOpen = !!expandedCues[ex.id];
 
                 return (
                   <div 
@@ -963,35 +1170,9 @@ export const GymTrackerView: React.FC = () => {
                             </span>
                           )}
                         </div>
-
-                        {/* Expandable Coach Cues */}
-                        {def?.cues && def.cues.length > 0 && (
-                          <div className="pt-1">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedCues(prev => ({ ...prev, [ex.id]: !prev[ex.id] }))}
-                              className="text-[11px] font-bold text-forest-800 hover:text-forest-950 flex items-center gap-1 transition"
-                            >
-                              <Info className="w-3.5 h-3.5 text-mint-600" />
-                              <span>Form Cues & Technique</span>
-                              {isCuesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            </button>
-
-                            {isCuesOpen && (
-                              <div className="mt-2 p-3 rounded-xl bg-cream-50/80 border border-mint-100 text-xs space-y-1 text-charcoal-700 animate-in fade-in">
-                                <p className="font-semibold text-forest-950">{def.instructions}</p>
-                                <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-charcoal-600">
-                                  {def.cues.map((cue, cIdx) => (
-                                    <li key={cIdx}>{cue}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
 
-                      {/* Top Action Buttons (Swap Alternative, Delete) */}
+                      {/* Top Actions: Swap Alternative & Delete */}
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
@@ -1046,7 +1227,7 @@ export const GymTrackerView: React.FC = () => {
                             )}
                           </div>
 
-                          {/* Weight Stepper & Input */}
+                          {/* Weight Stepper & Direct Input */}
                           <div className="col-span-4 flex items-center gap-1">
                             <button
                               type="button"
@@ -1071,7 +1252,7 @@ export const GymTrackerView: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* Reps Stepper & Input */}
+                          {/* Reps Stepper & Direct Input */}
                           <div className="col-span-4 flex items-center gap-1">
                             <button
                               type="button"
@@ -1095,7 +1276,7 @@ export const GymTrackerView: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* 1-Tap Completion Button */}
+                          {/* 1-Tap Completion Checkmark */}
                           <div className="col-span-2 flex justify-center">
                             <button
                               type="button"
@@ -1114,7 +1295,7 @@ export const GymTrackerView: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Bottom Row: + Add Set & Rest Presets */}
+                    {/* Bottom Controls: + Add Set & Rest Timer Presets */}
                     <div className="flex items-center justify-between pt-2 border-t border-mint-100">
                       <button
                         type="button"
@@ -1162,16 +1343,16 @@ export const GymTrackerView: React.FC = () => {
               className="w-full py-4 rounded-3xl bg-white hover:bg-mint-50/50 border-2 border-dashed border-mint-300 hover:border-mint-500 text-forest-900 font-black text-sm flex items-center justify-center gap-2 transition shadow-soft"
             >
               <Plus className="w-5 h-5 text-forest-800" />
-              <span>Add Another Movement</span>
+              <span>Add Movement to Live Workout</span>
             </button>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 🏆 SUB-VIEW: CURATED HYPERTROPHY ROUTINE SPLITS                            */}
+      {/* 🏆 TAB 3: CURATED SCIENCE-BACKED HYPERTROPHY SPLITS                       */}
       {/* ========================================================================= */}
-      {subView === 'challenges' && (
+      {activeTab === 'splits' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div>
@@ -1225,7 +1406,7 @@ export const GymTrackerView: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => startRoutine(tmpl.id)}
+                    onClick={() => startRoutineTemplate(tmpl.id)}
                     className="w-full py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition active:scale-95 flex items-center justify-center gap-1.5 shadow-soft"
                   >
                     <span>Start This Split</span>
@@ -1239,35 +1420,9 @@ export const GymTrackerView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* 🧬 SUB-VIEW: BODY MAP HEATMAP                                             */}
+      {/* 📜 TAB 4: SESSION HISTORY & VOLUME TRACKER                                 */}
       {/* ========================================================================= */}
-      {subView === 'bodymap' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <BodyMapHeatmap
-            onSelectExercise={(ex) => {
-              handleAddExercise(ex);
-              setSubView('workout');
-            }}
-            onStartMuscleWorkout={() => {
-              startRoutine('push-day');
-            }}
-          />
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 🎯 SUB-VIEW: LONGEVITY OBJECTIVES & GAMIFICATION                          */}
-      {/* ========================================================================= */}
-      {subView === 'milestones' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <GamificationHub />
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 📜 SUB-VIEW: SESSION HISTORY & VOLUME TRACKER                             */}
-      {/* ========================================================================= */}
-      {subView === 'history' && (
+      {activeTab === 'history' && (
         <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-mint-100 pb-4">
             <div>
@@ -1275,7 +1430,7 @@ export const GymTrackerView: React.FC = () => {
                 PERFORMANCE LOGBOOK
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-forest-950 mt-0.5">
-                Workout Session Logs
+                Workout Session History
               </h2>
             </div>
             <span className="text-xs text-charcoal-600 font-mono font-bold bg-mint-100 px-3 py-1 rounded-full border border-mint-200">
@@ -1332,9 +1487,9 @@ export const GymTrackerView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* ⚡ SUB-VIEW: ATHLETIC SUPPLEMENTS & EVIDENCE-BACKED FORMULATIONS          */}
+      {/* ⚡ TAB 5: ATHLETIC SUPPLEMENTS & FORMULATIONS                              */}
       {/* ========================================================================= */}
-      {subView === 'supplements' && (
+      {activeTab === 'supplements' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
@@ -1453,15 +1608,15 @@ export const GymTrackerView: React.FC = () => {
               </button>
             </div>
 
-            {/* Muscle Filter Pills */}
+            {/* Muscle Filter */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
               {(['All', ...allMuscles] as const).map((group) => (
                 <button
                   key={group}
                   type="button"
-                  onClick={() => setExercisePickerMuscle(group)}
+                  onClick={() => setPickerMuscle(group)}
                   className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition ${
-                    exercisePickerMuscle === group
+                    pickerMuscle === group
                       ? 'bg-forest-900 text-white'
                       : 'bg-cream-50 text-charcoal-600 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
                   }`}
@@ -1471,15 +1626,15 @@ export const GymTrackerView: React.FC = () => {
               ))}
             </div>
 
-            {/* Equipment Filter Pills */}
+            {/* Equipment Filter */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
               {allEquipments.map((eq) => (
                 <button
                   key={eq}
                   type="button"
-                  onClick={() => setExercisePickerEquipment(eq)}
+                  onClick={() => setPickerEquipment(eq)}
                   className={`px-2.5 py-0.5 rounded-md font-medium whitespace-nowrap transition ${
-                    exercisePickerEquipment === eq
+                    pickerEquipment === eq
                       ? 'bg-mint-200 text-forest-950 font-bold border border-mint-400'
                       : 'bg-cream-50 text-charcoal-500 border border-mint-100'
                   }`}
@@ -1489,46 +1644,34 @@ export const GymTrackerView: React.FC = () => {
               ))}
             </div>
 
-            {/* Search Input */}
-            <input
-              type="text"
-              placeholder="Search movement (e.g. Bench Press, Squat, Lat Pulldown)..."
-              value={exerciseSearch}
-              onChange={(e) => setExerciseSearch(e.target.value)}
-              className="w-full p-3 rounded-xl bg-cream-50 border border-mint-200 text-xs font-bold text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
-            />
-
             {/* Exercise List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {pickerExercises.length === 0 ? (
-                <div className="p-6 text-center text-xs text-charcoal-500">
-                  No exercises matched your search. Try changing the filters.
-                </div>
-              ) : (
-                pickerExercises.map((def) => (
-                  <div
-                    key={def.id}
-                    onClick={() => handleAddExercise(def)}
-                    className="p-3.5 rounded-2xl bg-cream-50 hover:bg-mint-50 border border-mint-100 hover:border-mint-300 transition cursor-pointer flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-forest-950 group-hover:text-forest-800">{def.name}</span>
-                        <span className="text-[9px] font-bold text-forest-800 px-2 py-0.5 bg-mint-100 border border-mint-200 rounded-full font-mono">
-                          {def.muscleGroup}
-                        </span>
-                        <span className="text-[9px] font-bold text-charcoal-500 px-2 py-0.5 bg-white border border-mint-100 rounded-full font-mono">
-                          {def.equipment}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-charcoal-600 mt-1 line-clamp-1">{def.instructions}</p>
+              {PRESET_EXERCISES.filter(e => 
+                (pickerMuscle === 'All' || e.muscleGroup === pickerMuscle) &&
+                (pickerEquipment === 'All' || e.equipment === pickerEquipment)
+              ).map((def) => (
+                <div
+                  key={def.id}
+                  onClick={() => {
+                    addExerciseToActiveWorkout(def);
+                    setShowAddExerciseModal(false);
+                  }}
+                  className="p-3.5 rounded-2xl bg-cream-50 hover:bg-mint-50 border border-mint-100 hover:border-mint-300 transition cursor-pointer flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-forest-950 group-hover:text-forest-800">{def.name}</span>
+                      <span className="text-[9px] font-bold text-forest-800 px-2 py-0.5 bg-mint-100 border border-mint-200 rounded-full font-mono">
+                        {def.muscleGroup}
+                      </span>
                     </div>
-                    <div className="w-8 h-8 rounded-xl bg-white border border-mint-200 flex items-center justify-center text-forest-900 group-hover:bg-forest-900 group-hover:text-white transition shadow-soft shrink-0 ml-2">
-                      <Plus className="w-4 h-4" />
-                    </div>
+                    <p className="text-[11px] text-charcoal-600 mt-1 line-clamp-1">{def.instructions}</p>
                   </div>
-                ))
-              )}
+                  <div className="w-8 h-8 rounded-xl bg-white border border-mint-200 flex items-center justify-center text-forest-900 group-hover:bg-forest-900 group-hover:text-white transition shadow-soft shrink-0 ml-2">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1744,7 +1887,7 @@ export const GymTrackerView: React.FC = () => {
               type="button"
               onClick={() => {
                 setFinishedSummary(null);
-                setSubView('history');
+                setActiveTab('history');
               }}
               className="w-full py-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm transition active:scale-95 shadow-soft"
             >
