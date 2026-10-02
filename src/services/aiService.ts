@@ -6,11 +6,10 @@ import { extractTextWithGoogleVision } from './googleVisionService';
 
 export const POPULAR_OPENROUTER_MODELS = [
   { id: 'openrouter/free', name: 'OpenRouter Free Multimodal Router (Auto / Fast)' },
-  { id: 'google/gemini-2.0-flash-exp:free', name: 'Google: Gemini 2.0 Flash Vision (Free / Fast)' },
+  { id: 'qwen/qwen3.8-27b:free', name: 'Qwen: Qwen 3.8 27B Vision (Free / High-Precision)' },
+  { id: 'dots-studio/dots-3-note-preview:free', name: 'Dots Studio: Dots-3 Note Vision (Free)' },
   { id: 'google/gemma-4-31b-it:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
-  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
-  { id: 'qwen/qwen-2.5-vl-72b-instruct:free', name: 'Qwen: Qwen 2.5 VL 72B Vision (Free)' },
-  { id: 'meta-llama/llama-3.2-11b-vision-instruct:free', name: 'Meta: Llama 3.2 11B Vision (Free)' }
+  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -23,8 +22,61 @@ export interface VisionLabelExtractionResult {
 }
 
 /**
- * Direct Vision AI & Google Cloud Vision Extraction for bottle/packaging photos.
- * Strictly extracts ONLY ingredients, active substances, and product info, discarding packaging noise.
+ * Resizes and compresses image to max 1600px for lightning-fast direct Vision LLM upload
+ */
+export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 1600): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+
+      if (w > maxDimension || h > maxDimension) {
+        if (w > h) {
+          h = Math.round((h * maxDimension) / w);
+          w = maxDimension;
+        } else {
+          w = Math.round((w * maxDimension) / h);
+          h = maxDimension;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        if (typeof fileOrDataUrl === 'string') resolve(fileOrDataUrl);
+        else fileToBase64DataUrl(fileOrDataUrl).then(resolve).catch(() => resolve(''));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+
+    img.onerror = () => {
+      if (typeof fileOrDataUrl === 'string') {
+        resolve(fileOrDataUrl);
+      } else {
+        fileToBase64DataUrl(fileOrDataUrl).then(resolve).catch(() => resolve(''));
+      }
+    };
+
+    if (typeof fileOrDataUrl === 'string') {
+      img.src = fileOrDataUrl;
+    } else {
+      fileToBase64DataUrl(fileOrDataUrl).then(base64 => {
+        img.src = base64;
+      }).catch(() => resolve(''));
+    }
+  });
+}
+
+/**
+ * Direct Vision AI Extraction: Sends the packaging image directly to the Multimodal LLM.
+ * The LLM reads the label directly and isolates ONLY ingredients and active dosages.
  */
 export async function extractLabelFromImageWithAI(
   imageSource: File | string,
@@ -33,27 +85,22 @@ export async function extractLabelFromImageWithAI(
   model: string = 'openrouter/free',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
-  let base64DataUrl = '';
-  if (typeof imageSource === 'string') {
-    base64DataUrl = imageSource;
-  } else {
-    base64DataUrl = await fileToBase64DataUrl(imageSource);
-  }
+  if (onProgress) onProgress(15, 'Optimizing packaging image for Vision AI...');
+  const base64DataUrl = await optimizeImageForVisionAI(imageSource);
 
   const effectiveApiKey = (apiKey && apiKey.trim().length > 5) 
     ? apiKey.trim() 
     : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
 
-  // 1. Multimodal Vision AI with smart model fallback (First Priority for camera captures)
+  // 1. Direct Multimodal Vision AI (Primary Pipeline)
   if (effectiveApiKey && effectiveApiKey.length > 5) {
     const candidateModels = [
       model && model !== 'local' ? model : 'openrouter/free',
       'openrouter/free',
-      'google/gemini-2.0-flash-exp:free',
+      'qwen/qwen3.8-27b:free',
+      'dots-studio/dots-3-note-preview:free',
       'google/gemma-4-31b-it:free',
-      'google/gemma-4-26b-a4b-it:free',
-      'qwen/qwen-2.5-vl-72b-instruct:free',
-      'meta-llama/llama-3.2-11b-vision-instruct:free'
+      'google/gemma-4-26b-a4b-it:free'
     ];
     // Remove duplicates
     const uniqueModels = [...new Set(candidateModels)];

@@ -1,13 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
-import { analyzeLabelText, fileToBase64DataUrl } from '../../services/analyzer';
+import { analyzeLabelText } from '../../services/analyzer';
 import { extractLabelFromImageWithAI } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 import { VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
-import { ImageCropModal } from '../common/ImageCropModal';
 import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
@@ -29,9 +28,6 @@ export const LabelLensView: React.FC = () => {
 
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
-  const [isCropModalOpen, setIsCropModalOpen] = useState<boolean>(false);
-  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
-  const [isFrontLabelScan, setIsFrontLabelScan] = useState<boolean>(false);
 
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
   const [showManualEditor, setShowManualEditor] = useState<boolean>(false);
@@ -79,33 +75,19 @@ export const LabelLensView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const base64Url = await fileToBase64DataUrl(file);
-      setImageToCrop(base64Url);
-      setIsFrontLabelScan(isFrontLabel);
-      setIsCropModalOpen(true);
-    } catch (err) {
-      showToast('Could not read image file. Please try again.', 'warning');
-    } finally {
-      if (e.target) e.target.value = '';
-    }
-  };
-
-  const handleCropComplete = async (croppedBase64: string) => {
-    setIsCropModalOpen(false);
     setIsScanning(true);
-    setScanProgress({ percent: 15, status: 'Analyzing cropped label with Vision AI...' });
+    setScanProgress({ percent: 15, status: 'Sending photo directly to Vision AI...' });
 
     try {
       const visionRes = await extractLabelFromImageWithAI(
-        croppedBase64,
+        file,
         profile.primaryGoal,
         aiSettings.openRouterApiKey,
         aiSettings.selectedModel,
         (percent, status) => setScanProgress({ percent, status })
       );
 
-      if (isFrontLabelScan) {
+      if (isFrontLabel) {
         const combinedClaims = `${frontClaimText} ${visionRes.claimText || visionRes.ingredientText}`.trim();
         setFrontClaimText(combinedClaims);
         if (visionRes.productName && visionRes.productName !== 'Scanned Product') {
@@ -115,7 +97,7 @@ export const LabelLensView: React.FC = () => {
           setSaveBrand(visionRes.brand);
         }
         handleReanalyze(ingredientText, combinedClaims, visionRes.productName || productName);
-        showToast('Front label claims analyzed with Vision AI', 'success');
+        showToast('Front label claims analyzed directly with Vision AI', 'success');
       } else {
         setIngredientText(visionRes.ingredientText);
         if (visionRes.claimText && !frontClaimText) {
@@ -131,7 +113,7 @@ export const LabelLensView: React.FC = () => {
         setAnalysisResult(visionRes.analysis);
         showToast(
           visionRes.source === 'openrouter_vision'
-            ? 'Multimodal Vision AI decoded ingredients & claims with high precision!'
+            ? 'Multimodal Vision AI decoded ingredients & claims directly from image!'
             : 'Ingredient label parsed & analyzed',
           'success'
         );
@@ -141,7 +123,7 @@ export const LabelLensView: React.FC = () => {
     } finally {
       setIsScanning(false);
       setScanProgress({ percent: 0, status: '' });
-      setImageToCrop(null);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -698,23 +680,6 @@ export const LabelLensView: React.FC = () => {
         onClose={() => setIsBarcodeModalOpen(false)}
         onProductFound={handleBarcodeProductFound}
         userGoal={profile.primaryGoal}
-      />
-
-      {/* On-Screen Ingredient Cropper Modal */}
-      <ImageCropModal
-        isOpen={isCropModalOpen}
-        imageSrc={imageToCrop}
-        title={isFrontLabelScan ? 'Crop Front Packaging Claims' : 'Crop Ingredients Section'}
-        subtitle={
-          isFrontLabelScan
-            ? 'Crop around front-of-pack claims and product title to isolate marketing claims.'
-            : 'Crop around ONLY the ingredient list & active composition table to eliminate packaging noise.'
-        }
-        onCropComplete={handleCropComplete}
-        onCancel={() => {
-          setIsCropModalOpen(false);
-          setImageToCrop(null);
-        }}
       />
     </div>
   );
