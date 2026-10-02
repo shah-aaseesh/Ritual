@@ -294,25 +294,22 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
   return (
     <div className="space-y-3.5">
       {/* ========================================================================= */}
-      {/* 🎮 GAMIFIED FORMULATION SCOREBOARD & BS METER                             */}
+      {/* 🔬 CLINICAL FORMULATION INTEGRITY INDEX & EXCIPIENT AUDIT                 */}
       {/* ========================================================================= */}
-      <div className="rounded-3xl bg-gradient-to-br from-forest-950 via-forest-900 to-forest-950 border border-emerald-500/30 p-4 sm:p-5 text-cream-50 shadow-card relative overflow-hidden">
-        {/* Shimmer Ambient Glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer-sweep pointer-events-none" />
-
+      <div className="rounded-3xl bg-forest-950 border border-emerald-500/20 p-5 sm:p-6 text-cream-50 shadow-card relative overflow-hidden font-sans">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-          {/* Left: Score Dial & Formulation Grade */}
-          <div className="flex items-center gap-3.5 w-full sm:w-auto">
-            {/* Circular Gamified Score Ring */}
-            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center animate-score-glow rounded-full bg-forest-950 border border-emerald-500/30">
+          {/* Left: Score Dial & Formulation Integrity Tier */}
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* Circular Clinical Score Ring */}
+            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center rounded-full bg-black/40 border border-white/10">
               <svg className="w-14 h-14 -rotate-90" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="19" stroke="rgba(255,255,255,0.1)" strokeWidth="3.5" fill="none" />
+                <circle cx="24" cy="24" r="19" stroke="rgba(255,255,255,0.1)" strokeWidth="3" fill="none" />
                 <circle
                   cx="24"
                   cy="24"
                   r="19"
                   stroke={formulationGrade.ring}
-                  strokeWidth="3.5"
+                  strokeWidth="3"
                   strokeDasharray="119.38"
                   strokeDashoffset={119.38 - (119.38 * Math.max(activePercentage, 10)) / 100}
                   strokeLinecap="round"
@@ -321,67 +318,66 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs font-black font-mono leading-none">{activePercentage}%</span>
-                <span className="text-[8px] font-bold text-cream-300 uppercase tracking-tighter">Purity</span>
+                <span className="text-xs font-bold font-mono leading-none text-white">{activePercentage}%</span>
+                <span className="text-[8px] font-medium text-cream-300 uppercase">Potency</span>
               </div>
             </div>
 
-            {/* Score & Verdict Pill */}
+            {/* Score & Formulation Classification */}
             <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className={`text-base sm:text-lg font-black tracking-tight ${formulationGrade.color}`}>
-                  Grade {formulationGrade.grade}
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+                  Formulation Integrity: {formulationGrade.grade} Tier
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-cream-200 font-extrabold uppercase font-mono tracking-wider">
-                  BS Meter
+                <span className="text-[9px] px-2 py-0.5 rounded-md bg-white/10 text-cream-200 font-bold uppercase font-mono">
+                  Rx Audit
                 </span>
               </div>
-              <p className="text-xs text-cream-200 font-medium line-clamp-1">
+              <p className="text-xs text-cream-300 font-medium">
                 {formulationGrade.label}
               </p>
             </div>
           </div>
 
-          {/* Right: Gamified Stats + Zapper Control */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-            {/* 3 Gamified Stat Badges */}
-            <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/10">
+          {/* Right: Clinical Actives vs Inactive Excipients Counter + Filter Mode */}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-2 bg-black/30 p-1.5 rounded-2xl border border-white/10 text-xs font-mono">
               <div className="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-center">
-                <span className="block text-emerald-400 font-black font-mono text-xs leading-none">
+                <span className="block text-emerald-400 font-bold text-xs leading-none">
                   {provenActivesCount}
                 </span>
-                <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-tight">Actives</span>
+                <span className="text-[9px] text-emerald-300 font-medium uppercase">Active</span>
               </div>
 
-              <div className="px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-center">
-                <span className="block text-rose-400 font-black font-mono text-xs leading-none">
+              <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-center">
+                <span className="block text-cream-300 font-bold text-xs leading-none">
                   {fillersCount}
                 </span>
-                <span className="text-[9px] font-bold text-rose-300 uppercase tracking-tight">Purged</span>
+                <span className="text-[9px] text-cream-400 font-medium uppercase">Excipients</span>
               </div>
 
               <button
                 type="button"
                 onClick={startAnimation}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-cream-200 transition active:scale-95"
-                title="Replay Scanner Animation"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-cream-200 transition"
+                title="Replay Clinical Audit"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-mint-300" />
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Gamified "ZAP THE FLUFF" Switch */}
+            {/* Filter Toggle */}
             <button
               type="button"
               onClick={() => setPurgeFluffMode(!purgeFluffMode)}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
+              className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition ${
                 purgeFluffMode
-                  ? 'bg-gradient-to-r from-emerald-500 to-mint-400 text-forest-950 ring-2 ring-emerald-300 ring-offset-2 ring-offset-forest-950'
-                  : 'bg-gradient-to-r from-amber-500 to-rose-500 text-white hover:brightness-110'
+                  ? 'bg-forest-800 text-cream-50 border border-mint-400/40 shadow-sm'
+                  : 'bg-white/10 hover:bg-white/20 text-cream-100 border border-white/10'
               }`}
             >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>{purgeFluffMode ? '✨ Pure Actives View' : '⚡ Zap Marketing Fluff'}</span>
+              <Zap className="w-3.5 h-3.5 text-mint-300" />
+              <span>{purgeFluffMode ? 'Showing Actives Only' : 'Filter Inactive Fillers'}</span>
             </button>
           </div>
         </div>

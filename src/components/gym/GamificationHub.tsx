@@ -1,195 +1,261 @@
 import React, { useState } from 'react';
 import { 
-  Trophy, 
-  Target, 
   Award, 
   CheckCircle2, 
-  Star
+  Target
 } from 'lucide-react';
 
-export interface QuestItem {
+export interface ObjectiveItem {
   id: string;
   title: string;
-  category: 'gym' | 'nutrition' | 'wellness';
-  xpReward: number;
+  category: 'resistance' | 'nutrition' | 'evidence';
+  targetScore: number;
   isCompleted: boolean;
   progressText: string;
+  impactDescription: string;
 }
 
-export interface AchievementBadge {
+export interface LongevityMilestone {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  category: string;
   isUnlocked: boolean;
+  tier: 'Gold' | 'Platinum' | 'Silver' | 'Bronze';
   unlockedDate?: string;
-  rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
 }
 
 export const GamificationHub: React.FC = () => {
-  const [userLevel] = useState<number>(() => {
-    const saved = localStorage.getItem('ritual_user_level');
-    return saved ? parseInt(saved) : 14;
-  });
+  const [consistencyScore] = useState<number>(88);
+  const [activeStreakDays] = useState<number>(14);
 
-  const [currentXp, setCurrentXp] = useState<number>(() => {
-    const saved = localStorage.getItem('ritual_user_xp');
-    return saved ? parseInt(saved) : 3450;
-  });
-
-  const nextLevelXp = userLevel * 350;
-
-  const [quests, setQuests] = useState<QuestItem[]>([
-    { id: 'q-1', title: 'Complete Today\'s Push Session (12+ Sets)', category: 'gym', xpReward: 250, isCompleted: true, progressText: '14 / 12 sets' },
-    { id: 'q-2', title: 'Hit Daily Protein Target (160g)', category: 'nutrition', xpReward: 150, isCompleted: false, progressText: '135g / 160g' },
-    { id: 'q-3', title: 'Scan & Debunk 1 Wellness Product with AI', category: 'wellness', xpReward: 120, isCompleted: true, progressText: '1 / 1 scanned' },
-    { id: 'q-4', title: 'Maintain 3,000ml Cellular Hydration', category: 'nutrition', xpReward: 100, isCompleted: false, progressText: '2,250ml / 3,000ml' }
+  const [objectives, setObjectives] = useState<ObjectiveItem[]>([
+    { 
+      id: 'o-1', 
+      title: 'Prescribed Resistance Volume (12+ Sets)', 
+      category: 'resistance', 
+      targetScore: 25, 
+      isCompleted: true, 
+      progressText: '14 of 12 sets logged', 
+      impactDescription: 'Sufficient mechanical tension for myofibrillar protein synthesis.' 
+    },
+    { 
+      id: 'o-2', 
+      title: 'Target Amino Acid & Protein Threshold (160g)', 
+      category: 'nutrition', 
+      targetScore: 25, 
+      isCompleted: false, 
+      progressText: '135g / 160g logged', 
+      impactDescription: 'Provides 2.5g leucine per meal for optimal mTOR activation.' 
+    },
+    { 
+      id: 'o-3', 
+      title: 'Formulation Ingredient Audit via Label Lens', 
+      category: 'evidence', 
+      targetScore: 20, 
+      isCompleted: true, 
+      progressText: '1 product analyzed', 
+      impactDescription: 'Eliminates unverified excipients and confirms active bioavailability.' 
+    },
+    { 
+      id: 'o-4', 
+      title: 'Euvolemic Hydration Target (3,000ml)', 
+      category: 'nutrition', 
+      targetScore: 18, 
+      isCompleted: false, 
+      progressText: '2,250ml / 3,000ml', 
+      impactDescription: 'Maintains optimal blood volume and electrolyte balance.' 
+    }
   ]);
 
-  const badges: AchievementBadge[] = [
-    { id: 'b-1', title: 'Iron Discipline', description: 'Log 10 complete workout sessions', icon: '🏋️', isUnlocked: true, unlockedDate: 'Yesterday', rarity: 'Rare' },
-    { id: 'b-2', title: 'Century Lifter', description: 'Lift over 10,000 kg total volume in a week', icon: '⚡', isUnlocked: true, unlockedDate: '3 days ago', rarity: 'Epic' },
-    { id: 'b-3', title: 'Formulation Debunker', description: 'Purge 15+ marketing fillers with Rx Scanner', icon: '🔬', isUnlocked: true, unlockedDate: 'Today', rarity: 'Rare' },
-    { id: 'b-4', title: 'Anabolic Perfection', description: 'Hit all 3 macro targets within 5% accuracy', icon: '🥩', isUnlocked: false, rarity: 'Legendary' }
+  const milestones: LongevityMilestone[] = [
+    { 
+      id: 'm-1', 
+      title: 'Unbroken Ritual Adherence', 
+      description: 'Maintained 14-day consecutive active compliance across daily morning & evening steps.',
+      category: 'Habit Consistency',
+      isUnlocked: true,
+      tier: 'Platinum',
+      unlockedDate: 'Active Streak'
+    },
+    { 
+      id: 'm-2', 
+      title: '10-Tonne Progressive Overload', 
+      description: 'Accumulated over 10,000 kg in mechanical tonnage across multi-joint compound movements.',
+      category: 'Strength Adaptation',
+      isUnlocked: true,
+      tier: 'Gold',
+      unlockedDate: '3 days ago'
+    },
+    { 
+      id: 'm-3', 
+      title: 'Clinical Formulation Literacy', 
+      description: 'Decoded and debunked over 20 commercial packaging formulations with PubMed evidence.',
+      category: 'Science & Health',
+      isUnlocked: true,
+      tier: 'Gold',
+      unlockedDate: 'Yesterday'
+    },
+    { 
+      id: 'm-4', 
+      title: 'Precision Macro Adherence', 
+      description: 'Hit target protein, carbohydrate, and fat ratios within a ±5% clinical variance for 7 days.',
+      category: 'Nutritional Precision',
+      isUnlocked: false,
+      tier: 'Silver'
+    }
   ];
 
-  const completeQuest = (id: string) => {
-    setQuests(prev => prev.map(q => {
-      if (q.id === id && !q.isCompleted) {
-        const nextXp = currentXp + q.xpReward;
-        setCurrentXp(nextXp);
-        localStorage.setItem('ritual_user_xp', nextXp.toString());
-        return { ...q, isCompleted: true };
+  const toggleObjective = (id: string) => {
+    setObjectives(prev => prev.map(obj => {
+      if (obj.id === id) {
+        return { ...obj, isCompleted: !obj.isCompleted };
       }
-      return q;
+      return obj;
     }));
   };
 
-  const xpPercentage = Math.min(100, Math.round((currentXp / nextLevelXp) * 100));
+  const completedCount = objectives.filter(o => o.isCompleted).length;
+  const completionPercentage = Math.round((completedCount / objectives.length) * 100);
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-forest-950 via-forest-900 to-forest-950 border border-emerald-500/30 p-5 sm:p-6 text-cream-50 shadow-card space-y-5 relative overflow-hidden">
-      {/* Background Neon Shimmer */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer-sweep pointer-events-none" />
-
-      {/* Level & XP HUD Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 relative z-10">
-        <div className="flex items-center gap-3.5">
-          {/* Level Emblem */}
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-forest-950 flex flex-col items-center justify-center font-black shadow-lg ring-2 ring-amber-300">
-            <Trophy className="w-4 h-4" />
-            <span className="text-xs leading-none">LVL {userLevel}</span>
+    <div className="rounded-3xl bg-white border border-cream-300 p-6 sm:p-8 shadow-card space-y-6 font-sans">
+      {/* Formal Header: Consistency & Longevity Status */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-5">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-md bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-wider font-mono">
+              LONGEVITY & ADHERENCE INDEX
+            </span>
+            <span className="text-xs text-charcoal-500 font-medium">
+              Evidence-Based Performance
+            </span>
           </div>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-black text-white">Strength & Science Athlete</span>
-              <span className="text-[10px] font-black uppercase text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30 font-mono">
-                TIER 3 WARRIOR
-              </span>
-            </div>
-            <p className="text-xs text-cream-300 font-medium">
-              {currentXp.toLocaleString()} XP earned • {Math.max(0, nextLevelXp - currentXp)} XP to Level {userLevel + 1}
-            </p>
-          </div>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-forest-950 tracking-tight">
+            Daily Biological Objectives & Milestones
+          </h3>
         </div>
 
-        {/* Level Progress Bar */}
-        <div className="w-full sm:w-64 space-y-1">
-          <div className="flex justify-between text-[10px] font-mono font-bold text-cream-300">
-            <span>XP Progress</span>
-            <span className="text-emerald-400">{xpPercentage}%</span>
+        {/* Consistency Stat Badges */}
+        <div className="flex items-center gap-3">
+          <div className="px-3.5 py-2 rounded-2xl bg-cream-100 border border-cream-200 text-left">
+            <span className="text-[10px] font-bold uppercase text-charcoal-500 block font-mono">
+              Habit Streak
+            </span>
+            <span className="text-sm font-extrabold text-forest-900 flex items-center gap-1">
+              <span>{activeStreakDays} Consecutive Days</span>
+            </span>
           </div>
-          <div className="w-full h-2.5 rounded-full bg-black/50 overflow-hidden border border-white/10">
-            <div 
-              className="h-full bg-gradient-to-r from-emerald-500 via-mint-400 to-amber-400 rounded-full transition-all duration-700" 
-              style={{ width: `${xpPercentage}%` }}
-            />
+
+          <div className="px-3.5 py-2 rounded-2xl bg-forest-900 text-cream-50 text-left">
+            <span className="text-[10px] font-bold uppercase text-mint-300 block font-mono">
+              Adherence Index
+            </span>
+            <span className="text-sm font-extrabold text-white">
+              {consistencyScore}% Prime
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Quests & Badges Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
-        {/* Left: Daily Quests */}
-        <div className="lg:col-span-7 space-y-2.5">
+      {/* Main Grid: Left Daily Objectives | Right Milestone Certifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left: Daily Objectives */}
+        <div className="lg:col-span-7 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-mint-300 font-mono flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" />
-              <span>Daily Health & Strength Quests</span>
-            </span>
-            <span className="text-[10px] font-mono text-cream-400">
-              {quests.filter(q => q.isCompleted).length} / {quests.length} Done
+            <h4 className="text-sm font-extrabold text-forest-950 uppercase tracking-wider flex items-center gap-2">
+              <Target className="w-4 h-4 text-forest-900" />
+              <span>Today's Evidence-Based Objectives</span>
+            </h4>
+            <span className="text-xs font-mono font-bold text-forest-800">
+              {completedCount} of {objectives.length} Complete ({completionPercentage}%)
             </span>
           </div>
 
-          <div className="space-y-2">
-            {quests.map((quest) => (
+          <div className="space-y-2.5">
+            {objectives.map((obj) => (
               <div
-                key={quest.id}
-                onClick={() => completeQuest(quest.id)}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
-                  quest.isCompleted
-                    ? 'bg-emerald-500/15 border-emerald-500/40 text-cream-100'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10 text-cream-200'
+                key={obj.id}
+                onClick={() => toggleObjective(obj.id)}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                  obj.isCompleted
+                    ? 'bg-emerald-50/50 border-emerald-200 text-forest-950'
+                    : 'bg-[#FAF7F2] border-cream-200 hover:border-forest-800 text-charcoal-800'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                    quest.isCompleted ? 'bg-emerald-500 text-forest-950 font-bold' : 'bg-white/10 text-cream-400'
-                  }`}>
-                    {quest.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Star className="w-3.5 h-3.5" />}
-                  </div>
-                  <div>
-                    <span className={`text-xs font-bold block ${quest.isCompleted ? 'line-through text-cream-400' : 'text-white'}`}>
-                      {quest.title}
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    className={`mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center transition shrink-0 ${
+                      obj.isCompleted
+                        ? 'bg-emerald-700 text-white'
+                        : 'border border-cream-300 bg-white text-transparent hover:border-forest-800'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" />
+                  </button>
+
+                  <div className="space-y-0.5">
+                    <span className={`text-xs font-bold block ${obj.isCompleted ? 'text-emerald-950' : 'text-forest-950'}`}>
+                      {obj.title}
                     </span>
-                    <span className="text-[10px] text-cream-400 font-mono">{quest.progressText}</span>
+                    <p className="text-[11px] text-charcoal-600 leading-relaxed font-sans">
+                      {obj.impactDescription}
+                    </p>
                   </div>
                 </div>
 
-                <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-black shrink-0">
-                  +{quest.xpReward} XP
+                <span className="text-[10px] font-mono font-bold text-charcoal-500 shrink-0 bg-white px-2 py-1 rounded-md border border-cream-200">
+                  {obj.progressText}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right: Achievement Badges */}
-        <div className="lg:col-span-5 space-y-2.5">
+        {/* Right: Longevity Milestones */}
+        <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-amber-300 font-mono flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5" />
-              <span>Unlocked Milestones</span>
+            <h4 className="text-sm font-extrabold text-forest-950 uppercase tracking-wider flex items-center gap-2">
+              <Award className="w-4 h-4 text-forest-900" />
+              <span>Verified Longevity Milestones</span>
+            </h4>
+            <span className="text-xs font-mono font-bold text-charcoal-500">
+              3 Verified
             </span>
-            <span className="text-[10px] font-mono text-cream-400">3 / 4 Unlocked</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {badges.map((b) => (
+          <div className="space-y-2.5">
+            {milestones.map((m) => (
               <div
-                key={b.id}
-                className={`p-3 rounded-2xl border flex flex-col justify-between space-y-1.5 ${
-                  b.isUnlocked
-                    ? 'bg-gradient-to-br from-white/10 to-white/5 border-amber-500/30 text-white shadow-xs'
-                    : 'bg-black/30 border-white/5 text-cream-500 opacity-60'
+                key={m.id}
+                className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                  m.isUnlocked
+                    ? 'bg-white border-cream-300 shadow-soft'
+                    : 'bg-cream-50/60 border-dashed border-cream-300 opacity-60'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xl">{b.icon}</span>
-                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded bg-white/10 text-amber-300">
-                    {b.rarity}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs font-black block">{b.title}</span>
-                  <p className="text-[10px] text-cream-300 line-clamp-1">{b.description}</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-forest-950">{m.title}</span>
+                    <span className={`text-[9px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                      m.tier === 'Platinum' ? 'bg-forest-900 text-cream-50' :
+                      m.tier === 'Gold' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                      'bg-cream-200 text-charcoal-700'
+                    }`}>
+                      {m.tier} Tier
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-charcoal-600 leading-snug">
+                    {m.description}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   );

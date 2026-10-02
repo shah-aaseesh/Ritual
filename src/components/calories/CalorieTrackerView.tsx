@@ -137,16 +137,16 @@ export const CalorieTrackerView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black uppercase tracking-wider font-mono">
-              HEALTH SUITE • NUTRITION
+            <span className="px-2.5 py-0.5 rounded-md bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-wider font-mono">
+              METABOLIC & NUTRITIONAL PRECISION
             </span>
-            <span className="text-xs font-bold text-charcoal-400">Precision Macro & Calorie Engine</span>
+            <span className="text-xs text-charcoal-500 font-medium">Daily Macronutrient Calibration</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
-            Nutrition & Macro Hub
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-forest-950 tracking-tight mt-1">
+            Nutritional Balance & Macro Hub
           </h1>
           <p className="text-xs sm:text-sm text-charcoal-600">
-            Log daily nutrition, balance protein ratios, and maintain optimal clinical hydration.
+            Precision macronutrient distribution, verified whole-food logging, and cellular hydration tracking.
           </p>
         </div>
 
@@ -156,22 +156,20 @@ export const CalorieTrackerView: React.FC = () => {
             setActiveMealCategory('breakfast');
             setShowAddFoodModal(true);
           }}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-forest-950 to-forest-900 text-cream-50 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-card hover:scale-[1.02] active:scale-95 transition"
+          className="px-5 py-3 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-card transition"
         >
-          <Plus className="w-4 h-4 text-mint-300 stroke-[3]" />
-          <span>Quick Log Meal</span>
+          <Plus className="w-4 h-4 text-mint-300" />
+          <span>Record Meal</span>
         </button>
       </div>
 
       {/* ========================================================================= */}
       {/* 🎯 MACRO TARGET RINGS HUD                                                 */}
       {/* ========================================================================= */}
-      <div className="rounded-3xl bg-gradient-to-br from-forest-950 via-forest-900 to-forest-950 border border-emerald-500/30 p-5 sm:p-6 text-cream-50 shadow-card relative overflow-hidden space-y-5">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer-sweep pointer-events-none" />
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
+      <div className="rounded-3xl bg-forest-950 border border-emerald-500/20 p-6 text-cream-50 shadow-card space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Main Calorie Ring */}
-          <div className="md:col-span-1 p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-center relative">
+          <div className="md:col-span-1 p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center text-center relative">
             <div className="relative w-28 h-28 flex items-center justify-center">
               <svg className="w-28 h-28 -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="14" stroke="rgba(255,255,255,0.1)" strokeWidth="3" fill="none" />
