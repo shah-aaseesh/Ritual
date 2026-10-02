@@ -402,78 +402,97 @@ export function fileToBase64DataUrl(file: File | Blob): Promise<string> {
 }
 
 /**
- * Normalizes common OCR artifacts in cosmetic typography and reconstructs clean formula text
+ * Fully dynamic case-by-case OCR cleaner & formula parser
+ * Evaluates whatever text is on the specific bottle without hardcoding lists or default units.
  */
 export function cleanAndNormalizeOCRText(raw: string): string {
-  if (!raw) return '';
+  if (!raw || raw.trim().length === 0) return '';
 
-  const cleanActives: string[] = [];
-  const cleanBase: string[] = [];
+  const dynamicExtracted: string[] = [];
+  const seenNames = new Set<string>();
 
-  // 1. Check for specific nutrients / active table lines with dosages
-  const tableItems = [
-    { pattern: /melatonin/i, name: 'Melatonin', regex: /melatonin[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /tart cherry/i, name: 'Tart Cherry Extract', regex: /tart cherry[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /theanine/i, name: 'L-Theanine', regex: /(?:l-)?theanine[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /chamomile/i, name: 'Chamomile Extract', regex: /chamomile[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /vitamin d[23]?|ergocalciferol|cholecalciferol/i, name: 'Vitamin D2 (Ergocalciferol)', regex: /vitamin d[23]?[^\d]*(\d+(?:\.\d+)?)\s*(mcg|iu|mg)?/i, defaultUnit: 'mcg' },
-    { pattern: /ashwagandha|withania/i, name: 'Ashwagandha Extract', regex: /ashwagandha[^\d]*(\d+(?:\.\d+)?)\s*(mg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /magnesium/i, name: 'Magnesium', regex: /magnesium[^\d]*(\d+(?:\.\d+)?)\s*(mg|g)?/i, defaultUnit: 'mg' },
-    { pattern: /salicylic acid|bha/i, name: 'Salicylic Acid', regex: /salicylic acid[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
-    { pattern: /niacinamide|vitamin b3/i, name: 'Niacinamide', regex: /niacinamide[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
-    { pattern: /glycolic acid|aha/i, name: 'Glycolic Acid', regex: /glycolic acid[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
-    { pattern: /redensyl/i, name: 'Redensyl', regex: /redensyl[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
-    { pattern: /minoxidil/i, name: 'Minoxidil', regex: /minoxidil[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
-    { pattern: /rosemary/i, name: 'Rosemary Leaf Extract', regex: /rosemary[^\d]*(\d+(?:\.\d+)?)\s*(%|mg)?/i, defaultUnit: '%' },
-    { pattern: /biotin/i, name: 'Biotin', regex: /biotin[^\d]*(\d+(?:\.\d+)?)\s*(mcg|mg)?/i, defaultUnit: 'mcg' },
-  ];
+  // Words that represent non-ingredient packaging metadata/macros to filter out
+  const skipWords = /^(energy|protein|carbohydrate|carbohydrates|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol|serving|gummy|per day|rda|net quantity|mrp|loss|feedback|email|visit|store below|batch)/i;
 
-  for (const item of tableItems) {
-    if (item.pattern.test(raw)) {
-      const match = raw.match(item.regex);
-      if (match && match[1]) {
-        const val = match[1];
-        const unit = match[2] || item.defaultUnit;
-        cleanActives.push(`${item.name} (${val} ${unit})`);
-      } else {
-        cleanActives.push(item.name);
+  // 1. Dynamic Table Row Parser: Matches any "[Ingredient Name] (unit) [number]"
+  // e.g. "Chamomile Extract (mg) 10", "Melatonin (mg) 5.0", "Vitamin D2 (mcg) 15.0"
+  const tableUnitRegex = /([a-zA-Z0-9\s\-]+?)\s*\(([a-zA-Z%]+)\)\s*([\d\.]+)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = tableUnitRegex.exec(raw)) !== null) {
+    let rawName = match[1].trim().replace(/^[^a-zA-Z]+/, '');
+    // If the captured text has multiple words with noise at the front, take the valid constituent name
+    const words = rawName.split(/\s+/).filter(w => w.length > 1);
+    if (words.length > 4) {
+      rawName = words.slice(-3).join(' ');
+    } else {
+      rawName = words.join(' ');
+    }
+
+    const unit = match[2].trim();
+    const val = match[3].trim();
+
+    if (rawName.length >= 2 && !skipWords.test(rawName)) {
+      const lower = rawName.toLowerCase();
+      if (!seenNames.has(lower)) {
+        seenNames.add(lower);
+        dynamicExtracted.push(`${rawName} (${val} ${unit})`);
       }
     }
   }
 
-  // 2. Extract standard base formulation components if present
-  const baseComponents = [
-    { pattern: /liquid glucose/i, name: 'Liquid Glucose' },
-    { pattern: /\bsugar\b|\bsucrose\b/i, name: 'Sugar' },
-    { pattern: /maltodextrin/i, name: 'Maltodextrin' },
-    { pattern: /water|aqua/i, name: 'Purified Water' },
-    { pattern: /pectin|ins\s*440/i, name: 'Pectin (INS 440)' },
-    { pattern: /acidity regulator|ins\s*330|ins\s*331|citric acid|sodium citrate/i, name: 'Acidity Regulators (INS 330 & INS 331)' },
-    { pattern: /medium chain triglycerides|mct/i, name: 'Medium Chain Triglycerides (MCT Oil)' },
-    { pattern: /beet\s*root/i, name: 'Beet Root Powder' },
-    { pattern: /mango|natural flavou?r/i, name: 'Natural Mango Flavouring' },
-    { pattern: /glycerin/i, name: 'Glycerin' },
-    { pattern: /panthenol/i, name: 'Panthenol' },
-    { pattern: /hyaluron/i, name: 'Hyaluronic Acid' },
-    { pattern: /tocopherol|vitamin e/i, name: 'Vitamin E' },
-    { pattern: /phenoxyethanol/i, name: 'Phenoxyethanol' },
-  ];
+  // 2. Dynamic Dosage Parser: Matches any "[Ingredient Name] [number][unit]"
+  // e.g. "Salicylic Acid 2%", "Redensyl 3%", "Biotin 5000mcg", "Zinc PCA 1%"
+  const inlineDoseRegex = /([a-zA-Z0-9\s\-]+?)\s+(\d+(?:\.\d+)?)\s*(%|mg|mcg|g|ml|iu|w\/w)\b/gi;
+  while ((match = inlineDoseRegex.exec(raw)) !== null) {
+    let rawName = match[1].trim().replace(/^[^a-zA-Z]+/, '');
+    const words = rawName.split(/\s+/).filter(w => w.length > 1);
+    if (words.length > 4) {
+      rawName = words.slice(-3).join(' ');
+    } else {
+      rawName = words.join(' ');
+    }
+    const val = match[2];
+    const unit = match[3];
 
-  for (const base of baseComponents) {
-    if (base.pattern.test(raw)) {
-      if (!cleanActives.some(a => a.toLowerCase().includes(base.name.toLowerCase()))) {
-        cleanBase.push(base.name);
+    if (rawName.length >= 3 && !skipWords.test(rawName)) {
+      const lower = rawName.toLowerCase();
+      if (!seenNames.has(lower)) {
+        seenNames.add(lower);
+        dynamicExtracted.push(`${rawName} (${val}${unit})`);
       }
     }
   }
 
-  // If we found known actives or formula components, assemble a clean, readable list
-  if (cleanActives.length > 0 || cleanBase.length > 0) {
-    const combined = [...new Set([...cleanActives, ...cleanBase])];
-    return combined.join(', ');
+  // 3. Dynamic "INGREDIENTS: ..." section parser
+  const ingSectionMatch = raw.match(/ingredients?\s*[:\-]\s*([\s\S]+?)(?=\.|\n\n|contains\s+natural|mfg|batch|$)/i);
+  if (ingSectionMatch && ingSectionMatch[1]) {
+    const ingSection = ingSectionMatch[1];
+    const tokens = ingSection.split(/[,;\n•·]/);
+    for (const token of tokens) {
+      const cleaned = token
+        .replace(/^[^\w\(\)]+/g, '')
+        .replace(/[^\w\(\)\.\s]+$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleaned.length >= 3 && !/^[0-9\W]+$/.test(cleaned) && !skipWords.test(cleaned)) {
+        const lower = cleaned.toLowerCase();
+        const isDuplicate = Array.from(seenNames).some(seen => lower.includes(seen) || seen.includes(lower));
+        if (!isDuplicate) {
+          seenNames.add(lower);
+          dynamicExtracted.push(cleaned);
+        }
+      }
+    }
   }
 
-  // Fallback cleaner: remove noise symbols, replace OCR character mixups
+  // If dynamic extraction found entries, return the clean formatted list
+  if (dynamicExtracted.length > 0) {
+    return dynamicExtracted.join(', ');
+  }
+
+  // Fallback generic line cleaner
   return raw
     .replace(/[|—–_•·]/g, ' ')
     .replace(/^[^\w\d\s]+$/gm, '')
