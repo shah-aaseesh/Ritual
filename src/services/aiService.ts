@@ -167,12 +167,20 @@ Return ONLY valid JSON in this exact structure:
   });
 
   const analysis = analyzeLabelText(ocrText, '', userGoal, 'Scanned Product');
+  
+  // Assemble a pristine clean list of detected actives & carriers
+  const cleanList = analysis.detectedIngredients.map(d => {
+    return d.doesLabelDiscloseDose && d.rawTextMatch ? d.rawTextMatch : d.ingredient.name;
+  }).join(', ');
+
+  const finalIngredientText = (cleanList && cleanList.length > 5) ? cleanList : ocrText;
+
   if (onProgress) onProgress(100, 'Analysis Complete');
 
   return {
     productName: 'Scanned Product',
     brand: '',
-    ingredientText: ocrText,
+    ingredientText: finalIngredientText,
     claimText: '',
     analysis,
     source: 'local_ocr'

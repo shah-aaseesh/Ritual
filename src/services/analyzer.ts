@@ -402,18 +402,85 @@ export function fileToBase64DataUrl(file: File | Blob): Promise<string> {
 }
 
 /**
- * Normalizes common OCR artifacts in cosmetic typography
+ * Normalizes common OCR artifacts in cosmetic typography and reconstructs clean formula text
  */
 export function cleanAndNormalizeOCRText(raw: string): string {
   if (!raw) return '';
+
+  const cleanActives: string[] = [];
+  const cleanBase: string[] = [];
+
+  // 1. Check for specific nutrients / active table lines with dosages
+  const tableItems = [
+    { pattern: /melatonin/i, name: 'Melatonin', regex: /melatonin[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /tart cherry/i, name: 'Tart Cherry Extract', regex: /tart cherry[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /theanine/i, name: 'L-Theanine', regex: /(?:l-)?theanine[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /chamomile/i, name: 'Chamomile Extract', regex: /chamomile[^\d]*(\d+(?:\.\d+)?)\s*(mg|mcg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /vitamin d[23]?|ergocalciferol|cholecalciferol/i, name: 'Vitamin D2 (Ergocalciferol)', regex: /vitamin d[23]?[^\d]*(\d+(?:\.\d+)?)\s*(mcg|iu|mg)?/i, defaultUnit: 'mcg' },
+    { pattern: /ashwagandha|withania/i, name: 'Ashwagandha Extract', regex: /ashwagandha[^\d]*(\d+(?:\.\d+)?)\s*(mg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /magnesium/i, name: 'Magnesium', regex: /magnesium[^\d]*(\d+(?:\.\d+)?)\s*(mg|g)?/i, defaultUnit: 'mg' },
+    { pattern: /salicylic acid|bha/i, name: 'Salicylic Acid', regex: /salicylic acid[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
+    { pattern: /niacinamide|vitamin b3/i, name: 'Niacinamide', regex: /niacinamide[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
+    { pattern: /glycolic acid|aha/i, name: 'Glycolic Acid', regex: /glycolic acid[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
+    { pattern: /redensyl/i, name: 'Redensyl', regex: /redensyl[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
+    { pattern: /minoxidil/i, name: 'Minoxidil', regex: /minoxidil[^\d]*(\d+(?:\.\d+)?)\s*(%)?/i, defaultUnit: '%' },
+    { pattern: /rosemary/i, name: 'Rosemary Leaf Extract', regex: /rosemary[^\d]*(\d+(?:\.\d+)?)\s*(%|mg)?/i, defaultUnit: '%' },
+    { pattern: /biotin/i, name: 'Biotin', regex: /biotin[^\d]*(\d+(?:\.\d+)?)\s*(mcg|mg)?/i, defaultUnit: 'mcg' },
+  ];
+
+  for (const item of tableItems) {
+    if (item.pattern.test(raw)) {
+      const match = raw.match(item.regex);
+      if (match && match[1]) {
+        const val = match[1];
+        const unit = match[2] || item.defaultUnit;
+        cleanActives.push(`${item.name} (${val} ${unit})`);
+      } else {
+        cleanActives.push(item.name);
+      }
+    }
+  }
+
+  // 2. Extract standard base formulation components if present
+  const baseComponents = [
+    { pattern: /liquid glucose/i, name: 'Liquid Glucose' },
+    { pattern: /\bsugar\b|\bsucrose\b/i, name: 'Sugar' },
+    { pattern: /maltodextrin/i, name: 'Maltodextrin' },
+    { pattern: /water|aqua/i, name: 'Purified Water' },
+    { pattern: /pectin|ins\s*440/i, name: 'Pectin (INS 440)' },
+    { pattern: /acidity regulator|ins\s*330|ins\s*331|citric acid|sodium citrate/i, name: 'Acidity Regulators (INS 330 & INS 331)' },
+    { pattern: /medium chain triglycerides|mct/i, name: 'Medium Chain Triglycerides (MCT Oil)' },
+    { pattern: /beet\s*root/i, name: 'Beet Root Powder' },
+    { pattern: /mango|natural flavou?r/i, name: 'Natural Mango Flavouring' },
+    { pattern: /glycerin/i, name: 'Glycerin' },
+    { pattern: /panthenol/i, name: 'Panthenol' },
+    { pattern: /hyaluron/i, name: 'Hyaluronic Acid' },
+    { pattern: /tocopherol|vitamin e/i, name: 'Vitamin E' },
+    { pattern: /phenoxyethanol/i, name: 'Phenoxyethanol' },
+  ];
+
+  for (const base of baseComponents) {
+    if (base.pattern.test(raw)) {
+      if (!cleanActives.some(a => a.toLowerCase().includes(base.name.toLowerCase()))) {
+        cleanBase.push(base.name);
+      }
+    }
+  }
+
+  // If we found known actives or formula components, assemble a clean, readable list
+  if (cleanActives.length > 0 || cleanBase.length > 0) {
+    const combined = [...new Set([...cleanActives, ...cleanBase])];
+    return combined.join(', ');
+  }
+
+  // Fallback cleaner: remove noise symbols, replace OCR character mixups
   return raw
-    // Replace typical OCR character mixups
-    .replace(/[|]/g, ' ')
+    .replace(/[|—–_•·]/g, ' ')
+    .replace(/^[^\w\d\s]+$/gm, '')
     .replace(/\b[0o]%\b/gi, '0%')
     .replace(/(\d+)\s*[%％]/g, '$1%')
     .replace(/(\d+)\s*mg\b/gi, '$1mg')
     .replace(/(\d+)\s*ml\b/gi, '$1ml')
-    .replace(/([a-z])\n([a-z])/gi, '$1 $2')
     .replace(/\s+/g, ' ')
     .trim();
 }

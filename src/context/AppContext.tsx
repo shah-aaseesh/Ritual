@@ -88,7 +88,7 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 const envApiKey = (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
-const envModel = (import.meta as any).env?.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-exp:free';
+const envModel = (import.meta as any).env?.VITE_OPENROUTER_MODEL || 'openrouter/free';
 
 const INITIAL_AI_SETTINGS: AISettings = {
   enabled: true,
@@ -116,6 +116,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!parsed.openRouterApiKey && envApiKey) {
           parsed.openRouterApiKey = envApiKey;
           parsed.provider = 'openrouter';
+        }
+        // Upgrade legacy/deprecated models
+        if (!parsed.selectedModel || parsed.selectedModel.includes('gemini-2.0-flash-exp') || parsed.selectedModel.includes('gemma-4-31b:free')) {
+          parsed.selectedModel = 'openrouter/free';
         }
         return parsed;
       } catch (e) { /* fallback */ }
