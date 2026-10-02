@@ -431,8 +431,8 @@ export function cleanAndNormalizeOCRText(raw: string): string {
   const dynamicExtracted: string[] = [];
   const seenNames = new Set<string>();
 
-  // Words that represent non-ingredient packaging metadata/macros to filter out
-  const skipWords = /^(energy|protein|carbohydrate|carbohydrates|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol|serving|gummy|per day|rda|net quantity|mrp|loss|feedback|email|visit|store below|batch)/i;
+  // Words that represent non-ingredient packaging metadata/macros/directions to filter out
+  const skipWords = /^(energy|protein|carbohydrate|carbohydrates|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol|serving|gummy|per day|rda|net quantity|mrp|loss|feedback|email|visit|store below|batch|apply|take|chew|directions|dosage|use|how to use|swallow|massage|rub|shake|not for|keep out)/i;
 
   // 1. Dynamic Table Row Parser: Matches plain text or Markdown tables "[Ingredient Name] (unit) [number]"
   // Plain text: "Chamomile Extract (mg) 10"
