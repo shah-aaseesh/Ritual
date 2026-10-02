@@ -437,19 +437,34 @@ export const OnboardingFlow: React.FC = () => {
                 {healthRecommendedProducts.map((prod) => (
                   <div
                     key={prod.id}
-                    className="p-4 rounded-2xl bg-[#121217] border border-white/10 flex items-center justify-between gap-3 shadow-card"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#121217] border border-white/10 flex items-center justify-between gap-3.5 shadow-card hover:border-[#FF3B30]/40 transition group"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{prod.product}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-[#FF3B30]/20 text-[#FF3B30] text-[9px] font-mono font-bold">
-                          {prod.potencyBadge}
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <div className="w-14 h-14 rounded-xl bg-black/50 border border-white/10 shrink-0 overflow-hidden relative flex items-center justify-center">
+                        {prod.imageUrl && (
+                          <img
+                            src={prod.imageUrl}
+                            alt={prod.product}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black text-white truncate">{prod.product}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-[#FF3B30]/20 text-[#FF3B30] text-[9px] font-mono font-bold shrink-0">
+                            {prod.potencyBadge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2">{prod.description}</p>
+                        <span className="text-[10px] text-emerald-400 font-mono block">
+                          ✓ {prod.clinicalAdvantage}
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 leading-snug">{prod.description}</p>
-                      <span className="text-[10px] text-emerald-400 font-mono block">
-                        ✓ {prod.clinicalAdvantage}
-                      </span>
                     </div>
 
                     <div className="text-right shrink-0">
@@ -537,19 +552,34 @@ export const OnboardingFlow: React.FC = () => {
                 {wellnessRecommendedProducts.map((prod) => (
                   <div
                     key={prod.id}
-                    className="p-4 rounded-2xl bg-[#121217] border border-white/10 flex items-center justify-between gap-3 shadow-card"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#121217] border border-white/10 flex items-center justify-between gap-3.5 shadow-card hover:border-emerald-500/40 transition group"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{prod.product}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold">
-                          {prod.potencyBadge}
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <div className="w-14 h-14 rounded-xl bg-black/50 border border-white/10 shrink-0 overflow-hidden relative flex items-center justify-center">
+                        {prod.imageUrl && (
+                          <img
+                            src={prod.imageUrl}
+                            alt={prod.product}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black text-white truncate">{prod.product}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold shrink-0">
+                            {prod.potencyBadge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2">{prod.description}</p>
+                        <span className="text-[10px] text-emerald-400 font-mono block">
+                          ✓ {prod.clinicalAdvantage}
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 leading-snug">{prod.description}</p>
-                      <span className="text-[10px] text-zinc-400 font-mono block">
-                        ✓ {prod.clinicalAdvantage}
-                      </span>
                     </div>
 
                     <div className="text-right shrink-0">

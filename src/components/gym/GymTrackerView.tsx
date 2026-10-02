@@ -1029,13 +1029,28 @@ export const GymTrackerView: React.FC = () => {
                       </span>
                     </div>
 
-                    <div>
-                      <h3 className="text-base font-black text-white group-hover:text-[#FF3B30] transition">
-                        {prod.product}
-                      </h3>
-                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
-                        {prod.description}
-                      </p>
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-16 h-16 rounded-2xl bg-black/50 border border-white/10 shrink-0 overflow-hidden relative flex items-center justify-center">
+                        {prod.imageUrl && (
+                          <img
+                            src={prod.imageUrl}
+                            alt={prod.product}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-black text-white group-hover:text-[#FF3B30] transition leading-tight">
+                          {prod.product}
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed line-clamp-2">
+                          {prod.description}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1 text-xs">
