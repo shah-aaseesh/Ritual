@@ -20,6 +20,16 @@ export interface VisionLabelExtractionResult {
   claimText: string;
   analysis: ProductAnalysisResult;
   source: 'openrouter_vision' | 'local_ocr';
+  debugTrace?: {
+    model: string;
+    prompt: string;
+    rawResponse: string;
+    parsedJson?: any;
+    imageThumbnail?: string;
+    durationMs?: number;
+    tokens?: any;
+    timestamp: string;
+  };
 }
 
 /**
@@ -137,6 +147,12 @@ Return ONLY valid JSON matching this schema:
   "clinicalSynthesis": "Evidence-backed nocturnal recovery formula combining chronobiotic melatonin with synergistic adaptogens."
 }`;
 
+        const startTime = Date.now();
+        console.group(`%c[AI Vision Request] Model: ${candidateModel}`, 'color: #059669; font-weight: bold;');
+        console.log('Image Data URL (first 100 chars):', base64DataUrl.slice(0, 100) + '...');
+        console.log('Prompt Sent to AI:\n', prompt);
+        console.groupEnd();
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -167,10 +183,17 @@ Return ONLY valid JSON matching this schema:
           })
         });
 
+        const durationMs = Date.now() - startTime;
+
         if (response.ok) {
           if (onProgress) onProgress(80, 'Cross-referencing extracted actives with PubMed evidence DB...');
           const data = await response.json();
           const rawContent = data.choices?.[0]?.message?.content || '';
+
+          console.group(`%c[AI Vision Response] (${durationMs}ms)`, 'color: #10b981; font-weight: bold;');
+          console.log('Raw AI Response Content:\n', rawContent);
+          console.log('OpenRouter Usage / Tokens:', data.usage);
+          console.groupEnd();
           
           let cleaned = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
           cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -226,7 +249,17 @@ Return ONLY valid JSON matching this schema:
               ingredientText: ingText,
               claimText: claimText,
               analysis,
-              source: 'openrouter_vision'
+              source: 'openrouter_vision',
+              debugTrace: {
+                model: candidateModel,
+                prompt,
+                rawResponse: rawContent,
+                parsedJson: parsed,
+                imageThumbnail: base64DataUrl,
+                durationMs,
+                tokens: data.usage,
+                timestamp: new Date().toLocaleTimeString()
+              }
             };
           }
         }
@@ -422,7 +455,15 @@ Return ONLY a valid JSON object matching this schema without markdown fences or 
             ingredientText: finalIngredientText,
             claimText: claims,
             analysis,
-            source: 'openrouter_vision'
+            source: 'openrouter_vision',
+            debugTrace: {
+              model,
+              prompt,
+              rawResponse: rawContent,
+              parsedJson: parsed,
+              tokens: data.usage,
+              timestamp: new Date().toLocaleTimeString()
+            }
           };
         }
       }

@@ -17,7 +17,13 @@ import {
   BookmarkPlus,
   ScanBarcode,
   ClipboardPaste,
-  CheckCircle
+  CheckCircle,
+  Terminal,
+  Code2,
+  Copy,
+  Check,
+  Eye,
+  X
 } from 'lucide-react';
 
 export const LabelLensView: React.FC = () => {
@@ -34,6 +40,12 @@ export const LabelLensView: React.FC = () => {
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
   const [showManualEditor, setShowManualEditor] = useState<boolean>(false);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<'all' | 'ingredients' | 'claims'>('all');
+
+  // AI Inspector State
+  const [latestDebugTrace, setLatestDebugTrace] = useState<any>(null);
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState<boolean>(false);
+  const [debugTab, setDebugTab] = useState<'response' | 'image' | 'prompt' | 'parsed'>('response');
+  const [hasCopiedRaw, setHasCopiedRaw] = useState<boolean>(false);
 
   const [analysisResult, setAnalysisResult] = useState<ProductAnalysisResult>(() => {
     return analyzeLabelText(
@@ -88,6 +100,10 @@ export const LabelLensView: React.FC = () => {
         aiSettings.selectedModel,
         (percent, status) => setScanProgress({ percent, status })
       );
+
+      if (visionRes.debugTrace) {
+        setLatestDebugTrace(visionRes.debugTrace);
+      }
 
       if (isFrontLabel) {
         const combinedClaims = `${frontClaimText} ${visionRes.claimText || visionRes.ingredientText}`.trim();
@@ -151,6 +167,9 @@ export const LabelLensView: React.FC = () => {
       );
 
       if (structured) {
+        if (structured.debugTrace) {
+          setLatestDebugTrace(structured.debugTrace);
+        }
         setIngredientText(structured.ingredientText);
         if (structured.productName && structured.productName !== 'Audited Product') {
           setProductName(structured.productName);
@@ -307,13 +326,25 @@ export const LabelLensView: React.FC = () => {
                 </span>
               </div>
 
-              <button
-                onClick={() => setShowManualEditor(!showManualEditor)}
-                className="flex items-center gap-1 text-xs font-semibold text-forest-800 hover:text-mint-600 transition"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>{showManualEditor ? 'Hide Text Editor' : 'Edit Text'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {latestDebugTrace && (
+                  <button
+                    onClick={() => setIsDebugModalOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-forest-900 text-mint-300 text-[11px] font-bold shadow-soft hover:bg-forest-800 transition active:scale-95"
+                  >
+                    <Terminal className="w-3 h-3 text-mint-400" />
+                    <span>Inspect AI Trace</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowManualEditor(!showManualEditor)}
+                  className="flex items-center gap-1 text-xs font-semibold text-forest-800 hover:text-mint-600 transition"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>{showManualEditor ? 'Hide Editor' : 'Edit Text'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Barcode Scanner Primary Button */}
@@ -801,6 +832,158 @@ export const LabelLensView: React.FC = () => {
                 className="flex-1 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs shadow-soft transition"
               >
                 Save Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Inspector / Debug Modal */}
+      {isDebugModalOpen && latestDebugTrace && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-forest-950 text-cream-50 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-forest-800/80 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-forest-800 flex items-center justify-between bg-forest-900/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-forest-800 text-mint-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>AI Model Processing Inspector</span>
+                    <span className="px-2 py-0.5 rounded-full bg-mint-500/20 text-mint-300 text-[10px] font-mono">
+                      {latestDebugTrace.model}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-cream-300">
+                    Live raw payload, multi-tile image & JSON response inspection
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsDebugModalOpen(false)}
+                className="p-2 rounded-full hover:bg-forest-800 text-cream-300 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Metrics Bar */}
+            <div className="px-5 py-2.5 bg-forest-900/30 border-b border-forest-800/60 flex items-center justify-between text-[11px] font-mono text-cream-300">
+              <div className="flex items-center gap-4">
+                <span>⏱️ Latency: <strong className="text-mint-300">{latestDebugTrace.durationMs || 0}ms</strong></span>
+                {latestDebugTrace.tokens && (
+                  <span>📊 Tokens: <strong className="text-white">{latestDebugTrace.tokens.total_tokens || latestDebugTrace.tokens.completion_tokens || 'N/A'}</strong></span>
+                )}
+                <span>🕒 {latestDebugTrace.timestamp}</span>
+              </div>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(latestDebugTrace.rawResponse || '');
+                  setHasCopiedRaw(true);
+                  setTimeout(() => setHasCopiedRaw(false), 2000);
+                }}
+                className="flex items-center gap-1 text-[11px] text-mint-300 hover:text-white font-sans font-semibold transition"
+              >
+                {hasCopiedRaw ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Raw Response</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="px-5 pt-3 border-b border-forest-800/60 flex items-center gap-2 bg-forest-950">
+              <button
+                onClick={() => setDebugTab('response')}
+                className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
+                  debugTab === 'response'
+                    ? 'border-mint-400 text-mint-300'
+                    : 'border-transparent text-cream-300 hover:text-white'
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>Raw AI Response</span>
+              </button>
+
+              {latestDebugTrace.imageThumbnail && (
+                <button
+                  onClick={() => setDebugTab('image')}
+                  className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
+                    debugTab === 'image'
+                      ? 'border-mint-400 text-mint-300'
+                      : 'border-transparent text-cream-300 hover:text-white'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Image Sent to Vision AI</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setDebugTab('prompt')}
+                className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
+                  debugTab === 'prompt'
+                    ? 'border-mint-400 text-mint-300'
+                    : 'border-transparent text-cream-300 hover:text-white'
+                }`}
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                <span>Prompt Sent</span>
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-5 overflow-y-auto flex-1 font-mono text-xs">
+              {debugTab === 'response' && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-black/50 border border-forest-800/80 text-emerald-300 whitespace-pre-wrap leading-relaxed overflow-x-auto selection:bg-emerald-900 selection:text-white">
+                    {latestDebugTrace.rawResponse || 'No raw response recorded'}
+                  </div>
+                </div>
+              )}
+
+              {debugTab === 'image' && latestDebugTrace.imageThumbnail && (
+                <div className="space-y-3">
+                  <p className="text-[11px] text-cream-300 font-sans">
+                    This is the exact resolution-optimized image sent to the GPT-4o high-res multi-tile encoder:
+                  </p>
+                  <div className="p-2 rounded-2xl bg-black/40 border border-forest-800 flex justify-center max-h-[50vh] overflow-hidden">
+                    <img
+                      src={latestDebugTrace.imageThumbnail}
+                      alt="Captured Packaging Preview"
+                      className="max-h-[45vh] w-auto object-contain rounded-xl shadow-lg"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {debugTab === 'prompt' && (
+                <div className="p-4 rounded-2xl bg-black/50 border border-forest-800/80 text-cream-200 whitespace-pre-wrap leading-relaxed overflow-x-auto selection:bg-forest-800">
+                  {latestDebugTrace.prompt || 'No prompt recorded'}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-forest-800 bg-forest-900/30 flex items-center justify-between font-sans">
+              <span className="text-[11px] text-cream-300">
+                You can also open browser Developer Tools (F12) to see color-coded AI request/response logs.
+              </span>
+              <button
+                onClick={() => setIsDebugModalOpen(false)}
+                className="py-2 px-4 rounded-xl bg-mint-500 hover:bg-mint-400 text-forest-950 font-bold text-xs shadow-soft transition"
+              >
+                Close Inspector
               </button>
             </div>
           </div>
