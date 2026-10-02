@@ -11,7 +11,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Award,
-  Play
+  Play,
+  Sparkles,
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession } from '../../types';
 import { 
@@ -21,11 +24,12 @@ import {
   ExerciseDefinition,
   WorkoutTemplate 
 } from '../../data/gymData';
+import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { useApp } from '../../context/AppContext';
 import { BodyMapHeatmap } from './BodyMapHeatmap';
 import { GamificationHub } from './GamificationHub';
 
-type GymSubView = 'hub' | 'workout' | 'challenges' | 'bodymap' | 'milestones' | 'history';
+type GymSubView = 'hub' | 'workout' | 'challenges' | 'bodymap' | 'milestones' | 'history' | 'supplements';
 
 export const GymTrackerView: React.FC = () => {
   const { showToast } = useApp();
@@ -281,6 +285,7 @@ export const GymTrackerView: React.FC = () => {
             {subView === 'challenges' && '🏆 Challenges & Routines'}
             {subView === 'bodymap' && '🧬 Muscle Readiness'}
             {subView === 'milestones' && '🎯 Longevity Objectives'}
+            {subView === 'supplements' && '⚡ Evidence-Backed Formulations'}
             {subView === 'history' && '📜 Session History'}
           </span>
 
@@ -465,6 +470,35 @@ export const GymTrackerView: React.FC = () => {
                   </h3>
                   <p className="text-xs text-zinc-400 mt-0.5">
                     Daily objectives, habit streaks, and certified tiers
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition" />
+            </div>
+
+            {/* Tile 5: Evidence-Based Performance Formulations */}
+            <div
+              onClick={() => setSubView('supplements')}
+              className="group p-6 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 hover:border-[#FF3B30]/40 transition-all cursor-pointer shadow-card flex items-center justify-between md:col-span-2"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF3B30] via-rose-600 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-[#FF3B30]/20 group-hover:scale-105 transition-transform">
+                  <Zap className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-wider">
+                      Clinical Grade Formulations
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-bold text-zinc-300">
+                      Creapure® • Native Whey • Electrolytes
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-white mt-0.5">
+                    Athletic Supplements & Formulations
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Explore evidence-backed ergogenic aids, micronutrient matrices, and recovery kinetic dosages
                   </p>
                 </div>
               </div>
@@ -946,6 +980,111 @@ export const GymTrackerView: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ⚡ SUB-VIEW: EVIDENCE-BACKED ATHLETIC FORMULATIONS & SUPPLEMENTS          */}
+      {/* ========================================================================= */}
+      {subView === 'supplements' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div>
+                <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] tracking-widest block">
+                  EVIDENCE-BASED PROTOCOLS
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
+                  Athletic Formulations & Ergogenic Matrix
+                </h2>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Peer-reviewed athletic nutrition formulations calibrated for hypertrophy, intra-workout hydration, and rapid CNS recovery.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-black flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>100% Third-Party Tested</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Product Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {MOSAIC_PRODUCTS_CATALOG.filter(p => 
+                p.category.includes('Athletic') || p.category.includes('Recovery') || p.category.includes('Hydration')
+              ).map((prod) => (
+                <div
+                  key={prod.id}
+                  className="p-5 rounded-[2rem] bg-[#14141C] border border-white/10 hover:border-[#FF3B30]/40 transition space-y-4 flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-black uppercase text-[#FF3B30] bg-[#FF3B30]/10 px-2.5 py-0.5 rounded-full border border-[#FF3B30]/20">
+                        {prod.category}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-zinc-400">
+                        ₹{prod.sitePrice}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-black text-white group-hover:text-[#FF3B30] transition">
+                        {prod.product}
+                      </h3>
+                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                        {prod.description}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1 text-xs">
+                      <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+                        <span>Key Actives & Dosing</span>
+                        <span className="font-mono text-zinc-300">{prod.keyIngredients.join(' • ')}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+                        <span>Clinical Advantage</span>
+                        <span className="font-mono text-emerald-400 font-bold">{prod.clinicalAdvantage || 'Bio-enhanced formulation'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{prod.potencyBadge || 'Clinical Grade'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => showToast(`Added ${prod.product} to your athletic protocol!`, 'success')}
+                      className="px-4 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-black transition active:scale-95 shadow-md flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add to Protocol</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Clinical Evidence Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-[#181822] to-transparent border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span className="text-zinc-300">
+                  All athletic supplements adhere to clinical threshold dosing with published bio-availability trials.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => showToast('Displaying research references and clinical trials', 'info')}
+                className="text-emerald-400 font-mono font-bold hover:underline shrink-0"
+              >
+                View Study References ›
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
