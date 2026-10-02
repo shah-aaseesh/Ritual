@@ -33,6 +33,7 @@ import {
 } from '../../data/gymData';
 import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { useApp } from '../../context/AppContext';
+import { HumanBodyModel } from './HumanBodyModel';
 
 type GymTab = 'builder' | 'live' | 'splits' | 'history' | 'supplements';
 
@@ -45,7 +46,7 @@ export const GymTrackerView: React.FC = () => {
   // ============================================================================
   // WORKOUT.COOL INTERACTIVE ANATOMICAL MODEL STATE
   // ============================================================================
-  const [bodyPerspective, setBodyPerspective] = useState<'front' | 'back'>('front');
+  const [bodyPerspective, setBodyPerspective] = useState<'front' | 'back' | 'both'>('both');
   const [selectedMuscles, setSelectedMuscles] = useState<MuscleGroup[]>(['Chest']);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentType | 'All'>('All');
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState<string>('');
@@ -589,30 +590,40 @@ export const GymTrackerView: React.FC = () => {
                 </h2>
               </div>
 
-              {/* View Angle Switcher (Anterior Front vs Posterior Back) */}
+              {/* View Angle Switcher (Anterior Front vs Posterior Back vs Both) */}
               <div className="inline-flex p-1.5 bg-cream-50 rounded-2xl border border-mint-200 text-xs shrink-0">
                 <button
                   type="button"
+                  onClick={() => setBodyPerspective('both')}
+                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                    bodyPerspective === 'both'
+                      ? 'bg-forest-900 text-white shadow-soft'
+                      : 'text-charcoal-600 hover:text-forest-900'
+                  }`}
+                >
+                  <Rotate3d className="w-3.5 h-3.5" />
+                  <span>Full Body (Both)</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setBodyPerspective('front')}
-                  className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
                     bodyPerspective === 'front'
                       ? 'bg-forest-900 text-white shadow-soft'
                       : 'text-charcoal-600 hover:text-forest-900'
                   }`}
                 >
-                  <Rotate3d className="w-3.5 h-3.5" />
                   <span>Anterior (Front)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBodyPerspective('back')}
-                  className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
                     bodyPerspective === 'back'
                       ? 'bg-forest-900 text-white shadow-soft'
                       : 'text-charcoal-600 hover:text-forest-900'
                   }`}
                 >
-                  <Rotate3d className="w-3.5 h-3.5" />
                   <span>Posterior (Back)</span>
                 </button>
               </div>
@@ -621,180 +632,18 @@ export const GymTrackerView: React.FC = () => {
             {/* Split View: Left Anatomical Model | Right Muscle Chips & Selected Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
-              {/* Left: Clickable Anatomical Body SVG Model */}
-              <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-cream-50/70 border border-mint-200/80 relative">
+              {/* Left: Interactive Human Body Anatomical Model Component */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl bg-cream-50/70 border border-mint-200/80 relative">
                 <span className="text-[11px] font-mono font-bold text-charcoal-600 mb-2">
-                  Tap any muscle on the model to select/unselect:
+                  Tap any muscle on the body model to select:
                 </span>
 
-                <svg
-                  className="w-56 h-[370px] drop-shadow-md select-none transition-all cursor-pointer"
-                  viewBox="0 0 200 400"
-                >
-                  {/* Background Body Base */}
-                  <path
-                    d="M100 20 C90 20 82 28 82 40 C82 50 88 58 95 62 C80 68 62 85 55 105 C48 125 40 160 35 190 C32 205 38 215 45 210 C50 205 55 180 60 160 C62 180 62 210 65 240 C68 270 70 310 75 370 C77 385 85 385 88 370 C92 330 95 280 100 250 C105 280 108 330 112 370 C115 385 123 385 125 370 C130 310 132 270 135 240 C138 210 138 180 140 160 C145 180 150 205 155 210 C162 215 168 205 165 190 C160 160 152 125 145 105 C138 85 120 68 105 62 C112 58 118 50 118 40 C118 28 110 20 100 20 Z"
-                    fill="#E2EBE6"
-                    stroke="#C4D4CD"
-                    strokeWidth="2"
-                  />
-
-                  {/* ANTERIOR (FRONT) MUSCLES */}
-                  {bodyPerspective === 'front' && (
-                    <g className="transition-all">
-                      {/* Shoulders (Anterior Delts) */}
-                      <path
-                        d="M60 85 C52 92 48 105 48 118 C56 118 64 105 68 95 Z"
-                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Shoulders')}
-                      />
-                      <path
-                        d="M140 85 C148 92 152 105 152 118 C144 118 136 105 132 95 Z"
-                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Shoulders')}
-                      />
-
-                      {/* Chest (Pectoralis Major) */}
-                      <path
-                        d="M72 90 C85 92 98 96 98 120 C85 122 70 115 68 100 Z"
-                        fill={isMuscleSelected('Chest') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Chest') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Chest')}
-                      />
-                      <path
-                        d="M128 90 C115 92 102 96 102 120 C115 122 130 115 132 100 Z"
-                        fill={isMuscleSelected('Chest') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Chest') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Chest')}
-                      />
-
-                      {/* Biceps */}
-                      <path
-                        d="M48 122 C44 135 46 150 52 155 C54 145 56 130 54 122 Z"
-                        fill={isMuscleSelected('Biceps') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Biceps') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Biceps')}
-                      />
-                      <path
-                        d="M152 122 C156 135 154 150 148 155 C146 145 144 130 146 122 Z"
-                        fill={isMuscleSelected('Biceps') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Biceps') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Biceps')}
-                      />
-
-                      {/* Abs / Core */}
-                      <path
-                        d="M86 125 C94 125 106 125 114 125 C114 175 112 185 100 190 C88 185 86 175 86 125 Z"
-                        fill={isMuscleSelected('Core') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Core') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Core')}
-                      />
-
-                      {/* Quads (Quadriceps) */}
-                      <path
-                        d="M68 205 C64 225 66 265 76 270 C86 265 88 225 84 205 Z"
-                        fill={isMuscleSelected('Quads') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Quads') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Quads')}
-                      />
-                      <path
-                        d="M132 205 C136 225 134 265 124 270 C114 265 112 225 116 205 Z"
-                        fill={isMuscleSelected('Quads') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Quads') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Quads')}
-                      />
-                    </g>
-                  )}
-
-                  {/* POSTERIOR (BACK) MUSCLES */}
-                  {bodyPerspective === 'back' && (
-                    <g className="transition-all">
-                      {/* Upper Back (Traps & Rhomboids) */}
-                      <path
-                        d="M82 70 C92 78 108 78 118 70 C125 90 100 115 100 115 C100 115 75 90 82 70 Z"
-                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Back')}
-                      />
-
-                      {/* Rear Deltoids */}
-                      <path
-                        d="M60 85 C52 92 48 105 48 118 C56 118 64 105 68 95 Z"
-                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Shoulders')}
-                      />
-                      <path
-                        d="M140 85 C148 92 152 105 152 118 C144 118 136 105 132 95 Z"
-                        fill={isMuscleSelected('Shoulders') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Shoulders') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Shoulders')}
-                      />
-
-                      {/* Latissimus Dorsi (Lats) */}
-                      <path
-                        d="M68 110 C80 115 95 120 95 160 C80 160 68 145 62 125 Z"
-                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Back')}
-                      />
-                      <path
-                        d="M132 110 C120 115 105 120 105 160 C120 160 132 145 138 125 Z"
-                        fill={isMuscleSelected('Back') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Back') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Back')}
-                      />
-
-                      {/* Triceps */}
-                      <path
-                        d="M48 122 C44 135 46 150 52 155 C54 145 56 130 54 122 Z"
-                        fill={isMuscleSelected('Triceps') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Triceps') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Triceps')}
-                      />
-                      <path
-                        d="M152 122 C156 135 154 150 148 155 C146 145 144 130 146 122 Z"
-                        fill={isMuscleSelected('Triceps') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Triceps') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Triceps')}
-                      />
-
-                      {/* Hamstrings */}
-                      <path
-                        d="M70 215 C66 235 68 265 76 270 C84 265 86 235 84 215 Z"
-                        fill={isMuscleSelected('Hamstrings') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Hamstrings') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Hamstrings')}
-                      />
-                      <path
-                        d="M130 215 C134 235 132 265 124 270 C116 265 114 235 116 215 Z"
-                        fill={isMuscleSelected('Hamstrings') ? '#254E37' : '#88BEA3'}
-                        stroke={isMuscleSelected('Hamstrings') ? '#14291D' : '#6FA88D'}
-                        strokeWidth="1.5"
-                        onClick={() => toggleMuscle('Hamstrings')}
-                      />
-                    </g>
-                  )}
-                </svg>
+                <HumanBodyModel
+                  selectedMuscles={selectedMuscles}
+                  onToggleMuscle={toggleMuscle}
+                  perspective={bodyPerspective}
+                  className="w-full"
+                />
               </div>
 
               {/* Right: Muscle Group Selectors & Equipment Filter Bar */}
