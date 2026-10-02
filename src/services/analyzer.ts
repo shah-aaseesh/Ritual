@@ -40,7 +40,14 @@ export const NON_INGREDIENT_PHRASE_REGEX = /(directions for use|recommended (dai
 
 export function isPureIngredient(item: string): boolean {
   if (!item) return false;
-  const trimmed = item.trim();
+  const trimmed = item
+    .replace(/^(the ingredient list|ingredients? list|ingredients?|active ingredients?|composition)[\s\w\:\-]*\:\s*/i, '')
+    .replace(/^[\d\.\s\-\*•·\(\)\[\]\:\>]+/g, '')
+    .replace(/^[^\w\(\)]+/g, '')
+    .replace(/[^\w\(\)\.\s]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   if (trimmed.length < 2) return false;
   if (/^[0-9\W]+$/.test(trimmed)) return false;
   if (NON_INGREDIENT_FILTER_REGEX.test(trimmed)) return false;
@@ -523,7 +530,7 @@ export function cleanAndNormalizeOCRText(raw: string): string {
     .replace(/[|—–_•·]/g, ',')
     .split(/[,;\n]/)
     .map(s => s.trim())
-    .filter(s => isPureIngredient(s));
+    .filter(s => s.length > 1);
 
   const sanitizedFallback = sanitizeIngredientList(rawTokens);
   if (sanitizedFallback.length > 0) {
