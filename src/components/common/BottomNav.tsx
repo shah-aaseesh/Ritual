@@ -1,57 +1,36 @@
 import React from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
-import { Sun, ScanLine, Layers, CheckSquare, TrendingUp, Dumbbell, Utensils, Leaf } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText } from 'lucide-react';
 
 interface NavItem {
-  id: NavTab | 'switch_health' | 'switch_wellness';
+  id: NavTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   isHero?: boolean;
-  isSwitch?: boolean;
 }
 
 export const BottomNav: React.FC = () => {
-  const { activeTab, setActiveTab, activePillar, setActivePillar, shelfProducts } = useApp();
+  const { activeTab, setActiveTab } = useApp();
 
-  const wellnessTabs: NavItem[] = [
-    { id: 'today', label: 'Ritual', icon: Sun },
-    { id: 'smartshelf', label: 'Shelf', icon: Layers, badge: shelfProducts.length > 0 ? shelfProducts.length : undefined },
-    { id: 'labellens', label: 'Rx Scan', icon: ScanLine, isHero: true },
-    { id: 'routine', label: 'Routine', icon: CheckSquare },
-    { id: 'switch_health', label: 'Health ↗', icon: Dumbbell, isSwitch: true },
-  ];
-
-  const healthTabs: NavItem[] = [
-    { id: 'gym', label: 'Gym Log', icon: Dumbbell },
+  const navTabs: NavItem[] = [
+    { id: 'home', label: 'Home', icon: LayoutDashboard },
+    { id: 'workout', label: 'Workout', icon: Dumbbell },
+    { id: 'mythbuster', label: 'Myth Buster', icon: ScanLine, isHero: true },
     { id: 'calories', label: 'Calories', icon: Utensils },
-    { id: 'labellens', label: 'Rx Scan', icon: ScanLine, isHero: true },
-    { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'switch_wellness', label: 'Wellness ↗', icon: Leaf, isSwitch: true },
+    { id: 'documents', label: 'Docs AI', icon: FileText },
   ];
-
-  const tabs = activePillar === 'health' ? healthTabs : wellnessTabs;
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0C0C10]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 safe-bottom shadow-2xl">
       <div className="max-w-md mx-auto flex items-center justify-around">
-        {tabs.map((tab) => {
+        {navTabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          const isHero = tab.id === 'labellens';
-
-          const isSwitch = (tab as any).isSwitch;
+          const isActive = activeTab === tab.id || (tab.id === 'workout' && activeTab === 'gym') || (tab.id === 'mythbuster' && activeTab === 'labellens');
+          const isHero = tab.isHero;
 
           const handleClick = () => {
-            if (tab.id === 'switch_health') {
-              setActivePillar('health');
-              setActiveTab('gym');
-            } else if (tab.id === 'switch_wellness') {
-              setActivePillar('wellness');
-              setActiveTab('today');
-            } else {
-              setActiveTab(tab.id as NavTab);
-            }
+            setActiveTab(tab.id);
           };
 
           if (isHero) {
@@ -59,7 +38,7 @@ export const BottomNav: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={handleClick}
-                className={`relative flex flex-col items-center justify-center -mt-4 group focus:outline-none`}
+                className="relative flex flex-col items-center justify-center -mt-4 group focus:outline-none"
                 aria-label={tab.label}
               >
                 <div
@@ -87,9 +66,7 @@ export const BottomNav: React.FC = () => {
               key={tab.id}
               onClick={handleClick}
               className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150 focus:outline-none ${
-                isSwitch
-                  ? 'text-[#FF3B30] font-bold bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20'
-                  : isActive
+                isActive
                   ? 'text-white font-bold'
                   : 'text-zinc-500 hover:text-zinc-300'
               }`}

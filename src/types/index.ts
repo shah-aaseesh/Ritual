@@ -250,3 +250,37 @@ export interface DailyMacroTarget {
   waterMl: number;
 }
 
+// ============================================================================
+// HEALTH DOCUMENT STORE & AI REPORT ANALYZER TYPES
+// ============================================================================
+export type DocumentCategory = 'blood_test' | 'prescription' | 'dxa_scan' | 'lipid_profile' | 'general';
+
+export interface BiomarkerResult {
+  id: string;
+  name: string;
+  value: number | string;
+  unit: string;
+  referenceRange: string;
+  status: 'optimal' | 'borderline' | 'high' | 'low';
+  category: 'Metabolic' | 'Lipid' | 'Hormonal' | 'Vitamin & Mineral' | 'Organ Function';
+  impactExplanation: string;
+}
+
+export interface HealthDocument {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  uploadDate: string;
+  fileSizeText?: string;
+  previewUrl?: string;
+  doctorOrLab?: string;
+  biomarkers?: BiomarkerResult[];
+  aiAnalysis?: {
+    summary: string;
+    keyFindings: string[];
+    actionableDietAdvice: string[];
+    actionableWorkoutAdvice: string[];
+    recommendedSupplementIds: string[];
+  };
+}
+

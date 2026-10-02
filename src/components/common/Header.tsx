@@ -1,22 +1,10 @@
 import React, { useState } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { WellnessGoal, HealthGoal, DailyTimeCommitment } from '../../types';
-import { 
-  Settings, 
-  Check, 
-  X, 
-  Leaf, 
-  Sun, 
-  ScanLine, 
-  Layers, 
-  CheckSquare, 
-  TrendingUp,
-  Dumbbell,
-  Utensils
-} from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Leaf } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, shelfProducts, activePillar, setActivePillar } = useApp();
+  const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, healthDocuments, activePillar } = useApp();
   const [showSettings, setShowSettings] = useState(false);
   const [tempGoal, setTempGoal] = useState<WellnessGoal>(profile.primaryGoal);
   const [tempHealthGoal, setTempHealthGoal] = useState<HealthGoal>(profile.healthGoal || 'hypertrophy_strength');
@@ -36,21 +24,13 @@ export const Header: React.FC = () => {
     longevity_health: { label: 'Metabolic Longevity', icon: '🧬' }
   };
 
-  const wellnessTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
-    { id: 'today', label: 'Daily Ritual', icon: Sun },
-    { id: 'labellens', label: 'Label Lens', icon: ScanLine },
-    { id: 'smartshelf', label: 'Smart Shelf', icon: Layers, badge: shelfProducts.length > 0 ? shelfProducts.length : undefined },
-    { id: 'routine', label: 'Routine', icon: CheckSquare },
-    { id: 'progress', label: 'Progress', icon: TrendingUp },
+  const mainNavTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
+    { id: 'home', label: 'Home', icon: LayoutDashboard },
+    { id: 'workout', label: 'Workout Log', icon: Dumbbell },
+    { id: 'calories', label: 'Calorie Tracker', icon: Utensils },
+    { id: 'mythbuster', label: 'Myth Buster', icon: ScanLine },
+    { id: 'documents', label: 'Medical Docs & AI', icon: FileText, badge: healthDocuments.length > 0 ? healthDocuments.length : undefined },
   ];
-
-  const healthTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
-    { id: 'gym', label: 'Gym & Strength', icon: Dumbbell },
-    { id: 'calories', label: 'Calorie & Macro Hub', icon: Utensils },
-    { id: 'progress', label: 'Longevity Progress', icon: TrendingUp },
-  ];
-
-  const currentTabs = activePillar === 'health' ? healthTabs : wellnessTabs;
 
   const handleSaveSettings = () => {
     updateProfile({
@@ -68,76 +48,32 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="sticky top-0 z-30 bg-[#0C0C10]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Brand Logo & Tagline */}
-          <div className="flex items-center justify-between gap-3">
-            <button 
-              onClick={() => {
-                if (activePillar === 'health') {
-                  setActiveTab('gym');
-                } else {
-                  setActiveTab('today');
-                }
-              }}
-              className="flex items-center gap-2.5 text-left group focus:outline-none"
-            >
-              <div className="w-9 h-9 rounded-2xl bg-[#14141C] flex items-center justify-center text-white shadow-sm border border-white/10 group-hover:scale-105 group-hover:border-[#FF3B30]/40 transition">
-                <Leaf className="w-4 h-4 text-[#FF3B30]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-lg font-black tracking-tight text-white font-sans">
-                    Ritual
-                  </h1>
-                  <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">
-                    Clinical
-                  </span>
-                </div>
-              </div>
-            </button>
-
-            {/* Category Pillar Switcher */}
-            <div className="inline-flex p-1 bg-[#14141C] rounded-full border border-white/10 text-xs shadow-inner">
-              <button
-                type="button"
-                onClick={() => {
-                  setActivePillar('wellness');
-                  if (activeTab === 'gym' || activeTab === 'calories') {
-                    setActiveTab('today');
-                  }
-                }}
-                className={`px-3.5 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition ${
-                  activePillar === 'wellness'
-                    ? 'bg-white text-black shadow-md font-extrabold'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                <span>🌿 Wellness</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActivePillar('health');
-                  if (activeTab === 'today' || activeTab === 'smartshelf' || activeTab === 'routine') {
-                    setActiveTab('gym');
-                  }
-                }}
-                className={`px-3.5 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition ${
-                  activePillar === 'health'
-                    ? 'bg-white text-black shadow-md font-extrabold'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                <span>⚡ Health</span>
-              </button>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          {/* Brand Logo */}
+          <button 
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-2.5 text-left group focus:outline-none"
+          >
+            <div className="w-9 h-9 rounded-2xl bg-[#14141C] flex items-center justify-center text-white shadow-sm border border-white/10 group-hover:scale-105 group-hover:border-[#FF3B30]/40 transition">
+              <Leaf className="w-4 h-4 text-[#FF3B30]" />
             </div>
-          </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-lg font-black tracking-tight text-white font-sans">
+                  Ritual
+                </h1>
+                <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">
+                  Clinical AI
+                </span>
+              </div>
+            </div>
+          </button>
 
-          {/* Desktop Navigation Links based on active pillar */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1.5 bg-[#14141C] p-1 rounded-full border border-white/10">
-            {currentTabs.map((tab) => {
+            {mainNavTabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = activeTab === tab.id || (tab.id === 'workout' && activeTab === 'gym') || (tab.id === 'mythbuster' && activeTab === 'labellens');
 
               return (
                 <button

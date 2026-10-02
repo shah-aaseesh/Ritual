@@ -7,7 +7,8 @@ import {
   WellnessGoal, 
   DuplicateIngredientAlert,
   AISettings,
-  OnboardingProduct
+  OnboardingProduct,
+  HealthDocument
 } from '../types';
 import { 
   DEMO_USER_PROFILE, 
@@ -16,9 +17,10 @@ import {
   getDemoProgressHistory, 
   getMissedAdherenceHistory 
 } from '../data/demoState';
+import { DEMO_HEALTH_DOCUMENTS } from '../data/demoDocuments';
 import { generateRoutineFromProfile } from '../services/routineGenerator';
 
-export type NavTab = 'today' | 'labellens' | 'gym' | 'calories' | 'smartshelf' | 'routine' | 'progress';
+export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'routine' | 'progress';
 export type AppPillar = 'wellness' | 'health';
 
 interface ToastState {
@@ -36,6 +38,7 @@ interface AppContextType {
   shelfProducts: ShelfProduct[];
   routineSteps: RoutineStep[];
   progressHistory: ProgressEntry[];
+  healthDocuments: HealthDocument[];
   showRoutineRescue: boolean;
   setShowRoutineRescue: (show: boolean) => void;
   toasts: ToastState[];
@@ -51,6 +54,8 @@ interface AppContextType {
   addShelfProduct: (product: Omit<ShelfProduct, 'id' | 'dateAdded'>) => void;
   editShelfProduct: (id: string, updates: Partial<ShelfProduct>) => void;
   removeShelfProduct: (id: string) => void;
+  addHealthDocument: (doc: HealthDocument) => void;
+  removeHealthDocument: (id: string) => void;
   toggleRoutineStep: (stepId: string) => void;
   addRoutineStep: (step: Omit<RoutineStep, 'id' | 'isCompletedToday'>) => void;
   editRoutineStep: (stepId: string, updates: Partial<RoutineStep>) => void;
@@ -154,23 +159,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
-  const [activePillar, setActivePillarState] = useState<AppPillar>(() => {
-    const saved = localStorage.getItem('ritual_active_pillar_v1');
-    return (saved === 'health' || saved === 'wellness') ? saved : 'wellness';
+  const [healthDocuments, setHealthDocuments] = useState<HealthDocument[]>(() => {
+    const saved = localStorage.getItem('ritual_health_docs_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+    }
+    return DEMO_HEALTH_DOCUMENTS;
   });
 
-  const [activeTab, setActiveTab] = useState<NavTab>('today');
+  const [activePillar, setActivePillarState] = useState<AppPillar>(() => {
+    const saved = localStorage.getItem('ritual_active_pillar_v1');
+    return (saved === 'health' || saved === 'wellness') ? saved : 'health';
+  });
+
+  const [activeTab, setActiveTab] = useState<NavTab>('home');
 
   const setActivePillar = (pillar: AppPillar) => {
     setActivePillarState(pillar);
     localStorage.setItem('ritual_active_pillar_v1', pillar);
     if (pillar === 'health') {
-      if (activeTab !== 'gym' && activeTab !== 'calories') {
-        setActiveTab('gym');
+      if (activeTab !== 'workout' && activeTab !== 'calories' && activeTab !== 'home' && activeTab !== 'mythbuster' && activeTab !== 'documents') {
+        setActiveTab('home');
       }
     } else {
-      if (activeTab === 'gym' || activeTab === 'calories') {
-        setActiveTab('today');
+      if (activeTab === 'workout' || activeTab === 'gym') {
+        setActiveTab('home');
       }
     }
   };
@@ -201,6 +214,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(progressHistory));
   }, [progressHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('ritual_health_docs_v1', JSON.stringify(healthDocuments));
+  }, [healthDocuments]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.IS_DEMO, String(isDemoMode));
@@ -301,6 +318,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const p = shelfProducts.find(x => x.id === id);
     setShelfProducts(prev => prev.filter(x => x.id !== id));
     showToast(`Removed "${p?.name || 'Product'}" from shelf`, 'info');
+  };
+
+  const addHealthDocument = (doc: HealthDocument) => {
+    setHealthDocuments(prev => [doc, ...prev]);
+  };
+
+  const removeHealthDocument = (id: string) => {
+    setHealthDocuments(prev => prev.filter(d => d.id !== id));
   };
 
   const toggleRoutineStep = (stepId: string) => {
@@ -483,6 +508,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       shelfProducts,
       routineSteps,
       progressHistory,
+      healthDocuments,
       showRoutineRescue,
       setShowRoutineRescue,
       toasts,
@@ -494,6 +520,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addShelfProduct,
       editShelfProduct,
       removeShelfProduct,
+      addHealthDocument,
+      removeHealthDocument,
       toggleRoutineStep,
       addRoutineStep,
       editRoutineStep,
