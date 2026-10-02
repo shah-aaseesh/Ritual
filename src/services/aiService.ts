@@ -3,8 +3,9 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
-  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash (Direct Google AI Studio - Free & Fast)' },
-  { id: 'google/gemini-3.8-flash', name: 'Google: Gemini 3.8 Flash (Direct Google AI Studio - Frontier)' }
+  { id: 'google/gemini-3.1-flash-lite', name: 'Google: Gemini 3.1 Flash-Lite (Ultra-Fast <1s Response)' },
+  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash (Free AI Studio Engine)' },
+  { id: 'google/gemini-3.8-flash', name: 'Google: Gemini 3.8 Flash (Frontier AI Studio Engine)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -27,14 +28,14 @@ export interface VisionLabelExtractionResult {
 }
 
 /**
- * Direct Google AI Studio Gemini 3.5/3.8 Flash Multimodal Vision
- * High-speed, 100% free multimodal vision directly from Google
+ * Direct Google AI Studio Gemini 3.1/3.5 Flash Multimodal Vision
+ * Ultra-fast sub-second multimodal vision directly from Google
  */
 export async function extractLabelWithGeminiDirect(
   base64DataUrl: string,
   userGoal: WellnessGoal = 'hair_health',
   geminiApiKey?: string,
-  modelName: string = 'gemini-3.5-flash',
+  modelName: string = 'gemini-3.1-flash-lite',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult | null> {
   const effectiveKey = (geminiApiKey && geminiApiKey.trim().length > 5)
@@ -43,13 +44,13 @@ export async function extractLabelWithGeminiDirect(
 
   if (!effectiveKey) return null;
 
-  if (onProgress) onProgress(35, `Reading packaging with Google Gemini ${modelName.includes('3.8') ? '3.8 Flash' : '3.5 Flash'} (Free AI Studio)...`);
+  if (onProgress) onProgress(35, `Reading packaging with Google Gemini (Ultra-Fast Vision)...`);
 
   const base64Pure = base64DataUrl.replace(/^data:image\/\w+;base64,/, '');
   const mimeMatch = base64DataUrl.match(/^data:(image\/\w+);base64,/);
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-  const candidateGeminiModels = [modelName, 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  const candidateGeminiModels = [modelName, 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
   const uniqueModels = [...new Set(candidateGeminiModels.map(m => m.replace(/^models\//, '').replace(/^google\//, '')))];
 
   for (const geminiModel of uniqueModels) {
@@ -170,7 +171,7 @@ Output in this clean format:
 /**
  * Resizes and compresses image to max 2048px with high clarity for GPT-4o / Gemini multi-tile vision
  */
-export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 1400): Promise<string> {
+export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 1024): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -196,7 +197,7 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
         return;
       }
       ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
+      resolve(canvas.toDataURL('image/jpeg', 0.80));
     };
     img.onerror = () => {
       if (typeof fileOrDataUrl === 'string') {
@@ -224,15 +225,15 @@ export async function extractLabelFromImageWithAI(
   imageSource: File | string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
-  model: string = 'google/gemini-3.5-flash',
+  model: string = 'google/gemini-3.1-flash-lite',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
   if (onProgress) onProgress(15, 'Enhancing high-res packaging photo for AI Vision...');
   const base64DataUrl = await optimizeImageForVisionAI(imageSource);
 
-  // 1. Direct Google AI Studio Gemini 3.5 Flash (100% Free)
+  // 1. Direct Google AI Studio Gemini Multimodal Vision (Free & Instant <1s)
   const geminiEnvKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
-  const isGeminiRequested = model.includes('gemini') || model === 'google/gemini-3.5-flash' || (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza')));
+  const isGeminiRequested = model.includes('gemini') || (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza')));
 
   if (geminiEnvKey || isGeminiRequested) {
     const geminiResult = await extractLabelWithGeminiDirect(
@@ -502,7 +503,7 @@ export async function denoiseAndStructureOCRWithLLM(
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
   onProgress?: (percent: number, status: string) => void,
-  preferredModel: string = 'gemini-3.5-flash'
+  preferredModel: string = 'gemini-3.1-flash-lite'
 ): Promise<VisionLabelExtractionResult | null> {
   const effectiveGeminiKey = (apiKey && (apiKey.startsWith('AQ.') || apiKey.startsWith('AIza')))
     ? apiKey.trim()
@@ -547,7 +548,7 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
   "clinicalSynthesis": "string"
 }`;
 
-  const geminiModels = [preferredModel.replace('google/', ''), 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  const geminiModels = [preferredModel.replace('google/', ''), 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
   const uniqueModels = [...new Set(geminiModels)];
 
   if (effectiveGeminiKey) {

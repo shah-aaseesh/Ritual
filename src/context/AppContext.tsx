@@ -88,7 +88,7 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 const envApiKey = (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
-const envModel = (import.meta as any).env?.VITE_OPENROUTER_MODEL || 'google/gemini-3.5-flash';
+const envModel = (import.meta as any).env?.VITE_OPENROUTER_MODEL || 'google/gemini-3.1-flash-lite';
 
 const INITIAL_AI_SETTINGS: AISettings = {
   enabled: true,
@@ -117,9 +117,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           parsed.openRouterApiKey = envApiKey;
           parsed.provider = 'openrouter';
         }
-        // Exclusively use Gemini models
-        if (!parsed.selectedModel || !parsed.selectedModel.includes('gemini')) {
-          parsed.selectedModel = 'google/gemini-3.5-flash';
+        // Exclusively use ultra-fast Gemini 3.1 Flash-Lite
+        if (!parsed.selectedModel || !parsed.selectedModel.includes('gemini') || parsed.selectedModel === 'google/gemini-3.5-flash') {
+          parsed.selectedModel = 'google/gemini-3.1-flash-lite';
         }
         return parsed;
       } catch (e) { /* fallback */ }
