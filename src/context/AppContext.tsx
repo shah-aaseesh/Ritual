@@ -18,7 +18,7 @@ import {
 } from '../data/demoState';
 import { generateRoutineFromProfile } from '../services/routineGenerator';
 
-export type NavTab = 'today' | 'labellens' | 'smartshelf' | 'routine' | 'progress';
+export type NavTab = 'today' | 'labellens' | 'gym' | 'calories' | 'smartshelf' | 'routine' | 'progress';
 
 interface ToastState {
   id: string;

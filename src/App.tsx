@@ -8,6 +8,8 @@ import { DemoBar } from './components/demo/DemoBar';
 import { InstallPrompt } from './components/common/InstallPrompt';
 import { TodayView } from './components/today/TodayView';
 import { LabelLensView } from './components/labellens/LabelLensView';
+import { GymTrackerView } from './components/gym/GymTrackerView';
+import { CalorieTrackerView } from './components/calories/CalorieTrackerView';
 import { SmartShelfView } from './components/smartshelf/SmartShelfView';
 import { RoutineView } from './components/routine/RoutineView';
 import { ProgressView } from './components/progress/ProgressView';
@@ -41,6 +43,8 @@ const MainLayout: React.FC = () => {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'today' && <TodayView />}
         {activeTab === 'labellens' && <LabelLensView />}
+        {activeTab === 'gym' && <GymTrackerView />}
+        {activeTab === 'calories' && <CalorieTrackerView />}
         {activeTab === 'smartshelf' && <SmartShelfView />}
         {activeTab === 'routine' && <RoutineView />}
         {activeTab === 'progress' && <ProgressView />}

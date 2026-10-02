@@ -10,7 +10,9 @@ import {
   ScanLine, 
   Layers, 
   CheckSquare, 
-  TrendingUp 
+  TrendingUp,
+  Dumbbell,
+  Utensils
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -29,9 +31,11 @@ export const Header: React.FC = () => {
   const navTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
     { id: 'today', label: 'Today', icon: Sun },
     { id: 'labellens', label: 'Label Lens', icon: ScanLine },
+    { id: 'gym', label: 'Gym Tracker', icon: Dumbbell },
+    { id: 'calories', label: 'Calorie Hub', icon: Utensils },
     { id: 'smartshelf', label: 'Smart Shelf', icon: Layers, badge: shelfProducts.length > 0 ? shelfProducts.length : undefined },
     { id: 'routine', label: 'Routine', icon: CheckSquare },
-    { id: 'progress', label: 'Progress Journal', icon: TrendingUp },
+    { id: 'progress', label: 'Progress', icon: TrendingUp },
   ];
 
   const handleSaveSettings = () => {

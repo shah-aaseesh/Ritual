@@ -1,15 +1,15 @@
 import React from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
-import { Sun, ScanLine, Layers, CheckSquare, TrendingUp } from 'lucide-react';
+import { Sun, ScanLine, TrendingUp, Dumbbell, Utensils } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
-  const { activeTab, setActiveTab, shelfProducts } = useApp();
+  const { activeTab, setActiveTab } = useApp();
 
   const tabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
     { id: 'today', label: 'Today', icon: Sun },
+    { id: 'gym', label: 'Gym', icon: Dumbbell },
     { id: 'labellens', label: 'Label Lens', icon: ScanLine },
-    { id: 'smartshelf', label: 'Smart Shelf', icon: Layers, badge: shelfProducts.length > 0 ? shelfProducts.length : undefined },
-    { id: 'routine', label: 'Routine', icon: CheckSquare },
+    { id: 'calories', label: 'Calories', icon: Utensils },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
   ];
 

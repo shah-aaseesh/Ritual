@@ -170,3 +170,73 @@ export interface DuplicateIngredientAlert {
   productNames: string[];
   neutralMessage: string;
 }
+
+// ============================================================================
+// GYM & WORKOUT SUITE TYPES
+// ============================================================================
+export type MuscleGroup = 'Chest' | 'Back' | 'Quads' | 'Hamstrings' | 'Shoulders' | 'Biceps' | 'Triceps' | 'Core' | 'Cardio';
+
+export interface WorkoutSet {
+  id: string;
+  setNumber: number;
+  weightKg: number;
+  reps: number;
+  isCompleted: boolean;
+  isPersonalRecord?: boolean;
+}
+
+export interface ExerciseLog {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  muscleGroup: MuscleGroup;
+  sets: WorkoutSet[];
+  notes?: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  startTime: string;
+  durationMinutes: number;
+  exercises: ExerciseLog[];
+  totalVolumeKg: number;
+  totalSets: number;
+  notes?: string;
+}
+
+// ============================================================================
+// NUTRITION & CALORIE SUITE TYPES
+// ============================================================================
+export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+
+export interface FoodItem {
+  id: string;
+  name: string;
+  servingSize: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  fiberG?: number;
+  brand?: string;
+  category?: string;
+}
+
+export interface FoodLogEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  meal: MealCategory;
+  food: FoodItem;
+  quantity: number; // multiplier
+}
+
+export interface DailyMacroTarget {
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  waterMl: number;
+}
+
