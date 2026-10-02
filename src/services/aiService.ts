@@ -3,12 +3,10 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
-  { id: 'google/gemma-4-31b:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
-  { id: 'google/gemma-4-26b-a4b:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
-  { id: 'google/gemini-2.0-flash-exp:free', name: 'Google: Gemini 2.0 Flash (Free)' },
-  { id: 'qwen/qwen-2.5-vl-72b-instruct:free', name: 'Qwen 2.5 VL 72B Vision (Free)' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct (Free)' },
-  { id: 'deepseek/deepseek-r1:free', name: 'DeepSeek R1 Reasoning (Free)' }
+  { id: 'openrouter/free', name: 'OpenRouter Free Multimodal Router (Auto / Fast)' },
+  { id: 'google/gemma-4-31b-it:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
+  { id: 'google/gemma-4-26b-a4b-it:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
+  { id: 'qwen/qwen3.8-27b:free', name: 'Qwen: Qwen3.8 27B Vision (Free)' }
 ];
 
 export interface VisionLabelExtractionResult {
@@ -28,7 +26,7 @@ export async function extractLabelFromImageWithAI(
   imageSource: File | string,
   userGoal: WellnessGoal = 'hair_health',
   apiKey?: string,
-  model: string = 'google/gemma-4-31b:free',
+  model: string = 'openrouter/free',
   onProgress?: (percent: number, status: string) => void
 ): Promise<VisionLabelExtractionResult> {
   let base64DataUrl = '';
@@ -38,121 +36,127 @@ export async function extractLabelFromImageWithAI(
     base64DataUrl = await fileToBase64DataUrl(imageSource);
   }
 
-  // 1. If OpenRouter API key is available, use Multimodal Vision AI
+  // 1. If OpenRouter API key is available, use Multimodal Vision AI with smart model fallback
   if (apiKey && apiKey.trim().length > 5) {
-    try {
-      if (onProgress) onProgress(25, 'Multimodal Vision AI reading bottle typography...');
+    const candidateModels = [
+      model && model !== 'local' ? model : 'openrouter/free',
+      'openrouter/free',
+      'google/gemma-4-31b-it:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'qwen/qwen3.8-27b:free'
+    ];
+    // Remove duplicates
+    const uniqueModels = [...new Set(candidateModels)];
 
-      const prompt = `You are an expert cosmetic dermatologist, formulation chemist, and high-precision label reader.
-Analyze this cosmetic / wellness product packaging photo carefully.
+    for (const candidateModel of uniqueModels) {
+      try {
+        if (onProgress) onProgress(25, `Multimodal Vision AI reading bottle label (${candidateModel.split('/')[1] || candidateModel})...`);
+
+        const prompt = `You are an expert cosmetic dermatologist, formulation chemist, and high-precision label reader.
+Analyze this cosmetic / supplement / wellness product packaging photo carefully.
 
 Instructions:
-1. Product Name: Read the main product title.
+1. Product Name: Read the main product title (e.g. "Deep Sleep Gummies", "Salicylic Acid Body Wash").
 2. Brand Name: Identify the brand if visible.
-3. Ingredients List: Transcribe ALL ingredients accurately in order, fixing optical blur/artifacts into standard INCI cosmetic names separated by commas (e.g. "Aqua, Glycerin, Niacinamide 5%, Salicylic Acid 2%, Rosmarinus Officinalis Extract, Saw Palmetto, Phenoxyethanol").
-4. Front-Pack Claims: Extract all marketing or clinical claims (e.g. "Clinically Proven", "Reduces hair fall in 30 days", "Dermatologically Tested", "Chemical-Free", "100% Ayurvedic").
+3. Ingredients List: Transcribe ALL active ingredients, vitamins, botanical extracts, minerals, and base components accurately in order, fixing optical blur/artifacts into standard INCI names separated by commas (e.g. "Melatonin 5mg, L-Theanine 10mg, Tart Cherry Extract 200mg, Chamomile Extract 10mg, Vitamin D2 15mcg, Liquid Glucose, Sugar, Pectin, Citric Acid").
+4. Front-Pack Claims: Extract all marketing or clinical claims (e.g. "Clinically Proven", "Supports Deep Sleep", "100% RDA Vitamin D", "Non-Habit Forming").
 5. Explain EVERY single ingredient on the bottle (actives, humectants, carriers, preservatives, botanicals).
 
 Return ONLY valid JSON in this exact structure:
 {
   "productName": "Exact product name",
   "brand": "Brand name",
-  "extractedIngredientsText": "Aqua, Glycerin, Niacinamide 5%, Salicylic Acid 2%, Rosmarinus Officinalis Extract, Phenoxyethanol",
-  "extractedClaimsText": "Clinically Proven, Chemical-Free",
+  "extractedIngredientsText": "Melatonin 5mg, L-Theanine 10mg, Tart Cherry Extract 200mg, Chamomile Extract 10mg, Vitamin D2 15mcg, Pectin...",
+  "extractedClaimsText": "Supports Deep Sleep, 100% RDA...",
   "clinicalSynthesis": "Summary note for goal ${userGoal}...",
   "ingredientsDetailed": [
     {
-      "name": "Niacinamide 5%",
-      "purpose": "Active Vitamin B3",
+      "name": "Melatonin 5mg",
+      "purpose": "Circadian chronobiotic active",
       "tier": "strong_evidence",
-      "explanation": "Proven to regulate sebum, strengthen skin barrier, and reduce micro-inflammation."
-    },
-    {
-      "name": "Glycerin",
-      "purpose": "Humectant",
-      "tier": "strong_evidence",
-      "explanation": "Essential biological humectant that draws moisture into the skin/scalp."
+      "explanation": "Clinically proven to lower sleep latency and regulate sleep-wake cycles."
     }
   ]
 }`;
 
-      const selectedModel = model || 'google/gemma-4-31b:free';
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey.trim()}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://ritual-wellness.app',
+            'X-Title': 'Ritual Wellness AI'
+          },
+          body: JSON.stringify({
+            model: candidateModel,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: prompt },
+                  { type: 'image_url', image_url: { url: base64DataUrl } }
+                ]
+              }
+            ],
+            temperature: 0.1
+          })
+        });
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey.trim()}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://ritual-wellness.app',
-          'X-Title': 'Ritual Wellness AI'
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: prompt },
-                { type: 'image_url', image_url: { url: base64DataUrl } }
-              ]
+        if (response.ok) {
+          if (onProgress) onProgress(80, 'Cross-referencing extracted actives with PubMed evidence DB...');
+          const data = await response.json();
+          const rawContent = data.choices?.[0]?.message?.content || '';
+          const cleaned = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+          
+          let parsed: any = {};
+          try {
+            parsed = JSON.parse(cleaned);
+          } catch (jsonErr) {
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+            if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+          }
+
+          const ingText = parsed.extractedIngredientsText || '';
+          const claimText = parsed.extractedClaimsText || '';
+          const prodName = parsed.productName || 'Audited Product';
+          const brandName = parsed.brand || '';
+
+          if (ingText && ingText.trim().length > 3) {
+            // Run through our clinical evidence & claims evaluation matrix
+            const analysis = analyzeLabelText(ingText, claimText, userGoal, prodName);
+            if (parsed.clinicalSynthesis) {
+              analysis.summary.synthesisText = parsed.clinicalSynthesis;
             }
-          ],
-          temperature: 0.1
-        })
-      });
 
-      if (response.ok) {
-        if (onProgress) onProgress(80, 'Cross-referencing extracted actives with PubMed evidence DB...');
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content || '';
-        const cleaned = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
-        
-        let parsed: any = {};
-        try {
-          parsed = JSON.parse(cleaned);
-        } catch (jsonErr) {
-          const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-        }
-
-        const ingText = parsed.extractedIngredientsText || '';
-        const claimText = parsed.extractedClaimsText || '';
-        const prodName = parsed.productName || 'Audited Product';
-        const brandName = parsed.brand || '';
-
-        // Run through our clinical evidence & claims evaluation matrix
-        const analysis = analyzeLabelText(ingText, claimText, userGoal, prodName);
-        if (parsed.clinicalSynthesis) {
-          analysis.summary.synthesisText = parsed.clinicalSynthesis;
-        }
-
-        // If Vision model provided detailed ingredient notes, merge them
-        if (parsed.ingredientsDetailed && Array.isArray(parsed.ingredientsDetailed)) {
-          parsed.ingredientsDetailed.forEach((item: any) => {
-            if (!item.name) return;
-            const existing = analysis.detectedIngredients.find(
-              d => d.ingredient.name.toLowerCase().includes(item.name.toLowerCase()) || 
-                   item.name.toLowerCase().includes(d.ingredient.name.toLowerCase())
-            );
-            if (existing && item.explanation) {
-              existing.explanation = item.explanation;
+            // If Vision model provided detailed ingredient notes, merge them
+            if (parsed.ingredientsDetailed && Array.isArray(parsed.ingredientsDetailed)) {
+              parsed.ingredientsDetailed.forEach((item: any) => {
+                if (!item.name) return;
+                const existing = analysis.detectedIngredients.find(
+                  d => d.ingredient.name.toLowerCase().includes(item.name.toLowerCase()) || 
+                       item.name.toLowerCase().includes(d.ingredient.name.toLowerCase())
+                );
+                if (existing && item.explanation) {
+                  existing.explanation = item.explanation;
+                }
+              });
             }
-          });
+
+            if (onProgress) onProgress(100, 'Vision AI Analysis Complete!');
+
+            return {
+              productName: prodName,
+              brand: brandName,
+              ingredientText: ingText,
+              claimText: claimText,
+              analysis,
+              source: 'openrouter_vision'
+            };
+          }
         }
-
-        if (onProgress) onProgress(100, 'Vision AI Analysis Complete!');
-
-        return {
-          productName: prodName,
-          brand: brandName,
-          ingredientText: ingText,
-          claimText: claimText,
-          analysis,
-          source: 'openrouter_vision'
-        };
+      } catch (err) {
+        console.warn(`Vision AI model ${candidateModel} failed, trying next fallback:`, err);
       }
-    } catch (err) {
-      console.warn('Vision AI call error, falling back to enhanced local OCR:', err);
     }
   }
 
@@ -181,7 +185,7 @@ export async function analyzeIngredientsWithAI(
   goal: WellnessGoal = 'hair_health',
   productName: string = 'Scanned Product',
   apiKey?: string,
-  model: string = 'google/gemma-4-31b:free'
+  model: string = 'openrouter/free'
 ): Promise<ProductAnalysisResult> {
   // If user provided an OpenRouter API key, query OpenRouter for reasoning
   if (apiKey && apiKey.trim().length > 5 && ingredientText && ingredientText.trim().length > 5) {
@@ -231,7 +235,7 @@ Respond ONLY with the JSON object.`;
           'X-Title': 'Ritual Wellness AI'
         },
         body: JSON.stringify({
-          model: model || 'google/gemma-4-31b:free',
+          model: model || 'openrouter/free',
           messages,
           temperature: 0.2
         })
