@@ -26,7 +26,9 @@ export const TodayView: React.FC = () => {
     showRoutineRescue,
     setShowRoutineRescue,
     loadDemoState,
-    isDemoMode
+    isDemoMode,
+    setActivePillar,
+    shelfProducts
   } = useApp();
 
   const getGreeting = () => {
@@ -134,6 +136,109 @@ export const TodayView: React.FC = () => {
             <span>Load Demo Data</span>
           </button>
         )}
+      </div>
+
+      {/* Category Pillar Portals (Wellness vs Health) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 🌿 Wellness Category Card */}
+        <div 
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-forest-900 via-forest-850 to-forest-950 text-cream-50 border border-forest-700/80 shadow-card flex flex-col justify-between group transition-all duration-200 hover:border-mint-400"
+        >
+          <div className="absolute top-0 right-0 w-36 h-36 bg-mint-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-mint-500/20 text-mint-300 text-[11px] font-bold border border-mint-400/30">
+                🌿 Wellness Suite
+              </span>
+              <span className="text-[10px] font-mono font-bold text-mint-200/70 uppercase">
+                Active Domain
+              </span>
+            </div>
+
+            <h3 className="text-xl font-extrabold text-white tracking-tight">
+              Formulation & Daily Rituals
+            </h3>
+            <p className="text-xs text-cream-200 mt-1.5 leading-relaxed">
+              Clinical ingredient safety, Rx label debunking, smart shelf cabinet & morning/evening habit adherence.
+            </p>
+
+            {/* Quick shortcuts */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setActiveTab('labellens')}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95"
+              >
+                <ScanLine className="w-3.5 h-3.5 text-mint-300" />
+                <span>Rx Label Lens</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('smartshelf')}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95"
+              >
+                <span>Smart Shelf ({shelfProducts.length})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ⚡ Health & Performance Category Card */}
+        <div 
+          onClick={() => {
+            setActivePillar('health');
+            setActiveTab('gym');
+          }}
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-emerald-950 via-forest-950 to-charcoal-900 text-cream-50 border border-emerald-500/40 hover:border-emerald-400 shadow-card flex flex-col justify-between group cursor-pointer transition-all duration-200 hover:shadow-xl"
+        >
+          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black border border-emerald-500/30">
+                ⚡ Health & Athletics Hub
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 group-hover:translate-x-0.5 transition">
+                <span>Explore Health</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+
+            <h3 className="text-xl font-extrabold text-white tracking-tight">
+              Gym, Calories & Muscle Heatmap
+            </h3>
+            <p className="text-xs text-cream-200 mt-1.5 leading-relaxed">
+              Biomechanical recovery heatmaps, live strength set/rep tracking with timers, and precise macro & calorie logging.
+            </p>
+
+            {/* Quick shortcuts into health modules */}
+            <div className="flex flex-wrap gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePillar('health');
+                  setActiveTab('gym');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-mint-400 text-forest-950 text-xs font-black flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition shadow-sm"
+              >
+                <Dumbbell className="w-3.5 h-3.5" />
+                <span>Gym & Body Map</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePillar('health');
+                  setActiveTab('calories');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 text-xs font-bold flex items-center gap-1.5 transition active:scale-95"
+              >
+                <Utensils className="w-3.5 h-3.5" />
+                <span>Calorie & Macro Tracker</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Desktop 2-Column Responsive Layout */}

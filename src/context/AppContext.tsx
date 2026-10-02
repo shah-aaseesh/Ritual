@@ -19,6 +19,7 @@ import {
 import { generateRoutineFromProfile } from '../services/routineGenerator';
 
 export type NavTab = 'today' | 'labellens' | 'gym' | 'calories' | 'smartshelf' | 'routine' | 'progress';
+export type AppPillar = 'wellness' | 'health';
 
 interface ToastState {
   id: string;
@@ -28,6 +29,8 @@ interface ToastState {
 
 interface AppContextType {
   profile: UserProfile;
+  activePillar: AppPillar;
+  setActivePillar: (pillar: AppPillar) => void;
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
   shelfProducts: ShelfProduct[];
@@ -151,13 +154,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
+  const [activePillar, setActivePillarState] = useState<AppPillar>(() => {
+    const saved = localStorage.getItem('ritual_active_pillar_v1');
+    return (saved === 'health' || saved === 'wellness') ? saved : 'wellness';
+  });
+
   const [activeTab, setActiveTab] = useState<NavTab>('today');
-  const [showRoutineRescue, setShowRoutineRescue] = useState<boolean>(false);
+
+  const setActivePillar = (pillar: AppPillar) => {
+    setActivePillarState(pillar);
+    localStorage.setItem('ritual_active_pillar_v1', pillar);
+    if (pillar === 'health') {
+      if (activeTab !== 'gym' && activeTab !== 'calories') {
+        setActiveTab('gym');
+      }
+    } else {
+      if (activeTab === 'gym' || activeTab === 'calories') {
+        setActiveTab('today');
+      }
+    }
+  };
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.IS_DEMO);
     return saved !== null ? saved === 'true' : false;
   });
+  const [showRoutineRescue, setShowRoutineRescue] = useState<boolean>(false);
 
   // LocalStorage Sync
   useEffect(() => {
@@ -454,6 +476,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{
       profile,
+      activePillar,
+      setActivePillar,
       activeTab,
       setActiveTab,
       shelfProducts,

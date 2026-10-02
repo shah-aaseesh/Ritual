@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, shelfProducts } = useApp();
+  const { profile, updateProfile, regenerateRoutine, activeTab, setActiveTab, shelfProducts, activePillar, setActivePillar } = useApp();
   const [showSettings, setShowSettings] = useState(false);
   const [tempGoal, setTempGoal] = useState<WellnessGoal>(profile.primaryGoal);
   const [tempTime, setTempTime] = useState<DailyTimeCommitment>(profile.dailyTime);
@@ -28,15 +28,21 @@ export const Header: React.FC = () => {
     sleep_recovery: { label: 'Sleep & Recovery', icon: '🌙' }
   };
 
-  const navTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
-    { id: 'today', label: 'Today', icon: Sun },
+  const wellnessTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
+    { id: 'today', label: 'Daily Ritual', icon: Sun },
     { id: 'labellens', label: 'Label Lens', icon: ScanLine },
-    { id: 'gym', label: 'Gym Tracker', icon: Dumbbell },
-    { id: 'calories', label: 'Calorie Hub', icon: Utensils },
     { id: 'smartshelf', label: 'Smart Shelf', icon: Layers, badge: shelfProducts.length > 0 ? shelfProducts.length : undefined },
     { id: 'routine', label: 'Routine', icon: CheckSquare },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
   ];
+
+  const healthTabs: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
+    { id: 'gym', label: 'Gym & Strength', icon: Dumbbell },
+    { id: 'calories', label: 'Calorie & Macro Hub', icon: Utensils },
+    { id: 'progress', label: 'Longevity Progress', icon: TrendingUp },
+  ];
+
+  const currentTabs = activePillar === 'health' ? healthTabs : wellnessTabs;
 
   const handleSaveSettings = () => {
     updateProfile({
@@ -52,12 +58,15 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-cream-200/80 px-4 sm:px-6 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-cream-200/80 px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Brand Logo & Tagline */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
             <button 
-              onClick={() => setActiveTab('today')}
+              onClick={() => {
+                setActivePillar('wellness');
+                setActiveTab('today');
+              }}
               className="flex items-center gap-2.5 text-left group focus:outline-none"
             >
               <div className="w-9 h-9 rounded-xl bg-forest-900 flex items-center justify-center text-cream-50 shadow-sm border border-forest-800 group-hover:scale-105 transition">
@@ -69,19 +78,42 @@ export const Header: React.FC = () => {
                     Ritual
                   </h1>
                   <span className="text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-mint-100 text-forest-800 border border-mint-200">
-                    Evidence First
+                    Clinical Suite
                   </span>
                 </div>
-                <p className="text-[11px] text-charcoal-500 font-medium tracking-tight hidden sm:block">
-                  Know what works. Build what sticks.
-                </p>
               </div>
             </button>
+
+            {/* Category Pillar Switcher */}
+            <div className="inline-flex p-1 bg-cream-200/90 rounded-2xl border border-cream-300 text-xs shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setActivePillar('wellness')}
+                className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition ${
+                  activePillar === 'wellness'
+                    ? 'bg-forest-900 text-cream-50 shadow-sm'
+                    : 'text-charcoal-700 hover:text-forest-950'
+                }`}
+              >
+                <span>🌿 Wellness</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePillar('health')}
+                className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition ${
+                  activePillar === 'health'
+                    ? 'bg-forest-900 text-cream-50 shadow-sm'
+                    : 'text-charcoal-700 hover:text-forest-950'
+                }`}
+              >
+                <span>⚡ Health</span>
+              </button>
+            </div>
           </div>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links based on active pillar */}
           <nav className="hidden md:flex items-center gap-1 bg-cream-100/80 p-1 rounded-2xl border border-cream-200">
-            {navTabs.map((tab) => {
+            {currentTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               const isHero = tab.id === 'labellens';
@@ -98,12 +130,10 @@ export const Header: React.FC = () => {
                       : 'text-charcoal-600 hover:text-forest-950 hover:bg-cream-200/70'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive && isHero ? 'text-mint-300' : ''}`} />
+                  <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      isActive ? 'bg-mint-500 text-white' : 'bg-cream-300 text-charcoal-800'
-                    }`}>
+                    <span className="px-1.5 py-0.2 rounded-full bg-forest-800 text-cream-50 text-[10px] font-mono">
                       {tab.badge}
                     </span>
                   )}
