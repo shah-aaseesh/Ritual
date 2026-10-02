@@ -46,7 +46,7 @@ Provide clean JSON matching this exact structure:
 Respond ONLY with the JSON object.`;
 
       const messages: any[] = [];
-      if (imageThumbnail && (model.includes('gemini') || model.includes('vl'))) {
+      if (imageThumbnail && (model.includes('gemini') || model.includes('vl') || model.includes('gemma') || model.includes('vision'))) {
         messages.push({
           role: 'user',
           content: [

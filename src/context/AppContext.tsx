@@ -105,7 +105,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return DEMO_USER_PROFILE;
+    return INITIAL_PROFILE;
   });
 
   const [aiSettings, setAISettings] = useState<AISettings>(() => {
@@ -128,7 +128,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return DEMO_SHELF_PRODUCTS;
+    return [];
   });
 
   const [routineSteps, setRoutineSteps] = useState<RoutineStep[]>(() => {
@@ -136,7 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return DEMO_ROUTINE_STEPS;
+    return [];
   });
 
   const [progressHistory, setProgressHistory] = useState<ProgressEntry[]>(() => {
@@ -144,7 +144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return getDemoProgressHistory();
+    return [];
   });
 
   const [activeTab, setActiveTab] = useState<NavTab>('today');
@@ -152,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.IS_DEMO);
-    return saved !== null ? saved === 'true' : true;
+    return saved !== null ? saved === 'true' : false;
   });
 
   // LocalStorage Sync

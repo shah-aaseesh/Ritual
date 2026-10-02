@@ -9,7 +9,8 @@ import {
   Moon, 
   ArrowRight, 
   Clock, 
-  HeartHandshake
+  HeartHandshake,
+  Plus
 } from 'lucide-react';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 
@@ -356,6 +357,26 @@ export const TodayView: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Empty Routine fallback */}
+          {morningSteps.length === 0 && eveningSteps.length === 0 && (
+            <div className="p-8 rounded-3xl bg-white border border-cream-300 shadow-soft text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-cream-100 text-forest-800 flex items-center justify-center mx-auto">
+                <Sparkles className="w-6 h-6 text-mint-600" />
+              </div>
+              <h4 className="text-base font-bold text-forest-950">No routine steps active yet</h4>
+              <p className="text-xs text-charcoal-600 max-w-sm mx-auto leading-relaxed">
+                Add products or non-commercial evidence habits to build your daily science-backed AM/PM ritual.
+              </p>
+              <button
+                onClick={() => setActiveTab('routine')}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold shadow-soft transition"
+              >
+                <Plus className="w-4 h-4 text-mint-300" />
+                <span>Build My Routine</span>
+              </button>
             </div>
           )}
         </div>

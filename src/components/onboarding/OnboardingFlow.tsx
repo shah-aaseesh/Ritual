@@ -38,11 +38,11 @@ export const OnboardingFlow: React.FC = () => {
   const [scannedProducts, setScannedProducts] = useState<OnboardingProduct[]>([
     {
       id: 'prod-1',
-      name: 'Scalp Growth Serum',
-      brand: 'My Product',
+      name: '',
+      brand: '',
       category: 'Hair Care',
-      ingredientText: SAMPLE_PRODUCTS[0].ingredientLabelText,
-      claimText: SAMPLE_PRODUCTS[0].frontLabelText,
+      ingredientText: '',
+      claimText: '',
       ingredientAnalysis: undefined,
       matchedMosaic: []
     }
@@ -57,6 +57,22 @@ export const OnboardingFlow: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const claimFileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadSamplePreset = (idx: number, sampleIndex: number) => {
+    const sample = SAMPLE_PRODUCTS[sampleIndex] || SAMPLE_PRODUCTS[0];
+    setScannedProducts(prev => {
+      const copy = [...prev];
+      copy[idx] = {
+        ...copy[idx],
+        name: sample.name,
+        brand: sample.brandSuggestion,
+        ingredientText: sample.ingredientLabelText,
+        claimText: sample.frontLabelText
+      };
+      return copy;
+    });
+    analyzeActiveProduct(idx, sample.ingredientLabelText);
+  };
 
   const goalOptions: { id: WellnessGoal; title: string; desc: string; icon: string }[] = [
     {
@@ -531,6 +547,7 @@ export const OnboardingFlow: React.FC = () => {
                       <input
                         type="text"
                         value={scannedProducts[activeProdIndex].name}
+                        placeholder="e.g. My Rosemary Scalp Serum"
                         onChange={(e) => {
                           const val = e.target.value;
                           setScannedProducts(prev => {
@@ -539,7 +556,7 @@ export const OnboardingFlow: React.FC = () => {
                             return copy;
                           });
                         }}
-                        className="font-bold text-forest-950 text-base border-b border-cream-300 focus:outline-none focus:border-forest-800 bg-transparent"
+                        className="font-bold text-forest-950 text-base border-b border-cream-300 focus:outline-none focus:border-forest-800 bg-transparent placeholder:text-charcoal-400 placeholder:font-normal"
                       />
                     </div>
 
@@ -549,7 +566,7 @@ export const OnboardingFlow: React.FC = () => {
                       className="px-3.5 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-1.5 shadow-soft transition"
                     >
                       <Camera className="w-4 h-4 text-mint-300" />
-                      <span>Take Photo</span>
+                      <span>Take Photo / Upload</span>
                     </button>
                   </div>
 
@@ -561,13 +578,29 @@ export const OnboardingFlow: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Quick sample chips for testing without photo */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] font-semibold text-charcoal-500">Quick Test:</span>
+                    {SAMPLE_PRODUCTS.map((sp, sIdx) => (
+                      <button
+                        key={sp.id}
+                        type="button"
+                        onClick={() => loadSamplePreset(activeProdIndex, sIdx)}
+                        className="px-2 py-0.5 rounded-lg bg-cream-100 hover:bg-mint-100 text-[10px] font-bold text-forest-900 border border-cream-300 transition"
+                      >
+                        + {sp.name.split(' ')[0]} {sp.name.split(' ')[1] || ''}
+                      </button>
+                    ))}
+                  </div>
+
                   {/* Ingredient Text area */}
                   <div>
                     <label className="block text-xs font-semibold text-charcoal-700 mb-1">
-                      Ingredients on Label:
+                      Ingredients on Back Label:
                     </label>
                     <textarea
                       value={scannedProducts[activeProdIndex].ingredientText}
+                      placeholder="e.g. Aqua, Redensyl 3%, Rosemary Extract, Procapil, Saw Palmetto, Glycerin... (or snap photo above)"
                       onChange={(e) => {
                         const val = e.target.value;
                         setScannedProducts(prev => {
@@ -576,8 +609,8 @@ export const OnboardingFlow: React.FC = () => {
                           return copy;
                         });
                       }}
-                      rows={2}
-                      className="w-full p-2.5 rounded-xl bg-cream-50 border border-cream-300 text-xs font-mono text-charcoal-800 focus:outline-none focus:ring-1 focus:ring-forest-800"
+                      rows={3}
+                      className="w-full p-2.5 rounded-xl bg-cream-50 border border-cream-300 text-xs font-mono text-charcoal-800 focus:outline-none focus:ring-1 focus:ring-forest-800 placeholder:text-charcoal-400"
                     />
                   </div>
 
@@ -585,10 +618,10 @@ export const OnboardingFlow: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => analyzeActiveProduct(activeProdIndex)}
-                      className="text-xs font-bold text-forest-800 hover:text-mint-600 flex items-center gap-1"
+                      className="px-4 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold flex items-center gap-1.5 shadow-soft transition"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-mint-600" />
-                      <span>Re-Audit Ingredients with AI</span>
+                      <Sparkles className="w-3.5 h-3.5 text-mint-300" />
+                      <span>Debunk Ingredients with AI</span>
                     </button>
                   </div>
                 </div>
