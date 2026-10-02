@@ -22,7 +22,7 @@ const MainLayout: React.FC = () => {
 
   if (!profile.isOnboarded) {
     return (
-      <div className="min-h-screen bg-[#09090D] text-white">
+      <div className="min-h-screen bg-[#FBF9F5] text-charcoal-900">
         <ToastContainer />
         <DemoBar />
         <InstallPrompt />
@@ -32,7 +32,7 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090D] flex flex-col text-white font-sans">
+    <div className="min-h-screen bg-[#FBF9F5] flex flex-col text-charcoal-900 font-sans">
       <ToastContainer />
       
       {/* Reviewer Top Bar */}

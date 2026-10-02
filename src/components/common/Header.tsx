@@ -47,22 +47,22 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#0C0C10]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5">
+      <header className="sticky top-0 z-30 bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-mint-200/80 px-4 sm:px-6 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Brand Logo */}
           <button 
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-2.5 text-left group focus:outline-none"
           >
-            <div className="w-9 h-9 rounded-2xl bg-[#14141C] flex items-center justify-center text-white shadow-sm border border-white/10 group-hover:scale-105 group-hover:border-[#FF3B30]/40 transition">
-              <Leaf className="w-4 h-4 text-[#FF3B30]" />
+            <div className="w-9 h-9 rounded-2xl bg-forest-900 flex items-center justify-center text-white shadow-sm border border-mint-200 group-hover:scale-105 group-hover:bg-forest-800 transition">
+              <Leaf className="w-4 h-4 text-mint-300" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight text-white font-sans">
+                <h1 className="text-lg font-black tracking-tight text-forest-950 font-sans">
                   Ritual
                 </h1>
-                <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">
+                <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200">
                   Clinical AI
                 </span>
               </div>
@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
           </button>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-[#14141C] p-1 rounded-full border border-white/10">
+          <nav className="hidden md:flex items-center gap-1.5 bg-white/90 p-1 rounded-full border border-mint-200/80 shadow-soft">
             {mainNavTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id || (tab.id === 'workout' && activeTab === 'gym') || (tab.id === 'mythbuster' && activeTab === 'labellens');
@@ -81,14 +81,14 @@ export const Header: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-150 ${
                     isActive
-                      ? 'bg-white text-black shadow-md font-black'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-forest-900 text-white shadow-sm font-black'
+                      : 'text-charcoal-600 hover:text-forest-900 hover:bg-mint-50'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && (
-                    <span className="px-1.5 py-0.2 rounded-full bg-[#FF3B30] text-white text-[9px] font-mono">
+                    <span className="px-1.5 py-0.2 rounded-full bg-mint-600 text-white text-[9px] font-mono">
                       {tab.badge}
                     </span>
                   )}
@@ -107,21 +107,21 @@ export const Header: React.FC = () => {
                 setTempTime(profile.dailyTime);
                 setShowSettings(true);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-xs font-bold text-zinc-200 transition shadow-soft"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-mint-50 border border-mint-200/80 text-xs font-bold text-charcoal-800 transition shadow-soft"
               aria-label="Profile Settings"
             >
               {activePillar === 'health' ? (
                 <>
                   <span>{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.icon}</span>
-                  <span className="font-bold text-white">{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.label}</span>
+                  <span className="font-bold text-forest-900">{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.label}</span>
                 </>
               ) : (
                 <>
                   <span>{goalLabels[profile.primaryGoal]?.icon}</span>
-                  <span className="font-bold text-white">{goalLabels[profile.primaryGoal]?.label}</span>
+                  <span className="font-bold text-forest-900">{goalLabels[profile.primaryGoal]?.label}</span>
                 </>
               )}
-              <Settings className="w-3.5 h-3.5 text-zinc-400 ml-1" />
+              <Settings className="w-3.5 h-3.5 text-charcoal-400 ml-1" />
             </button>
           </div>
         </div>
@@ -129,18 +129,18 @@ export const Header: React.FC = () => {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#121218] rounded-[2rem] max-w-sm w-full p-6 shadow-2xl border border-white/10 text-white">
-            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] max-w-sm w-full p-6 shadow-modal border border-mint-200 text-charcoal-900">
+            <div className="flex items-center justify-between mb-4 border-b border-mint-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#1C1C26] flex items-center justify-center text-white border border-white/10">
-                  <Settings className="w-4 h-4 text-[#FF3B30]" />
+                <div className="w-8 h-8 rounded-xl bg-mint-100 flex items-center justify-center text-forest-900 border border-mint-200">
+                  <Settings className="w-4 h-4 text-forest-700" />
                 </div>
-                <h2 className="text-base font-black text-white">Profile & Calibration</h2>
+                <h2 className="text-base font-black text-forest-950">Profile & Calibration</h2>
               </div>
               <button
                 onClick={() => setShowSettings(false)}
-                className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition"
+                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700 hover:bg-mint-50 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -148,21 +148,21 @@ export const Header: React.FC = () => {
 
             <div className="space-y-4 text-sm">
               <div>
-                <label className="block text-xs font-bold text-zinc-400 mb-1">
+                <label className="block text-xs font-bold text-charcoal-700 mb-1">
                   Your Name
                 </label>
                 <input
                   type="text"
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#FF3B30] text-white font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 focus:outline-none focus:ring-2 focus:ring-mint-500 text-charcoal-900 font-bold"
                   placeholder="Enter your name"
                 />
               </div>
 
               {activePillar === 'health' ? (
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">
+                  <label className="block text-xs font-bold text-charcoal-700 mb-1">
                     Athletic & Health Target
                   </label>
                   <div className="grid grid-cols-1 gap-1.5">
@@ -173,22 +173,22 @@ export const Header: React.FC = () => {
                         onClick={() => setTempHealthGoal(g)}
                         className={`flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-bold transition ${
                           tempHealthGoal === g
-                            ? 'bg-white text-black border-white shadow-md font-extrabold'
-                            : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
+                            ? 'bg-forest-900 text-white border-forest-900 shadow-soft font-extrabold'
+                            : 'bg-cream-50 text-charcoal-700 border-mint-100 hover:bg-mint-50'
                         }`}
                       >
                         <span className="flex items-center gap-2">
                           <span>{healthGoalLabels[g].icon}</span>
                           <span>{healthGoalLabels[g].label}</span>
                         </span>
-                        {tempHealthGoal === g && <Check className="w-4 h-4 text-black stroke-[3]" />}
+                        {tempHealthGoal === g && <Check className="w-4 h-4 text-white stroke-[3]" />}
                       </button>
                     ))}
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">
+                  <label className="block text-xs font-bold text-charcoal-700 mb-1">
                     Primary Wellness Goal
                   </label>
                   <div className="grid grid-cols-1 gap-1.5">
@@ -199,15 +199,15 @@ export const Header: React.FC = () => {
                         onClick={() => setTempGoal(g)}
                         className={`flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-bold transition ${
                           tempGoal === g
-                            ? 'bg-white text-black border-white shadow-md font-extrabold'
-                            : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
+                            ? 'bg-forest-900 text-white border-forest-900 shadow-soft font-extrabold'
+                            : 'bg-cream-50 text-charcoal-700 border-mint-100 hover:bg-mint-50'
                         }`}
                       >
                         <span className="flex items-center gap-2">
                           <span>{goalLabels[g].icon}</span>
                           <span>{goalLabels[g].label}</span>
                         </span>
-                        {tempGoal === g && <Check className="w-4 h-4 text-black stroke-[3]" />}
+                        {tempGoal === g && <Check className="w-4 h-4 text-white stroke-[3]" />}
                       </button>
                     ))}
                   </div>
@@ -215,7 +215,7 @@ export const Header: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-xs font-bold text-zinc-400 mb-1">
+                <label className="block text-xs font-bold text-charcoal-700 mb-1">
                   Daily Time Commitment
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -226,8 +226,8 @@ export const Header: React.FC = () => {
                       onClick={() => setTempTime(t)}
                       className={`py-2 px-2 rounded-xl border text-xs font-bold text-center transition ${
                         tempTime === t
-                          ? 'bg-white text-black border-white shadow-md font-extrabold'
-                          : 'bg-black/30 text-zinc-300 border-white/5 hover:bg-white/5'
+                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft font-extrabold'
+                          : 'bg-cream-50 text-charcoal-700 border-mint-100 hover:bg-mint-50'
                       }`}
                     >
                       {t.replace('_', ' ')}
@@ -239,7 +239,7 @@ export const Header: React.FC = () => {
               <div className="pt-2">
                 <button
                   onClick={handleSaveSettings}
-                  className="w-full py-3 rounded-full bg-white text-black font-extrabold text-sm shadow-lg hover:bg-zinc-200 transition"
+                  className="w-full py-3 rounded-full bg-forest-900 text-white font-extrabold text-sm shadow-soft hover:bg-forest-800 transition"
                 >
                   Save Changes
                 </button>

@@ -93,22 +93,22 @@ export const DocumentStoreAIView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto animate-in fade-in duration-200 text-white">
+    <div className="space-y-6 pb-24 max-w-4xl mx-auto animate-in fade-in duration-200 text-charcoal-900">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-200/80 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-indigo-400">
+            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-forest-700">
               MODULE 4 • CLINICAL STORAGE & INTELLIGENCE
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-mono font-bold">
+            <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 text-[10px] font-mono font-bold border border-mint-200">
               Gemini Vision & Doc AI
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
             Medical Document Store & AI Analyzer
           </h1>
-          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+          <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
             Store blood reports, lipid panels, and scans. Gemini AI decodes complex biomarkers into clear health directives.
           </p>
         </div>
@@ -116,7 +116,7 @@ export const DocumentStoreAIView: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowUploadModal(true)}
-          className="px-5 py-2.5 rounded-full bg-white text-black font-black text-xs hover:bg-zinc-200 transition shadow-lg flex items-center gap-2 active:scale-95 shrink-0"
+          className="px-5 py-2.5 rounded-full bg-forest-900 text-white font-black text-xs hover:bg-forest-800 transition shadow-soft flex items-center gap-2 active:scale-95 shrink-0"
         >
           <Upload className="w-4 h-4" />
           <span>Upload Lab Report</span>
@@ -129,20 +129,20 @@ export const DocumentStoreAIView: React.FC = () => {
         {/* Left Column: Documents List */}
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-mono font-bold uppercase text-zinc-400">
+            <span className="text-xs font-mono font-bold uppercase text-charcoal-500">
               Stored Reports ({healthDocuments.length})
             </span>
-            <span className="text-[10px] font-mono text-indigo-400 font-bold">100% Client-Side Encrypted</span>
+            <span className="text-[10px] font-mono text-mint-700 font-bold">100% Client-Side Encrypted</span>
           </div>
 
           {healthDocuments.length === 0 ? (
-            <div className="p-8 rounded-3xl bg-[#121217] border border-white/10 text-center space-y-3">
-              <FileText className="w-10 h-10 text-zinc-600 mx-auto" />
-              <p className="text-xs text-zinc-400">No medical reports uploaded yet.</p>
+            <div className="p-8 rounded-3xl bg-white border border-mint-200/80 text-center space-y-3 shadow-soft">
+              <FileText className="w-10 h-10 text-charcoal-400 mx-auto" />
+              <p className="text-xs text-charcoal-600">No medical reports uploaded yet.</p>
               <button
                 type="button"
                 onClick={() => setShowUploadModal(true)}
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition"
+                className="px-4 py-2 rounded-full bg-mint-100 hover:bg-mint-200 text-xs font-bold text-forest-900 transition"
               >
                 Upload First Report
               </button>
@@ -157,26 +157,26 @@ export const DocumentStoreAIView: React.FC = () => {
                     onClick={() => setSelectedDoc(doc)}
                     className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                       isSelected
-                        ? 'bg-[#181822] border-indigo-500/60 shadow-lg ring-1 ring-indigo-500/30'
-                        : 'bg-[#121217] border-white/10 hover:border-white/20'
+                        ? 'bg-mint-50/70 border-mint-500 shadow-soft ring-1 ring-mint-500/30'
+                        : 'bg-white border-mint-200/80 hover:border-mint-400 shadow-soft'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        isSelected ? 'bg-indigo-600 text-white' : 'bg-white/5 text-zinc-400'
+                        isSelected ? 'bg-forest-900 text-white' : 'bg-mint-100 text-forest-800'
                       }`}>
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-black text-white truncate">
+                        <h4 className="text-xs sm:text-sm font-black text-forest-950 truncate">
                           {doc.title}
                         </h4>
-                        <p className="text-[11px] text-zinc-400 mt-0.5 truncate">
+                        <p className="text-[11px] text-charcoal-500 mt-0.5 truncate">
                           {doc.doctorOrLab || 'Certified Lab'} • {doc.uploadDate}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 shrink-0 transition ${isSelected ? 'text-indigo-400 translate-x-1' : 'text-zinc-600'}`} />
+                    <ChevronRight className={`w-4 h-4 shrink-0 transition ${isSelected ? 'text-forest-900 translate-x-1' : 'text-charcoal-400'}`} />
                   </div>
                 );
               })}
@@ -187,22 +187,22 @@ export const DocumentStoreAIView: React.FC = () => {
         {/* Right Column: Active Document AI Analysis HUD */}
         <div className="lg:col-span-7 space-y-4">
           {selectedDoc ? (
-            <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-7 border border-white/10 shadow-2xl space-y-6">
+            <div className="bg-white rounded-[2.5rem] p-6 sm:p-7 border border-mint-200/80 shadow-card space-y-6">
               {/* Document Header Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-mint-100 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-black uppercase text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                    <span className="text-[10px] font-mono font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
                       {selectedDoc.category.replace('_', ' ')}
                     </span>
-                    <span className="text-[11px] font-mono text-zinc-400">
+                    <span className="text-[11px] font-mono text-charcoal-500">
                       Uploaded {selectedDoc.uploadDate}
                     </span>
                   </div>
-                  <h2 className="text-xl font-black text-white mt-1">
+                  <h2 className="text-xl font-black text-forest-950 mt-1">
                     {selectedDoc.title}
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-charcoal-600 mt-0.5">
                     {selectedDoc.doctorOrLab} • {selectedDoc.fileSizeText || 'PDF Document'}
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export const DocumentStoreAIView: React.FC = () => {
                         showToast('Document removed from store', 'info');
                       }
                     }}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-zinc-400 transition"
+                    className="p-2 rounded-xl bg-cream-50 hover:bg-rose-50 hover:text-rose-600 text-charcoal-400 transition"
                     title="Delete Document"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -227,22 +227,22 @@ export const DocumentStoreAIView: React.FC = () => {
 
               {/* Gemini AI Synthesis Card */}
               {selectedDoc.aiAnalysis && (
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-[#14141E] to-[#121217] border border-indigo-500/30 space-y-3">
-                  <div className="flex items-center gap-2 text-indigo-300 text-xs font-mono font-bold">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                <div className="p-5 rounded-2xl bg-mint-50/80 border border-mint-200 space-y-3">
+                  <div className="flex items-center gap-2 text-forest-900 text-xs font-mono font-bold">
+                    <Sparkles className="w-4 h-4 text-mint-600" />
                     <span>Gemini AI Biomarker Synthesis</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-charcoal-800 leading-relaxed font-medium">
                     {selectedDoc.aiAnalysis.summary}
                   </p>
 
-                  <div className="pt-2 border-t border-white/10 space-y-1.5">
-                    <span className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">
+                  <div className="pt-2 border-t border-mint-200/80 space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase text-charcoal-500 block font-bold">
                       Key Clinical Findings:
                     </span>
                     {selectedDoc.aiAnalysis.keyFindings.map((finding, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-zinc-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <div key={idx} className="flex items-start gap-2 text-xs text-charcoal-700">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-mint-600 shrink-0 mt-0.5" />
                         <span>{finding}</span>
                       </div>
                     ))}
@@ -254,40 +254,40 @@ export const DocumentStoreAIView: React.FC = () => {
               {selectedDoc.biomarkers && selectedDoc.biomarkers.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-mono font-bold uppercase text-zinc-300 tracking-wider">
+                    <h3 className="text-xs font-mono font-bold uppercase text-charcoal-600 tracking-wider">
                       Decoded Biomarkers ({selectedDoc.biomarkers.length})
                     </h3>
-                    <span className="text-[10px] text-zinc-500 font-mono">Reference Calibrated</span>
+                    <span className="text-[10px] text-charcoal-400 font-mono">Reference Calibrated</span>
                   </div>
 
                   <div className="space-y-2">
                     {selectedDoc.biomarkers.map((bm) => (
                       <div
                         key={bm.id}
-                        className="p-3.5 rounded-xl bg-[#14141C] border border-white/5 space-y-1.5"
+                        className="p-3.5 rounded-xl bg-cream-50/70 border border-mint-100 space-y-1.5"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div>
-                            <span className="text-xs font-black text-white">{bm.name}</span>
-                            <span className="text-[10px] font-mono text-zinc-500 ml-2">[{bm.category}]</span>
+                            <span className="text-xs font-black text-forest-950">{bm.name}</span>
+                            <span className="text-[10px] font-mono text-charcoal-400 ml-2">[{bm.category}]</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono font-black text-white">
-                              {bm.value} <span className="text-[10px] text-zinc-400 font-normal">{bm.unit}</span>
+                            <span className="text-xs font-mono font-black text-forest-950">
+                              {bm.value} <span className="text-[10px] text-charcoal-500 font-normal">{bm.unit}</span>
                             </span>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-black uppercase ${
                               bm.status === 'optimal'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                ? 'bg-mint-100 text-forest-800 border border-mint-200'
                                 : bm.status === 'borderline'
-                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : 'bg-rose-100 text-rose-800 border border-rose-200'
                             }`}>
                               {bm.status}
                             </span>
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-zinc-400 leading-snug">
+                        <p className="text-[11px] text-charcoal-600 leading-snug">
                           {bm.impactExplanation}
                         </p>
                       </div>
@@ -299,23 +299,23 @@ export const DocumentStoreAIView: React.FC = () => {
               {/* Actionable Diet & Training Directives */}
               {selectedDoc.aiAnalysis && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div className="p-4 rounded-2xl bg-[#14141C] border border-white/5 space-y-1.5">
-                    <span className="text-[10px] font-mono font-bold uppercase text-emerald-400 block">
+                  <div className="p-4 rounded-2xl bg-mint-50/40 border border-mint-100 space-y-1.5">
+                    <span className="text-[10px] font-mono font-bold uppercase text-forest-700 block">
                       🥗 Dietary Directives
                     </span>
                     {selectedDoc.aiAnalysis.actionableDietAdvice.map((advice, i) => (
-                      <p key={i} className="text-xs text-zinc-300 leading-relaxed">
+                      <p key={i} className="text-xs text-charcoal-700 leading-relaxed">
                         • {advice}
                       </p>
                     ))}
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#14141C] border border-white/5 space-y-1.5">
-                    <span className="text-[10px] font-mono font-bold uppercase text-[#FF3B30] block">
+                  <div className="p-4 rounded-2xl bg-mint-50/40 border border-mint-100 space-y-1.5">
+                    <span className="text-[10px] font-mono font-bold uppercase text-forest-700 block">
                       🏋️ Training Directives
                     </span>
                     {selectedDoc.aiAnalysis.actionableWorkoutAdvice.map((advice, i) => (
-                      <p key={i} className="text-xs text-zinc-300 leading-relaxed">
+                      <p key={i} className="text-xs text-charcoal-700 leading-relaxed">
                         • {advice}
                       </p>
                     ))}
@@ -324,10 +324,10 @@ export const DocumentStoreAIView: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="p-12 rounded-[2.5rem] bg-[#0C0C10] border border-white/10 text-center space-y-2">
-              <Info className="w-8 h-8 text-zinc-600 mx-auto" />
-              <h3 className="text-sm font-bold text-white">Select a report to view analysis</h3>
-              <p className="text-xs text-zinc-400">Choose an uploaded report from the left list.</p>
+            <div className="p-12 rounded-[2.5rem] bg-white border border-mint-200/80 text-center space-y-2 shadow-soft">
+              <Info className="w-8 h-8 text-charcoal-400 mx-auto" />
+              <h3 className="text-sm font-bold text-forest-950">Select a report to view analysis</h3>
+              <p className="text-xs text-charcoal-500">Choose an uploaded report from the left list.</p>
             </div>
           )}
         </div>
@@ -336,22 +336,22 @@ export const DocumentStoreAIView: React.FC = () => {
 
       {/* UPLOAD REPORT MODAL */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#121218] rounded-[2.5rem] max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-white/10 text-white space-y-5">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-6 sm:p-7 shadow-modal border border-mint-200 text-charcoal-900 space-y-5">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-mint-100 text-forest-800 border border-mint-200 flex items-center justify-center">
                   <Upload className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white">Upload Medical Report</h3>
-                  <p className="text-xs text-zinc-400">PDF, JPG, PNG or Lab scanned report</p>
+                  <h3 className="text-base font-black text-forest-950">Upload Medical Report</h3>
+                  <p className="text-xs text-charcoal-500">PDF, JPG, PNG or Lab scanned report</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowUploadModal(false)}
-                className="p-1.5 rounded-full text-zinc-400 hover:text-white"
+                className="p-1.5 rounded-full text-charcoal-400 hover:text-charcoal-700"
               >
                 ✕
               </button>
@@ -359,7 +359,7 @@ export const DocumentStoreAIView: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-mono uppercase text-zinc-400 mb-1.5">
+                <label className="block font-mono uppercase text-charcoal-600 mb-1.5 font-bold">
                   Report Title
                 </label>
                 <input
@@ -367,19 +367,19 @@ export const DocumentStoreAIView: React.FC = () => {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Annual Blood Panel, Lipid Profile, DXA Scan"
-                  className="w-full p-3.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full p-3.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-mono uppercase text-zinc-400 mb-1.5">
+                  <label className="block font-mono uppercase text-charcoal-600 mb-1.5 font-bold">
                     Category
                   </label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="w-full p-3.5 rounded-xl bg-[#181822] border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-3.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
                   >
                     <option value="blood_test">Blood Test Panel</option>
                     <option value="lipid_profile">Lipid Profile</option>
@@ -390,7 +390,7 @@ export const DocumentStoreAIView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-mono uppercase text-zinc-400 mb-1.5">
+                  <label className="block font-mono uppercase text-charcoal-600 mb-1.5 font-bold">
                     Lab / Doctor Name
                   </label>
                   <input
@@ -398,7 +398,7 @@ export const DocumentStoreAIView: React.FC = () => {
                     value={newDoctorLab}
                     onChange={(e) => setNewDoctorLab(e.target.value)}
                     placeholder="e.g. Metropolis, Apollo"
-                    className="w-full p-3.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-3.5 rounded-xl bg-cream-50 border border-mint-200 text-charcoal-900 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
               </div>
@@ -417,15 +417,15 @@ export const DocumentStoreAIView: React.FC = () => {
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="p-6 rounded-2xl bg-black/30 border-2 border-dashed border-white/15 hover:border-indigo-500/50 cursor-pointer transition text-center space-y-2 group"
+                className="p-6 rounded-2xl bg-cream-50/50 border-2 border-dashed border-mint-300 hover:border-mint-500 cursor-pointer transition text-center space-y-2 group"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white/5 group-hover:bg-indigo-500/20 text-zinc-400 group-hover:text-indigo-400 transition flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-mint-100 group-hover:bg-mint-200 text-forest-800 transition flex items-center justify-center mx-auto">
                   <Upload className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-bold text-white">
+                <p className="text-xs font-bold text-forest-950">
                   Click to Browse or Drag & Drop PDF / Image
                 </p>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-charcoal-500">
                   Gemini AI will automatically extract & interpret all biomarkers
                 </p>
               </div>
@@ -436,11 +436,11 @@ export const DocumentStoreAIView: React.FC = () => {
                 type="button"
                 disabled={isUploading}
                 onClick={() => handleSimulatedUpload()}
-                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs shadow-soft transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isUploading ? (
                   <>
-                    <Sparkles className="w-4 h-4 animate-spin" />
+                    <Sparkles className="w-4 h-4 animate-spin text-mint-300" />
                     <span>Gemini AI Analyzing Biomarkers...</span>
                   </>
                 ) : (
