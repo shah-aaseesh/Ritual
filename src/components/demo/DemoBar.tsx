@@ -6,7 +6,7 @@ export const DemoBar: React.FC = () => {
   const { isDemoMode, loadDemoState, resetToCleanState, simulateMissedDays, setShowRoutineRescue } = useApp();
 
   return (
-    <div className="bg-[#07070A] text-zinc-300 text-xs px-4 py-1.5 border-b border-white/10">
+    <div className="hidden md:block bg-[#07070A] text-zinc-300 text-xs px-4 py-1.5 border-b border-white/10">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 font-medium truncate">
           <span className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse shrink-0"></span>

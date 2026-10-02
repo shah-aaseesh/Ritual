@@ -88,7 +88,12 @@ export const Header: React.FC = () => {
             <div className="inline-flex p-1 bg-[#14141C] rounded-full border border-white/10 text-xs shadow-inner">
               <button
                 type="button"
-                onClick={() => setActivePillar('wellness')}
+                onClick={() => {
+                  setActivePillar('wellness');
+                  if (activeTab === 'gym' || activeTab === 'calories') {
+                    setActiveTab('today');
+                  }
+                }}
                 className={`px-3.5 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition ${
                   activePillar === 'wellness'
                     ? 'bg-white text-black shadow-md font-extrabold'
@@ -99,7 +104,12 @@ export const Header: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setActivePillar('health')}
+                onClick={() => {
+                  setActivePillar('health');
+                  if (activeTab === 'today' || activeTab === 'smartshelf' || activeTab === 'routine') {
+                    setActiveTab('gym');
+                  }
+                }}
                 className={`px-3.5 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition ${
                   activePillar === 'health'
                     ? 'bg-white text-black shadow-md font-extrabold'
