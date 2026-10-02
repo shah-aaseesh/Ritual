@@ -87,11 +87,14 @@ const INITIAL_PROFILE: UserProfile = {
   createdAt: new Date().toISOString()
 };
 
+const envApiKey = (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+const envModel = (import.meta as any).env?.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-exp:free';
+
 const INITIAL_AI_SETTINGS: AISettings = {
   enabled: true,
-  provider: 'local',
-  openRouterApiKey: '',
-  selectedModel: 'google/gemini-2.0-flash-exp:free'
+  provider: envApiKey ? 'openrouter' : 'local',
+  openRouterApiKey: envApiKey,
+  selectedModel: envModel
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -108,7 +111,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [aiSettings, setAISettings] = useState<AISettings>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.AI_SETTINGS);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+      try { 
+        const parsed = JSON.parse(saved);
+        if (!parsed.openRouterApiKey && envApiKey) {
+          parsed.openRouterApiKey = envApiKey;
+          parsed.provider = 'openrouter';
+        }
+        return parsed;
+      } catch (e) { /* fallback */ }
     }
     return INITIAL_AI_SETTINGS;
   });
