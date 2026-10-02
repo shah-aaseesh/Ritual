@@ -31,7 +31,102 @@ interface ParsedItem {
   sourceUrl?: string;
   hasDose?: boolean;
   isStruckThrough: boolean;
+  strikeTag?: string;
   strikeReason?: string;
+}
+
+/**
+ * Specifically calls out marketing gimmicks, fairy dusting, synthetic scent masking,
+ * candy syrup bulkers, and cheap inert fillers without sugarcoating.
+ */
+function getSpecificDebunkVerdict(token: string): { strikeTag: string; strikeReason: string } {
+  const norm = token.toLowerCase();
+
+  // 1. Synthetic Fragrances, Perfume, and Allergen Scents
+  if (/fragrance|parfum|perfume|aroma|linalool|limonene|citronellol|geraniol|eugenol|cinnamal|coumarin|benzyl alcohol|benzyl benzoate|hexyl cinnamal/i.test(norm)) {
+    return {
+      strikeTag: '⚠️ Sensitizing Fragrance (Zero Skin Benefit)',
+      strikeReason: 'Pure scent masking. Added purely so the product smells nice; #1 clinical cause of contact dermatitis, scalp irritation, and barrier redness.'
+    };
+  }
+
+  // 2. Added Sugars & Glucose Candy Syrups in Wellness Gummies
+  if (/liquid glucose|glucose syrup|cane sugar|sucrose|fructose|corn syrup|maltitol syrup|dextrose|invert sugar/i.test(norm)) {
+    return {
+      strikeTag: '🍬 Added Sugar / Candy Base Matrix',
+      strikeReason: 'Gummy candy bulk filler. Adds 2–4g of unnecessary refined sugar disguised as daily "wellness" healthcare.'
+    };
+  }
+
+  // 3. Silicones (Cosmetic Smoothness Illusion)
+  if (/dimethicone|cyclomethicone|cyclopentasiloxane|amodimethicone|dimethiconol|phenyl trimethicone/i.test(norm)) {
+    return {
+      strikeTag: '🎭 Synthetic Slip Layer (Temporary Illusion)',
+      strikeReason: 'Cosmetic silicone film-former that coats the surface for an instant slick feel. Does not repair hair roots, follicles, or cellular damage.'
+    };
+  }
+
+  // 4. Fairy-Dusted Micro-Exotics & Gold / Diamond / Pearl / Exotic Stem Cell Gimmicks
+  if (/gold|diamond|pearl|caviar|ruby|platinum|rare apple stem|exotic orchid|snake venom|snail mucin extract \d*ppm|black truffle|meteorite/i.test(norm)) {
+    return {
+      strikeTag: '🚩 Fairy Dusting (Marketing Gimmick)',
+      strikeReason: 'Straight-up marketing gimmick added at <0.001% homeopathic micro-doses purely to justify luxury claims on the box. Zero clinical biological activity.'
+    };
+  }
+
+  // 5. Cheap Synthetic Dyes & Food Colorings
+  if (/ci\s*\d+|fd&c|d&c|yellow\s*\d+|blue\s*\d+|red\s*\d+|caramel color|titanium dioxide|iron oxides/i.test(norm)) {
+    return {
+      strikeTag: '🎨 Synthetic Dye (Visual Illusion)',
+      strikeReason: 'Artificial food dye added to trick your eyes into thinking the formulation is "berry fresh" or "clinical". Zero active therapeutic value.'
+    };
+  }
+
+  // 6. Water / Aqua Dilution
+  if (/^(aqua|water|purified water|demineralized water)$/i.test(norm.trim())) {
+    return {
+      strikeTag: '💧 85%+ Plain Water Dilution',
+      strikeReason: 'Basic solvent making up 80-90% of bottle volume. Essential liquid vehicle, but contains zero proprietary miracle active.'
+    };
+  }
+
+  // 7. Standard Chemical Thickeners & Binders
+  if (/carbomer|xanthan gum|acrylates|cellulose|hydroxyethylcellulose|magnesium stearate|stearic acid|guar gum|carrageenan|polyacrylate/i.test(norm)) {
+    return {
+      strikeTag: '📦 Bulking Excipient / Thickener',
+      strikeReason: 'Inactive industrial binder and gelling agent used to thicken fluid into a gel or bind tablets. Zero therapeutic action.'
+    };
+  }
+
+  // 8. Chelating agents & Chemical Preservatives
+  if (/disodium edta|tetrasodium edta|bht|bha|phenoxyethanol|sodium benzoate|potassium sorbate|methylparaben|propylparaben|ethylhexylglycerin/i.test(norm)) {
+    return {
+      strikeTag: '🛡️ Shelf-Life Preservative (Inactive)',
+      strikeReason: 'Chemical stabilizer required to prevent mold and bacterial growth for 24 months. Contains zero targeted wellness actives.'
+    };
+  }
+
+  // 9. Fatty Alcohols & Emulsifying Vehicles
+  if (/cetearyl alcohol|cetyl alcohol|stearyl alcohol|polysorbate|ceteareth|peg-\d+|glyceryl stearate|sorbitan|isostearate/i.test(norm)) {
+    return {
+      strikeTag: '🧴 Emulsifier / Texture Carrier',
+      strikeReason: 'Chemical binder that keeps oil and water from separating on the shelf. Inactive emulsion vehicle.'
+    };
+  }
+
+  // 10. Generic unverified marketing herbal extracts
+  if (/extract|juice|oil|leaf|root|bark|flower|seed/i.test(norm)) {
+    return {
+      strikeTag: '📢 Unverified Buzzword Extract',
+      strikeReason: 'Unstandardized botanical listed without active compound percentages. Often added at trace amounts (<0.01%) for label marketing.'
+    };
+  }
+
+  // Default fallback for other fillers
+  return {
+    strikeTag: '🚫 Inactive Filler / Excipient',
+    strikeReason: 'Non-therapeutic excipient providing no biological activity for your target wellness goal.'
+  };
 }
 
 export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
@@ -89,30 +184,46 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         const tier = matchedDetected.ingredient.evidenceTier;
         const isSupportingCarrier = tier === 'supporting_ingredient';
         
-        items.push({
-          id: `item-${i}`,
-          rawText: token,
-          cleanName: matchedDetected.ingredient.name,
-          isActive: !isSupportingCarrier,
-          tier: tier,
-          purpose: matchedDetected.ingredient.commonPurpose,
-          explanation: matchedDetected.explanation,
-          sourceUrl: matchedDetected.ingredient.sourceUrl,
-          hasDose: matchedDetected.doesLabelDiscloseDose,
-          isStruckThrough: isSupportingCarrier,
-          strikeReason: isSupportingCarrier ? 'Carrier / Solvent / Texture Matrix' : undefined
-        });
+        if (isSupportingCarrier) {
+          const debunk = getSpecificDebunkVerdict(token);
+          items.push({
+            id: `item-${i}`,
+            rawText: token,
+            cleanName: matchedDetected.ingredient.name,
+            isActive: false,
+            tier: tier,
+            purpose: matchedDetected.ingredient.commonPurpose,
+            explanation: matchedDetected.explanation,
+            sourceUrl: matchedDetected.ingredient.sourceUrl,
+            hasDose: matchedDetected.doesLabelDiscloseDose,
+            isStruckThrough: true,
+            strikeTag: debunk.strikeTag,
+            strikeReason: debunk.strikeReason
+          });
+        } else {
+          items.push({
+            id: `item-${i}`,
+            rawText: token,
+            cleanName: matchedDetected.ingredient.name,
+            isActive: true,
+            tier: tier,
+            purpose: matchedDetected.ingredient.commonPurpose,
+            explanation: matchedDetected.explanation,
+            sourceUrl: matchedDetected.ingredient.sourceUrl,
+            hasDose: matchedDetected.doesLabelDiscloseDose,
+            isStruckThrough: false
+          });
+        }
       } else {
-        // Excipient, filler, fragrance, solvent or unverified marketing additive
-        const isCarrierOrPreservative = /water|aqua|glycerin|phenoxyethanol|alcohol|fragrance|parfum|citric|edta|pectin|sugar|glucose|triglyceride|preservative|sorbate|benzoate/i.test(norm);
-        
+        const debunk = getSpecificDebunkVerdict(token);
         items.push({
           id: `item-${i}`,
           rawText: token,
           cleanName: token.replace(/\(.*\)/, '').trim(),
           isActive: false,
           isStruckThrough: true,
-          strikeReason: isCarrierOrPreservative ? 'Excipient / Base Carrier (No active therapeutic action)' : 'Bulking Agent / Marketing Additive'
+          strikeTag: debunk.strikeTag,
+          strikeReason: debunk.strikeReason
         });
       }
     }
@@ -148,7 +259,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
             clearInterval(markTimer);
             setAnimationStep('complete');
           }
-        }, 80);
+        }, 70);
       }
     }, 35);
   };
@@ -187,7 +298,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 : 'text-charcoal-700 hover:text-forest-950'
             }`}
           >
-            All Items ({parsedItems.length})
+            All Ingredients ({parsedItems.length})
           </button>
           <button
             type="button"
@@ -211,7 +322,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-rose-400" />
-            <span>Struck Fillers ({fillersCount})</span>
+            <span>Struck Gimmicks ({fillersCount})</span>
           </button>
         </div>
 
@@ -237,10 +348,10 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-forest-950 text-mint-300 text-[10px] font-black uppercase tracking-widest font-mono">
-                Rx CLINICAL AUDIT
+                Rx FORMULATION SENSE-CHECK
               </span>
               <span className="text-[10px] font-extrabold text-charcoal-400 uppercase tracking-widest font-mono">
-                FORMULATION REPORT
+                NO-BULLSHIT AUDIT
               </span>
             </div>
             <h3 className="text-lg sm:text-xl font-black text-forest-950 tracking-tight">
@@ -253,24 +364,24 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs px-3.5 py-2 rounded-2xl border border-cream-300 self-start sm:self-auto shadow-xs">
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xs px-3.5 py-2 rounded-2xl border border-cream-300 self-start sm:self-auto shadow-xs">
             <div className="text-left">
               <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider block">
-                AUDIT VERDICT
+                REAL ACTIVES
               </span>
               <span className="text-xs font-extrabold text-emerald-800 flex items-center gap-1">
                 <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                {provenActivesCount} Clinically Circled
+                {provenActivesCount} Circled Green
               </span>
             </div>
             <div className="w-px h-6 bg-cream-300" />
             <div className="text-left">
               <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider block">
-                EXCIPIENTS
+                MARKETING / FILLERS
               </span>
               <span className="text-xs font-extrabold text-rose-700 flex items-center gap-1">
                 <X className="w-3.5 h-3.5 text-rose-600 stroke-[3]" />
-                {fillersCount} Struck Inactive
+                {fillersCount} Struck Red
               </span>
             </div>
           </div>
@@ -291,7 +402,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
           <div className="mb-4 p-2.5 rounded-2xl bg-emerald-900/10 text-emerald-950 text-xs font-bold flex items-center justify-between animate-pulse">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
-              <span>Evaluating active potency: Circling actives in green & striking fillers in red...</span>
+              <span>Sense-checking actives: Circling proven actives & striking marketing fillers in red...</span>
             </div>
             <span className="text-[11px] font-mono">{markedCount} / {parsedItems.length}</span>
           </div>
@@ -316,17 +427,17 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 <div
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  className={`group relative p-3 sm:p-3.5 rounded-2xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                  className={`group relative p-3 sm:p-3.5 rounded-2xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 ${
                     isProven
                       ? 'bg-emerald-500/10 border-2 border-emerald-500/40 shadow-xs hover:border-emerald-600'
                       : isStruck
-                      ? 'bg-white/40 border border-transparent hover:bg-rose-50/40 hover:border-rose-200'
+                      ? 'bg-white/50 border border-cream-200/60 hover:bg-rose-50/50 hover:border-rose-300'
                       : 'bg-white/70 border border-cream-200'
                   }`}
                 >
                   {/* Left Column: Ingredient with Handwritten Script & Animated Marking */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {/* Ingredient Text Container with SVG Circle or Red Strikethrough */}
                       <div className="relative inline-flex items-center py-0.5 px-1">
                         {/* 1. ANIMATED GREEN HAND-DRAWN CIRCLE/OVAL FOR VALUABLE ACTIVES */}
@@ -366,22 +477,28 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                       {isProven && (
                         <span className="relative z-10 inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
                           <Check className="w-3 h-3 stroke-[3]" />
-                          <span>Clinically Valuable Active</span>
+                          <span>Proven Active</span>
                         </span>
                       )}
 
-                      {/* Red Struck Reason Annotation */}
-                      {isStruck && item.strikeReason && (
-                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200/60 font-sans">
-                          {item.strikeReason}
+                      {/* Red Specific Debunk Tag */}
+                      {isStruck && item.strikeTag && (
+                        <span className="text-[10px] font-extrabold text-rose-800 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200/80 font-sans shadow-2xs">
+                          {item.strikeTag}
                         </span>
                       )}
                     </div>
 
-                    {/* Pharmacological role note */}
+                    {/* Active Pharmacological Role or Struck Debunk Explanation */}
                     {isProven && item.purpose && (
-                      <p className="text-xs text-emerald-900 font-medium mt-1 leading-relaxed pl-1">
+                      <p className="text-xs text-emerald-950 font-semibold leading-relaxed pl-1">
                         ✦ {item.purpose}
+                      </p>
+                    )}
+
+                    {isStruck && item.strikeReason && (
+                      <p className="text-[11px] text-charcoal-600 font-medium leading-relaxed pl-1">
+                        {item.strikeReason}
                       </p>
                     )}
                   </div>
@@ -442,7 +559,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                   selectedItem.isActive ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-rose-100 text-rose-900 border border-rose-200'
                 }`}>
-                  {selectedItem.isActive ? 'Clinically Active Compound' : 'Carrier / Inactive Excipient'}
+                  {selectedItem.isActive ? 'Clinically Active Compound' : (selectedItem.strikeTag || 'Inactive Filler')}
                 </span>
                 <h4 className="text-base sm:text-lg font-black text-forest-950 mt-1.5">
                   {selectedItem.cleanName}
@@ -473,9 +590,9 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
               )}
 
               {selectedItem.strikeReason && (
-                <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950">
-                  <span className="font-bold block text-xs mb-0.5">Why this was struck through:</span>
-                  <p className="text-xs text-rose-900">{selectedItem.strikeReason}</p>
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1">
+                  <span className="font-extrabold block text-xs">Reality Check:</span>
+                  <p className="text-xs text-rose-900 leading-relaxed">{selectedItem.strikeReason}</p>
                 </div>
               )}
             </div>
