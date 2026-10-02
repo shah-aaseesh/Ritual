@@ -1,0 +1,60 @@
+import React from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+import { Header } from './components/common/Header';
+import { BottomNav } from './components/common/BottomNav';
+import { ToastContainer } from './components/common/Toast';
+import { DemoBar } from './components/demo/DemoBar';
+import { TodayView } from './components/today/TodayView';
+import { LabelLensView } from './components/labellens/LabelLensView';
+import { SmartShelfView } from './components/smartshelf/SmartShelfView';
+import { RoutineView } from './components/routine/RoutineView';
+import { ProgressView } from './components/progress/ProgressView';
+import { RoutineRescueModal } from './components/rescue/RoutineRescueModal';
+
+const MainLayout: React.FC = () => {
+  const { profile, activeTab } = useApp();
+
+  if (!profile.isOnboarded) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2]">
+        <ToastContainer />
+        <DemoBar />
+        <OnboardingFlow />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-charcoal-900 font-sans">
+      <ToastContainer />
+      
+      {/* Reviewer Top Bar */}
+      <DemoBar />
+
+      {/* Top Header & Desktop Navigation */}
+      <Header />
+
+      {/* Main Content Area: Responsive Full Desktop Layout */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {activeTab === 'today' && <TodayView />}
+        {activeTab === 'labellens' && <LabelLensView />}
+        {activeTab === 'smartshelf' && <SmartShelfView />}
+        {activeTab === 'routine' && <RoutineView />}
+        {activeTab === 'progress' && <ProgressView />}
+      </main>
+
+      {/* Mobile-only Bottom Navigation */}
+      <BottomNav />
+      <RoutineRescueModal />
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AppProvider>
+      <MainLayout />
+    </AppProvider>
+  );
+}
