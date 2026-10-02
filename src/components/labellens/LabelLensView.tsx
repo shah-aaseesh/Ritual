@@ -6,13 +6,16 @@ import { extractLabelFromImageWithAI } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
 import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
+import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
+import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Camera, 
   Upload, 
   Sparkles, 
   ExternalLink, 
   Edit3, 
-  BookmarkPlus
+  BookmarkPlus,
+  ScanBarcode
 } from 'lucide-react';
 
 export const LabelLensView: React.FC = () => {
@@ -24,6 +27,7 @@ export const LabelLensView: React.FC = () => {
   const [selectedSampleId, setSelectedSampleId] = useState<string>(SAMPLE_PRODUCTS[0].id);
 
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
   const [showManualEditor, setShowManualEditor] = useState<boolean>(false);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<'all' | 'ingredients' | 'claims'>('all');
@@ -120,6 +124,15 @@ export const LabelLensView: React.FC = () => {
       setScanProgress({ percent: 0, status: '' });
       if (e.target) e.target.value = '';
     }
+  };
+
+  const handleBarcodeProductFound = (result: BarcodeLookupResult) => {
+    setProductName(result.productName);
+    setSaveBrand(result.brand);
+    setIngredientText(result.ingredientText);
+    setAnalysisResult(result.analysis);
+    setSelectedSampleId('');
+    showToast(`Found: ${result.productName}`, 'success');
   };
 
   const handleSaveToShelf = () => {
@@ -243,12 +256,23 @@ export const LabelLensView: React.FC = () => {
               </button>
             </div>
 
+            {/* Barcode Scanner Primary Button */}
+            <button
+              type="button"
+              onClick={() => setIsBarcodeModalOpen(true)}
+              disabled={isScanning}
+              className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-forest-900 to-forest-800 hover:from-forest-800 hover:to-forest-700 text-cream-50 flex items-center justify-center gap-2.5 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.99] border border-forest-700/60"
+            >
+              <ScanBarcode className="w-4 h-4 text-mint-400 animate-pulse" />
+              <span>Scan Product Barcode (Instant 100% Match)</span>
+            </button>
+
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => frontFileInputRef.current?.click()}
                 disabled={isScanning}
-                className="p-3.5 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-cream-300 text-charcoal-800 flex items-center justify-center gap-2 text-xs font-semibold transition disabled:opacity-50"
+                className="p-3 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-cream-300 text-charcoal-800 flex items-center justify-center gap-2 text-xs font-semibold transition disabled:opacity-50"
               >
                 <Camera className="w-4 h-4 text-forest-800" />
                 <span>Scan Front Claims</span>
@@ -258,10 +282,10 @@ export const LabelLensView: React.FC = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isScanning}
-                className="p-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 flex items-center justify-center gap-2 text-xs font-bold shadow-soft transition disabled:opacity-50"
+                className="p-3 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-cream-300 text-charcoal-800 flex items-center justify-center gap-2 text-xs font-semibold transition disabled:opacity-50"
               >
-                <Upload className="w-4 h-4 text-mint-300" />
-                <span>Scan Ingredients</span>
+                <Upload className="w-4 h-4 text-forest-800" />
+                <span>Scan Bottle Photo</span>
               </button>
             </div>
 
@@ -712,6 +736,14 @@ export const LabelLensView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Barcode Scanner Viewfinder Modal */}
+      <BarcodeScannerModal
+        isOpen={isBarcodeModalOpen}
+        onClose={() => setIsBarcodeModalOpen(false)}
+        onProductFound={handleBarcodeProductFound}
+        userGoal={profile.primaryGoal}
+      />
     </div>
   );
 };

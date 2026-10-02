@@ -14,6 +14,8 @@ import {
   POPULAR_OPENROUTER_MODELS 
 } from '../../services/aiService';
 import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
+import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
+import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Leaf, 
   ArrowRight, 
@@ -23,7 +25,8 @@ import {
   Plus, 
   Bot, 
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  ScanBarcode
 } from 'lucide-react';
 
 export const OnboardingFlow: React.FC = () => {
@@ -57,10 +60,30 @@ export const OnboardingFlow: React.FC = () => {
   const [ocrStatus, setOcrStatus] = useState<string>('');
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
-  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'google/gemini-2.0-flash-exp:free');
+  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'openrouter/free');
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const claimFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOnboardingBarcodeProduct = (result: BarcodeLookupResult) => {
+    const detectedNames = result.analysis.detectedIngredients.map(d => d.ingredient.name);
+    const matched = findMatchingMosaicProducts(detectedNames, goal);
+
+    setScannedProducts(prev => {
+      const copy = [...prev];
+      copy[activeProdIndex] = {
+        ...copy[activeProdIndex],
+        name: result.productName,
+        brand: result.brand,
+        ingredientText: result.ingredientText,
+        ingredientAnalysis: result.analysis,
+        matchedMosaic: matched
+      };
+      return copy;
+    });
+    showToast(`Linked: ${result.productName}`, 'success');
+  };
 
   const loadSamplePreset = (idx: number, sampleIndex: number) => {
     const sample = SAMPLE_PRODUCTS[sampleIndex] || SAMPLE_PRODUCTS[0];
@@ -583,14 +606,25 @@ export const OnboardingFlow: React.FC = () => {
                       />
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-3.5 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-1.5 shadow-soft transition"
-                    >
-                      <Camera className="w-4 h-4 text-mint-300" />
-                      <span>Take Photo / Upload</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsBarcodeModalOpen(true)}
+                        className="px-3 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center gap-1.5 shadow-soft transition"
+                      >
+                        <ScanBarcode className="w-4 h-4 text-mint-400" />
+                        <span>Scan Barcode</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-3 py-2 rounded-2xl bg-sand-100 hover:bg-sand-200 border border-sand-300 text-forest-950 font-semibold text-xs flex items-center gap-1.5 transition"
+                      >
+                        <Camera className="w-4 h-4 text-forest-800" />
+                        <span>Photo</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* OCR Progress if scanning */}
@@ -965,6 +999,14 @@ export const OnboardingFlow: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={isBarcodeModalOpen}
+        onClose={() => setIsBarcodeModalOpen(false)}
+        onProductFound={handleOnboardingBarcodeProduct}
+        userGoal={goal}
+      />
     </div>
   );
 };
