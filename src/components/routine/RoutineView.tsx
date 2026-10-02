@@ -113,79 +113,77 @@ export const RoutineView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-28 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-28 animate-in fade-in duration-200 text-white">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <span className="px-2 py-0.5 rounded-full bg-forest-900 text-mint-300 text-[10px] font-bold uppercase tracking-wider">
+          <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-wider font-mono border border-white/10">
             Daily System
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-forest-950 tracking-tight mt-1">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1.5">
             Routine Builder
           </h2>
-          <p className="text-xs sm:text-sm text-charcoal-600">
+          <p className="text-xs sm:text-sm text-zinc-400">
             Balanced morning & evening steps combining your shelf products with foundational non-commercial habits.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => regenerateRoutine(profile.primaryGoal)}
-            className="p-2 rounded-2xl bg-cream-100 hover:bg-cream-200 text-charcoal-700 border border-cream-200 transition"
+            className="p-3 rounded-full bg-[#14141C] hover:bg-[#1E1E28] text-zinc-300 hover:text-white border border-white/10 transition"
             title="Recalculate routine"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 text-[#FF3B30]" />
           </button>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs shadow-card transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs shadow-lg transition active:scale-95"
           >
-            <Plus className="w-4 h-4 text-mint-300" />
+            <Plus className="w-4 h-4 text-[#FF3B30]" />
             <span>Add Step</span>
           </button>
         </div>
       </div>
 
       {/* Routine Overview Summary Banner */}
-      <div className="p-4 rounded-3xl bg-white border border-cream-300 shadow-soft flex items-center justify-between text-xs text-charcoal-700">
+      <div className="p-4 rounded-2xl bg-[#121217] border border-white/10 shadow-card flex items-center justify-between text-xs text-zinc-300">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-forest-950">{routineSteps.length} Steps Total</span>
-          <span className="text-charcoal-400">•</span>
+          <span className="font-extrabold text-white">{routineSteps.length} Steps Total</span>
+          <span className="text-zinc-600">•</span>
           <span>{routineSteps.reduce((acc, curr) => acc + curr.estimatedMinutes, 0)} mins daily</span>
         </div>
-        <span className="text-[11px] font-semibold text-mint-600 bg-mint-50 px-2 py-0.5 rounded-full border border-mint-200">
+        <span className="text-[11px] font-bold text-white bg-white/10 px-3 py-0.5 rounded-full border border-white/10 font-mono">
           Goal: {profile.primaryGoal.replace('_', ' ')}
         </span>
       </div>
 
       {/* Responsive 2-Column Grid for Morning & Evening on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* ========================================================================= */}
-        {/* MORNING ROUTINE SECTION                                                   */}
-        {/* ========================================================================= */}
+        {/* MORNING ROUTINE SECTION */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-forest-950">
-              <div className="p-1.5 rounded-xl bg-amber-100 text-amber-800">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
+              <div className="p-1.5 rounded-xl bg-amber-500/20 text-amber-400">
                 <Sun className="w-4 h-4" />
               </div>
-              <span>Morning Ritual</span>
-              <span className="text-xs text-charcoal-500 font-medium">({morningSteps.length} steps)</span>
+              <span className="font-black">Morning Ritual</span>
+              <span className="text-xs text-zinc-400 font-mono font-medium">({morningSteps.length} steps)</span>
             </div>
           </div>
 
           {morningSteps.length === 0 ? (
-            <div className="p-5 rounded-3xl bg-white border border-dashed border-cream-300 text-center text-xs text-charcoal-500">
+            <div className="p-6 rounded-[2rem] bg-[#121217] border border-dashed border-white/10 text-center text-xs text-zinc-400">
               No morning steps. Click "Add Step" to add one.
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {morningSteps.map((step) => {
                 const fullIndex = routineSteps.findIndex(s => s.id === step.id);
                 return (
                   <div
                     key={step.id}
-                    className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 hover:border-mint-300 shadow-soft transition-all duration-200 space-y-2"
+                    className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 hover:border-white/20 shadow-card transition-all duration-200 space-y-2.5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -194,34 +192,34 @@ export const RoutineView: React.FC = () => {
                           className="mt-0.5 shrink-0 focus:outline-none"
                         >
                           {step.isCompletedToday ? (
-                            <CheckCircle2 className="w-5 h-5 text-forest-800 fill-mint-200" />
+                            <CheckCircle2 className="w-5 h-5 text-[#FF3B30] fill-[#FF3B30]/20" />
                           ) : (
-                            <Circle className="w-5 h-5 text-charcoal-300 hover:text-charcoal-500" />
+                            <Circle className="w-5 h-5 text-zinc-600 hover:text-zinc-400" />
                           )}
                         </button>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className={`text-sm font-bold truncate ${step.isCompletedToday ? 'line-through text-charcoal-500' : 'text-forest-950'}`}>
+                            <h4 className={`text-sm font-black truncate ${step.isCompletedToday ? 'line-through text-zinc-500' : 'text-white'}`}>
                               {step.action}
                             </h4>
                             {step.isProductFreeHabit ? (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-mint-50 text-forest-800 border border-mint-200">
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10">
                                 Habit Step
                               </span>
                             ) : (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cream-100 text-charcoal-700 border border-cream-200">
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10">
                                 Product Step
                               </span>
                             )}
                           </div>
 
-                          <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
+                          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
                             {step.shortExplanation}
                           </p>
 
                           {step.productName && (
-                            <p className="text-[11px] font-semibold text-forest-800 mt-1">
+                            <p className="text-[11px] font-bold text-white mt-1">
                               🧴 Shelf product: {step.productName}
                             </p>
                           )}
@@ -233,7 +231,7 @@ export const RoutineView: React.FC = () => {
                         <button
                           onClick={() => handleMove(fullIndex, 'up')}
                           disabled={fullIndex === 0}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700 disabled:opacity-30"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white disabled:opacity-20"
                           title="Move up"
                         >
                           <ArrowUp className="w-3.5 h-3.5" />
@@ -241,21 +239,21 @@ export const RoutineView: React.FC = () => {
                         <button
                           onClick={() => handleMove(fullIndex, 'down')}
                           disabled={fullIndex === routineSteps.length - 1}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700 disabled:opacity-30"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white disabled:opacity-20"
                           title="Move down"
                         >
                           <ArrowDown className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openEditModal(step)}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white"
                           title="Edit step"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => removeRoutineStep(step.id)}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-coral-600"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-[#FF3B30]"
                           title="Remove step"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -263,14 +261,14 @@ export const RoutineView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-charcoal-400 pt-1 border-t border-cream-100">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-white/10 font-mono">
                       <span className="flex items-center gap-1 font-medium">
                         <Clock className="w-3 h-3" />
                         Estimated {step.estimatedMinutes} min
                       </span>
                       <button
                         onClick={() => editRoutineStep(step.id, { timeOfDay: 'evening' })}
-                        className="text-forest-800 hover:underline font-semibold"
+                        className="text-white hover:text-[#FF3B30] font-bold"
                       >
                         Switch to PM ➔
                       </button>
@@ -282,32 +280,30 @@ export const RoutineView: React.FC = () => {
           )}
         </div>
 
-        {/* ========================================================================= */}
-        {/* EVENING ROUTINE SECTION                                                   */}
-        {/* ========================================================================= */}
+        {/* EVENING ROUTINE SECTION */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-forest-950">
-              <div className="p-1.5 rounded-xl bg-indigo-100 text-indigo-800">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
+              <div className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-400">
                 <Moon className="w-4 h-4" />
               </div>
-              <span>Evening Ritual</span>
-              <span className="text-xs text-charcoal-500 font-medium">({eveningSteps.length} steps)</span>
+              <span className="font-black">Evening Ritual</span>
+              <span className="text-xs text-zinc-400 font-mono font-medium">({eveningSteps.length} steps)</span>
             </div>
           </div>
 
           {eveningSteps.length === 0 ? (
-            <div className="p-5 rounded-3xl bg-white border border-dashed border-cream-300 text-center text-xs text-charcoal-500">
+            <div className="p-6 rounded-[2rem] bg-[#121217] border border-dashed border-white/10 text-center text-xs text-zinc-400">
               No evening steps. Click "Add Step" to add one.
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {eveningSteps.map((step) => {
                 const fullIndex = routineSteps.findIndex(s => s.id === step.id);
                 return (
                   <div
                     key={step.id}
-                    className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 hover:border-mint-300 shadow-soft transition-all duration-200 space-y-2"
+                    className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 hover:border-white/20 shadow-card transition-all duration-200 space-y-2.5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -316,34 +312,34 @@ export const RoutineView: React.FC = () => {
                           className="mt-0.5 shrink-0 focus:outline-none"
                         >
                           {step.isCompletedToday ? (
-                            <CheckCircle2 className="w-5 h-5 text-forest-800 fill-mint-200" />
+                            <CheckCircle2 className="w-5 h-5 text-[#FF3B30] fill-[#FF3B30]/20" />
                           ) : (
-                            <Circle className="w-5 h-5 text-charcoal-300 hover:text-charcoal-500" />
+                            <Circle className="w-5 h-5 text-zinc-600 hover:text-zinc-400" />
                           )}
                         </button>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className={`text-sm font-bold truncate ${step.isCompletedToday ? 'line-through text-charcoal-500' : 'text-forest-950'}`}>
+                            <h4 className={`text-sm font-black truncate ${step.isCompletedToday ? 'line-through text-zinc-500' : 'text-white'}`}>
                               {step.action}
                             </h4>
                             {step.isProductFreeHabit ? (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-mint-50 text-forest-800 border border-mint-200">
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10">
                                 Habit Step
                               </span>
                             ) : (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cream-100 text-charcoal-700 border border-cream-200">
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10">
                                 Product Step
                               </span>
                             )}
                           </div>
 
-                          <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
+                          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
                             {step.shortExplanation}
                           </p>
 
                           {step.productName && (
-                            <p className="text-[11px] font-semibold text-forest-800 mt-1">
+                            <p className="text-[11px] font-bold text-white mt-1">
                               🧴 Shelf product: {step.productName}
                             </p>
                           )}
@@ -355,7 +351,7 @@ export const RoutineView: React.FC = () => {
                         <button
                           onClick={() => handleMove(fullIndex, 'up')}
                           disabled={fullIndex === 0}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700 disabled:opacity-30"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white disabled:opacity-20"
                           title="Move up"
                         >
                           <ArrowUp className="w-3.5 h-3.5" />
@@ -363,21 +359,21 @@ export const RoutineView: React.FC = () => {
                         <button
                           onClick={() => handleMove(fullIndex, 'down')}
                           disabled={fullIndex === routineSteps.length - 1}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700 disabled:opacity-30"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white disabled:opacity-20"
                           title="Move down"
                         >
                           <ArrowDown className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openEditModal(step)}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-white"
                           title="Edit step"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => removeRoutineStep(step.id)}
-                          className="p-1 rounded-lg text-charcoal-400 hover:text-coral-600"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-[#FF3B30]"
                           title="Remove step"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -385,14 +381,14 @@ export const RoutineView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-charcoal-400 pt-1 border-t border-cream-100">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-white/10 font-mono">
                       <span className="flex items-center gap-1 font-medium">
                         <Clock className="w-3 h-3" />
                         Estimated {step.estimatedMinutes} min
                       </span>
                       <button
                         onClick={() => editRoutineStep(step.id, { timeOfDay: 'morning' })}
-                        className="text-forest-800 hover:underline font-semibold"
+                        className="text-white hover:text-[#FF3B30] font-bold"
                       >
                         Switch to AM ➔
                       </button>
@@ -405,9 +401,8 @@ export const RoutineView: React.FC = () => {
         </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* Clinically Matched Product Formulations */}
-      <div className="pt-6 border-t border-cream-300">
+      <div className="pt-6 border-t border-white/10">
         <ClinicalRecommendations
           products={contextualFormulations}
           title="Evidence-Based Product Formulations"
@@ -417,15 +412,15 @@ export const RoutineView: React.FC = () => {
 
       {/* Add / Edit Step Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-modal border border-cream-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-forest-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#121218] rounded-[2rem] max-w-sm w-full p-6 shadow-2xl border border-white/10 space-y-4 text-white">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="text-base font-black text-white">
                 {editingStepId ? 'Edit Routine Step' : 'Add Routine Step'}
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
+                className="p-1 rounded-full text-zinc-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -433,24 +428,24 @@ export const RoutineView: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-charcoal-700 mb-1">Step Action Title</label>
+                <label className="block font-bold text-zinc-400 mb-1">Step Action Title</label>
                 <input
                   type="text"
                   value={formAction}
                   onChange={(e) => setFormAction(e.target.value)}
                   placeholder="e.g. Apply 1ml Scalp Serum"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900 font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-charcoal-700 mb-1">Timing</label>
+                <label className="block font-bold text-zinc-400 mb-1">Timing</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setFormTimeOfDay('morning')}
                     className={`py-2 rounded-xl border font-bold capitalize transition ${
-                      formTimeOfDay === 'morning' ? 'bg-forest-900 text-cream-50 border-forest-900' : 'bg-white text-charcoal-700 border-cream-200'
+                      formTimeOfDay === 'morning' ? 'bg-white text-black border-white' : 'bg-black/40 text-zinc-400 border-white/5'
                     }`}
                   >
                     ☀️ Morning
@@ -459,7 +454,7 @@ export const RoutineView: React.FC = () => {
                     type="button"
                     onClick={() => setFormTimeOfDay('evening')}
                     className={`py-2 rounded-xl border font-bold capitalize transition ${
-                      formTimeOfDay === 'evening' ? 'bg-forest-900 text-cream-50 border-forest-900' : 'bg-white text-charcoal-700 border-cream-200'
+                      formTimeOfDay === 'evening' ? 'bg-white text-black border-white' : 'bg-black/40 text-zinc-400 border-white/5'
                     }`}
                   >
                     🌙 Evening
@@ -468,26 +463,26 @@ export const RoutineView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-charcoal-700 mb-1">Estimated Minutes</label>
+                <label className="block font-bold text-zinc-400 mb-1">Estimated Minutes</label>
                 <input
                   type="number"
                   min={1}
                   max={30}
                   value={formMinutes}
                   onChange={(e) => setFormMinutes(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900 font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-mono focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-charcoal-700 mb-1">Link Shelf Product (Optional)</label>
+                <label className="block font-bold text-zinc-400 mb-1">Link Shelf Product (Optional)</label>
                 <select
                   value={formProductId}
                   onChange={(e) => {
                     setFormProductId(e.target.value);
                     if (e.target.value) setFormIsHabit(false);
                   }}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white"
                 >
                   <option value="">None (Product-free habit step)</option>
                   {shelfProducts.map((p) => (
@@ -497,13 +492,13 @@ export const RoutineView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-charcoal-700 mb-1">Short Explanation / Instructions</label>
+                <label className="block font-bold text-zinc-400 mb-1">Short Explanation / Instructions</label>
                 <textarea
                   value={formExplanation}
                   onChange={(e) => setFormExplanation(e.target.value)}
                   rows={2}
                   placeholder="Why this step matters and how to perform it..."
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-charcoal-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none"
                 />
               </div>
             </div>
@@ -512,14 +507,14 @@ export const RoutineView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl bg-cream-200 text-charcoal-700 font-semibold text-xs hover:bg-cream-300 transition"
+                className="flex-1 py-3 rounded-full bg-white/10 text-zinc-300 font-bold text-xs hover:bg-white/20 transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveStepModal}
-                className="flex-1 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs shadow-soft transition"
+                className="flex-1 py-3 rounded-full bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition"
               >
                 Save Step
               </button>

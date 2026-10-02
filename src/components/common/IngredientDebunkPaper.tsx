@@ -296,14 +296,14 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
       {/* ========================================================================= */}
       {/* 🔬 CLINICAL FORMULATION INTEGRITY INDEX & EXCIPIENT AUDIT                 */}
       {/* ========================================================================= */}
-      <div className="rounded-3xl bg-forest-950 border border-emerald-500/20 p-5 sm:p-6 text-cream-50 shadow-card relative overflow-hidden font-sans">
+      <div className="rounded-3xl bg-[#121217] border border-white/10 p-5 sm:p-6 text-white shadow-xl relative overflow-hidden font-sans">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
           {/* Left: Score Dial & Formulation Integrity Tier */}
           <div className="flex items-center gap-4 w-full sm:w-auto">
             {/* Circular Clinical Score Ring */}
-            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center rounded-full bg-black/40 border border-white/10">
+            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center rounded-full bg-[#09090D] border border-white/10">
               <svg className="w-14 h-14 -rotate-90" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="19" stroke="rgba(255,255,255,0.1)" strokeWidth="3" fill="none" />
+                <circle cx="24" cy="24" r="19" stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none" />
                 <circle
                   cx="24"
                   cy="24"
@@ -318,22 +318,22 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs font-bold font-mono leading-none text-white">{activePercentage}%</span>
-                <span className="text-[8px] font-medium text-cream-300 uppercase">Potency</span>
+                <span className="text-xs font-black font-mono leading-none text-white">{activePercentage}%</span>
+                <span className="text-[8px] font-bold text-zinc-400 uppercase">Potency</span>
               </div>
             </div>
 
             {/* Score & Formulation Classification */}
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+                <span className="text-sm sm:text-base font-black text-white tracking-tight">
                   Formulation Integrity: {formulationGrade.grade} Tier
                 </span>
-                <span className="text-[9px] px-2 py-0.5 rounded-md bg-white/10 text-cream-200 font-bold uppercase font-mono">
+                <span className="text-[9px] px-2 py-0.5 rounded-md bg-[#181822] text-[#FF3B30] border border-white/10 font-black uppercase font-mono">
                   Rx Audit
                 </span>
               </div>
-              <p className="text-xs text-cream-300 font-medium">
+              <p className="text-xs text-zinc-400 font-medium">
                 {formulationGrade.label}
               </p>
             </div>
@@ -341,25 +341,25 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
 
           {/* Right: Clinical Actives vs Inactive Excipients Counter + Filter Mode */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex items-center gap-2 bg-black/30 p-1.5 rounded-2xl border border-white/10 text-xs font-mono">
+            <div className="flex items-center gap-2 bg-[#09090D] p-1.5 rounded-2xl border border-white/10 text-xs font-mono">
               <div className="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-center">
-                <span className="block text-emerald-400 font-bold text-xs leading-none">
+                <span className="block text-emerald-400 font-black text-xs leading-none">
                   {provenActivesCount}
                 </span>
                 <span className="text-[9px] text-emerald-300 font-medium uppercase">Active</span>
               </div>
 
               <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-center">
-                <span className="block text-cream-300 font-bold text-xs leading-none">
+                <span className="block text-zinc-300 font-black text-xs leading-none">
                   {fillersCount}
                 </span>
-                <span className="text-[9px] text-cream-400 font-medium uppercase">Excipients</span>
+                <span className="text-[9px] text-zinc-400 font-medium uppercase">Excipients</span>
               </div>
 
               <button
                 type="button"
                 onClick={startAnimation}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-cream-200 transition"
+                className="p-2 rounded-xl bg-[#181822] hover:bg-[#20202c] text-zinc-300 border border-white/10 transition"
                 title="Replay Clinical Audit"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -370,13 +370,13 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
             <button
               type="button"
               onClick={() => setPurgeFluffMode(!purgeFluffMode)}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition ${
                 purgeFluffMode
-                  ? 'bg-forest-800 text-cream-50 border border-mint-400/40 shadow-sm'
-                  : 'bg-white/10 hover:bg-white/20 text-cream-100 border border-white/10'
+                  ? 'bg-white text-black shadow-md'
+                  : 'bg-[#181822] hover:bg-[#20202c] text-zinc-300 border border-white/10'
               }`}
             >
-              <Zap className="w-3.5 h-3.5 text-mint-300" />
+              <Zap className="w-3.5 h-3.5 text-[#FF3B30]" />
               <span>{purgeFluffMode ? 'Showing Actives Only' : 'Filter Inactive Fillers'}</span>
             </button>
           </div>
@@ -386,7 +386,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
       {/* ========================================================================= */}
       {/* 📜 CLEAN PRESCRIPTION AUDIT SHEET (COMPACT & BITE-SIZED)                  */}
       {/* ========================================================================= */}
-      <div className="relative rounded-3xl rx-paper-ruled border-2 border-[#E2DAC8] shadow-card overflow-hidden p-4 sm:p-6 font-sans transition-all">
+      <div className="relative rounded-3xl bg-[#09090D] border border-white/10 shadow-xl overflow-hidden p-4 sm:p-6 font-sans transition-all">
         
         {/* Dynamic Scanning Laser Beam Overlay */}
         {(animationStep === 'writing' || animationStep === 'marking') && (
@@ -394,28 +394,28 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         )}
 
         {/* Top Paper Header */}
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-dashed border-[#CFC5B0]">
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-dashed border-white/10">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded-md bg-forest-950 text-mint-300 text-[9px] font-black uppercase font-mono tracking-widest">
+              <span className="px-2 py-0.5 rounded-md bg-[#181822] text-[#FF3B30] text-[9px] font-black uppercase font-mono tracking-widest border border-white/10">
                 Rx AUDIT SHEET
               </span>
-              <span className="text-[10px] font-extrabold text-charcoal-500 uppercase tracking-wider font-mono">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
                 {productName} {brand ? `• ${brand}` : ''}
               </span>
             </div>
           </div>
 
-          <span className="text-[11px] font-mono text-charcoal-500 font-bold">
+          <span className="text-[11px] font-mono text-zinc-400 font-bold">
             {visibleItems.length} {visibleItems.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 
         {/* Live Writing / Marking Progress Banner */}
         {animationStep !== 'complete' && (
-          <div className="mb-3 p-2 rounded-2xl bg-amber-900/10 text-amber-950 text-xs font-bold flex items-center justify-between animate-pulse">
+          <div className="mb-3 p-2 rounded-2xl bg-[#FF3B30]/10 text-white text-xs font-bold flex items-center justify-between animate-pulse border border-[#FF3B30]/20">
             <div className="flex items-center gap-1.5">
-              <PenTool className="w-3.5 h-3.5 text-amber-800 animate-bounce" />
+              <PenTool className="w-3.5 h-3.5 text-[#FF3B30] animate-bounce" />
               <span>Scanning packaging ingredients & circling active compounds...</span>
             </div>
             <span className="text-[10px] font-mono">{displayedCount} / {parsedItems.length}</span>
@@ -427,12 +427,12 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         {/* ========================================================================= */}
         <div className="space-y-2">
           {visibleItems.length === 0 ? (
-            <div className="text-center py-8 text-charcoal-400 space-y-1">
-              <p className="text-xs font-serif italic">Zero proven active ingredients found in this formulation.</p>
+            <div className="text-center py-8 text-zinc-500 space-y-1">
+              <p className="text-xs italic font-mono">Zero proven active ingredients found in this formulation.</p>
               <button
                 type="button"
                 onClick={() => setPurgeFluffMode(false)}
-                className="text-xs font-bold text-forest-900 underline"
+                className="text-xs font-bold text-white underline"
               >
                 View all packaging fillers
               </button>
@@ -450,12 +450,12 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                 <div
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  className={`group relative px-3.5 py-2.5 rounded-2xl transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 animate-pop-card ${
+                  className={`group relative px-3.5 py-2.5 rounded-2xl transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
                     isProven
-                      ? 'bg-emerald-500/10 border-2 border-emerald-500/50 shadow-xs hover:border-emerald-600 hover:bg-emerald-500/15'
+                      ? 'bg-emerald-500/10 border border-emerald-500/40 hover:bg-emerald-500/15'
                       : isStruck
-                      ? 'bg-white/60 border border-cream-200/80 hover:bg-rose-50/70 hover:border-rose-300 opacity-80 hover:opacity-100'
-                      : 'bg-white/80 border border-cream-200'
+                      ? 'bg-[#121217] border border-white/5 hover:border-white/15 opacity-75 hover:opacity-100'
+                      : 'bg-[#121217] border border-white/10'
                   }`}
                 >
                   {/* Left: Ingredient Name with Handwritten Circling or Strikethrough */}
@@ -471,7 +471,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                           <path
                             d="M 12 25 C 10 10, 35 4, 80 4 C 135 4, 154 10, 154 25 C 154 38, 125 46, 75 46 C 25 46, 6 36, 6 22 C 6 15, 20 8, 45 6"
                             fill="none"
-                            stroke="#059669"
+                            stroke="#10B981"
                             strokeWidth="2.8"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -484,10 +484,10 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
                       <span
                         className={`relative z-10 text-xs sm:text-sm font-bold tracking-tight font-sans ${
                           isProven
-                            ? 'text-emerald-950 font-black'
+                            ? 'text-emerald-300 font-black'
                             : isStruck
-                            ? 'text-charcoal-400 animate-red-strike font-medium'
-                            : 'text-forest-950 font-bold'
+                            ? 'text-zinc-500 line-through decoration-[#FF3B30]/70 font-medium'
+                            : 'text-zinc-200 font-bold'
                         }`}
                       >
                         {item.rawText}
@@ -496,22 +496,22 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
 
                     {/* Quick Active Badge or Snappy Debunk Pill */}
                     {isProven && (
-                      <span className="relative z-10 inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                      <span className="relative z-10 inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-black shadow-sm">
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
                         <span>Active</span>
                       </span>
                     )}
 
                     {isStruck && item.strikeTag && (
-                      <span className="text-[9px] font-extrabold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200/80 shadow-2xs">
+                      <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
                         {item.strikeTag}
                       </span>
                     )}
                   </div>
 
                   {/* Right: Quick Action Pill */}
-                  <div className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-charcoal-400 group-hover:text-forest-900 transition">
-                    <span className="hidden sm:inline">Tap for details</span>
+                  <div className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-zinc-400 group-hover:text-white transition">
+                    <span className="hidden sm:inline">Details</span>
                     <Info className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -521,12 +521,12 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         </div>
 
         {/* Minimalist Gamified Bottom Line Verdict */}
-        <div className="mt-4 pt-3 border-t border-dashed border-[#CFC5B0] flex items-center justify-between text-xs text-charcoal-600 gap-2">
-          <div className="flex items-center gap-1.5 font-bold text-forest-950 shrink-0">
-            <Trophy className="w-4 h-4 text-amber-500" />
+        <div className="mt-4 pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-xs text-zinc-400 gap-2">
+          <div className="flex items-center gap-1.5 font-bold text-white shrink-0 font-mono">
+            <Trophy className="w-4 h-4 text-amber-400" />
             <span>Reality Verdict:</span>
           </div>
-          <span className="text-charcoal-700 font-medium text-right text-[11px] truncate">
+          <span className="text-zinc-300 font-medium text-right text-[11px] truncate">
             {analysis.summary.synthesisText}
           </span>
         </div>
@@ -536,58 +536,58 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
       {/* 🔍 CLEAN QUICK-DETAILS MODAL (OPENS ON TAP)                               */}
       {/* ========================================================================= */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-cream-300 space-y-3.5">
-            <div className="flex items-start justify-between gap-2 border-b border-cream-200 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#121217] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-white/10 space-y-4">
+            <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
               <div>
-                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                  selectedItem.isActive ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-rose-100 text-rose-900 border border-rose-200'
+                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-mono ${
+                  selectedItem.isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-[#FF3B30]/20 text-[#FF3B30] border border-[#FF3B30]/30'
                 }`}>
                   {selectedItem.isActive ? 'Clinically Active Compound' : (selectedItem.strikeTag || 'Inactive Filler')}
                 </span>
-                <h4 className="text-base font-black text-forest-950 mt-1">
+                <h4 className="text-base font-black text-white mt-1">
                   {selectedItem.cleanName}
                 </h4>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="p-1 rounded-full text-charcoal-400 hover:text-forest-900 transition"
+                className="p-1 rounded-full text-zinc-400 hover:text-white transition font-bold"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs text-charcoal-700">
+            <div className="space-y-2.5 text-xs text-zinc-300">
               {selectedItem.purpose && (
-                <div className="p-2.5 rounded-xl bg-cream-50 border border-cream-200">
-                  <span className="font-bold text-forest-950 block text-[11px] mb-0.5">Clinical Purpose:</span>
-                  <p className="text-charcoal-700 leading-relaxed">{selectedItem.purpose}</p>
+                <div className="p-3 rounded-2xl bg-[#09090D] border border-white/10">
+                  <span className="font-bold text-white block text-[11px] mb-0.5 font-mono uppercase">Clinical Purpose:</span>
+                  <p className="text-zinc-300 leading-relaxed">{selectedItem.purpose}</p>
                 </div>
               )}
 
               {selectedItem.explanation && (
-                <div>
-                  <span className="font-bold text-forest-950 block text-[11px] mb-0.5">Pharmacological Action:</span>
-                  <p className="leading-relaxed text-charcoal-600">{selectedItem.explanation}</p>
+                <div className="p-3 rounded-2xl bg-[#09090D] border border-white/10">
+                  <span className="font-bold text-white block text-[11px] mb-0.5 font-mono uppercase">Pharmacological Action:</span>
+                  <p className="leading-relaxed text-zinc-400">{selectedItem.explanation}</p>
                 </div>
               )}
 
               {selectedItem.strikeReason && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1">
-                  <span className="font-extrabold block text-[11px]">Reality Check:</span>
-                  <p className="text-xs text-rose-900 leading-relaxed">{selectedItem.strikeReason}</p>
+                <div className="p-3 rounded-2xl bg-[#FF3B30]/10 border border-[#FF3B30]/30 text-rose-200 space-y-1">
+                  <span className="font-black block text-[11px] font-mono uppercase text-[#FF3B30]">Reality Check:</span>
+                  <p className="text-xs text-zinc-300 leading-relaxed">{selectedItem.strikeReason}</p>
                 </div>
               )}
             </div>
 
-            <div className="pt-2 flex items-center justify-between border-t border-cream-200">
+            <div className="pt-2 flex items-center justify-between border-t border-white/10">
               {selectedItem.sourceUrl ? (
                 <a
                   href={selectedItem.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-bold text-forest-800 hover:text-mint-600 flex items-center gap-1 underline"
+                  className="text-xs font-bold text-white hover:text-[#FF3B30] flex items-center gap-1 underline font-mono"
                 >
                   <span>PubMed Study</span>
                   <ExternalLink className="w-3 h-3" />
@@ -597,7 +597,7 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold shadow-soft transition"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-100 text-black text-xs font-black shadow-md transition"
               >
                 Done
               </button>

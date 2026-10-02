@@ -43,23 +43,23 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-6 text-charcoal-900 font-sans">
-          <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-cream-300 shadow-modal text-center space-y-5 animate-in fade-in duration-200">
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-soft">
-              <AlertTriangle className="w-7 h-7 text-amber-700" />
+        <div className="min-h-screen bg-[#09090D] flex items-center justify-center p-6 text-white font-sans">
+          <div className="max-w-md w-full bg-[#121217] rounded-3xl p-8 border border-white/10 shadow-2xl text-center space-y-5 animate-in fade-in duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF3B30]/20 to-rose-900/10 text-[#FF3B30] border border-[#FF3B30]/20 flex items-center justify-center mx-auto shadow-lg">
+              <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="text-xl font-extrabold text-forest-950">
-                Application Recovered
+              <h2 className="text-xl font-black text-white">
+                Application Exception Recovered
               </h2>
-              <p className="text-xs text-charcoal-600 leading-relaxed">
-                Ritual encountered a rendering exception. You can reload the page or reset the local cache.
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Ritual encountered an unexpected rendering error. You can reload or reset your local state.
               </p>
             </div>
 
             {this.state.error && (
-              <div className="p-3.5 rounded-2xl bg-cream-100 text-left overflow-x-auto text-[11px] font-mono text-charcoal-700 border border-cream-200 max-h-32">
+              <div className="p-3.5 rounded-2xl bg-[#09090D] text-left overflow-x-auto text-[11px] font-mono text-zinc-300 border border-white/10 max-h-32">
                 {this.state.error.toString()}
               </div>
             )}
@@ -68,19 +68,19 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="flex-1 py-3 px-4 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 text-xs font-bold flex items-center justify-center gap-2 shadow-soft transition active:scale-95"
+                className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-zinc-100 text-black text-xs font-black flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4 text-black" />
                 <span>Reload Page</span>
               </button>
 
               <button
                 type="button"
                 onClick={this.handleResetState}
-                className="py-3 px-4 rounded-xl bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95"
+                className="py-3 px-4 rounded-xl bg-[#181822] hover:bg-[#20202c] text-zinc-300 border border-white/10 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Cache</span>
+                <span>Reset State</span>
               </button>
             </div>
           </div>

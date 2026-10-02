@@ -154,41 +154,41 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
   );
 
   const getRecoveryTheme = (pct: number) => {
-    if (pct >= 80) return { fill: '#10B981', label: 'Prime Readiness', color: 'text-emerald-800', bg: 'bg-emerald-50 border-emerald-200' };
-    if (pct >= 60) return { fill: '#34D399', label: 'Optimal Recovery', color: 'text-forest-800', bg: 'bg-mint-50 border-mint-200' };
-    if (pct >= 40) return { fill: '#F59E0B', label: 'Active Adaptation', color: 'text-amber-800', bg: 'bg-amber-50 border-amber-200' };
-    return { fill: '#E11D48', label: 'High Post-Load Fatigue', color: 'text-rose-800', bg: 'bg-rose-50 border-rose-200' };
+    if (pct >= 80) return { fill: '#10B981', label: 'Prime Readiness', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30' };
+    if (pct >= 60) return { fill: '#34D399', label: 'Optimal Recovery', color: 'text-mint-400', bg: 'bg-mint-500/15 border-mint-500/30' };
+    if (pct >= 40) return { fill: '#F59E0B', label: 'Active Adaptation', color: 'text-amber-400', bg: 'bg-amber-500/15 border-amber-500/30' };
+    return { fill: '#FF3B30', label: 'High Post-Load Fatigue', color: 'text-[#FF3B30]', bg: 'bg-[#FF3B30]/15 border-[#FF3B30]/30' };
   };
 
   const theme = getRecoveryTheme(selectedMuscle.recoveryPercentage);
 
   return (
-    <div className="rounded-3xl bg-white border border-cream-300 p-6 sm:p-8 shadow-card space-y-6 transition-all font-sans">
+    <div className="rounded-3xl bg-[#121217] border border-white/10 p-6 sm:p-8 shadow-xl space-y-6 transition-all font-sans">
       {/* Formal Header & Perspective Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-wider font-mono">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#181822] text-[#FF3B30] text-[10px] font-black uppercase tracking-wider font-mono border border-white/10">
               PHYSIOLOGICAL RECOVERY INDEX
             </span>
-            <span className="text-xs text-charcoal-500 font-medium">
+            <span className="text-xs text-zinc-400 font-semibold font-mono">
               Kinetic Muscle Mapping
             </span>
           </div>
-          <h3 className="text-xl sm:text-2xl font-extrabold text-forest-950 tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Anatomical Muscle Readiness
           </h3>
         </div>
 
         {/* View Switcher: Front vs Back View */}
-        <div className="inline-flex p-1 bg-cream-100 rounded-2xl border border-cream-200 text-xs">
+        <div className="inline-flex p-1 bg-[#09090D] rounded-2xl border border-white/10 text-xs">
           <button
             type="button"
             onClick={() => setViewAngle('front')}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 transition ${
+            className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition ${
               viewAngle === 'front'
-                ? 'bg-forest-900 text-cream-50 shadow-sm'
-                : 'text-charcoal-700 hover:text-forest-950'
+                ? 'bg-white text-black shadow-md'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Rotate3d className="w-3.5 h-3.5" />
@@ -197,10 +197,10 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
           <button
             type="button"
             onClick={() => setViewAngle('back')}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 transition ${
+            className={`px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition ${
               viewAngle === 'back'
-                ? 'bg-forest-900 text-cream-50 shadow-sm'
-                : 'text-charcoal-700 hover:text-forest-950'
+                ? 'bg-white text-black shadow-md'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Rotate3d className="w-3.5 h-3.5" />
@@ -215,10 +215,10 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
         {/* ========================================================================= */}
         {/* LEFT: MINIMALIST ANATOMICAL SILHOUETTE (SVG)                             */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-[#F8F5EE] border border-cream-300 relative min-h-[440px]">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-[#09090D] border border-white/10 relative min-h-[440px]">
           
           {/* Recovery Legend Bar */}
-          <div className="flex items-center gap-3 text-[11px] font-medium text-charcoal-600 mb-4">
+          <div className="flex items-center gap-3 text-[11px] font-mono font-medium text-zinc-400 mb-4">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span>Prime (80%+)</span>
@@ -228,21 +228,21 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
               <span>Recovering</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" />
               <span>Fatigued</span>
             </span>
           </div>
 
           {/* SVG Silhouette */}
           <svg
-            className="w-56 h-[380px] drop-shadow-sm select-none transition-all"
+            className="w-56 h-[380px] drop-shadow-md select-none transition-all"
             viewBox="0 0 200 400"
           >
             {/* Background Body Base */}
             <path
               d="M100 20 C90 20 82 28 82 40 C82 50 88 58 95 62 C80 68 62 85 55 105 C48 125 40 160 35 190 C32 205 38 215 45 210 C50 205 55 180 60 160 C62 180 62 210 65 240 C68 270 70 310 75 370 C77 385 85 385 88 370 C92 330 95 280 100 250 C105 280 108 330 112 370 C115 385 123 385 125 370 C130 310 132 270 135 240 C138 210 138 180 140 160 C145 180 150 205 155 210 C162 215 168 205 165 190 C160 160 152 125 145 105 C138 85 120 68 105 62 C112 58 118 50 118 40 C118 28 110 20 100 20 Z"
-              fill="#E8E2D6"
-              stroke="#D4CCA"
+              fill="#1C1C26"
+              stroke="#2A2A38"
               strokeWidth="2"
             />
 
@@ -252,93 +252,75 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                 {/* Deltoids */}
                 <path
                   d="M60 85 C52 92 48 105 48 118 C56 118 64 105 68 95 Z"
-                  fill={selectedMuscleKey === 'front_shoulders' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.front_shoulders.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'front_shoulders' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.front_shoulders.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'front_shoulders' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('front_shoulders')}
                 />
                 <path
                   d="M140 85 C148 92 152 105 152 118 C144 118 136 105 132 95 Z"
-                  fill={selectedMuscleKey === 'front_shoulders' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.front_shoulders.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'front_shoulders' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.front_shoulders.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'front_shoulders' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('front_shoulders')}
                 />
 
-                {/* Pectorals */}
+                {/* Pectoralis Major */}
                 <path
-                  d="M72 90 C85 88 98 90 98 120 C85 122 72 115 68 102 Z"
-                  fill={selectedMuscleKey === 'chest' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.chest.recoveryPercentage).fill}
+                  d="M72 90 C85 92 98 96 98 120 C85 122 70 115 68 100 Z"
+                  fill={selectedMuscleKey === 'chest' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.chest.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'chest' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'chest' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'chest' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('chest')}
                 />
                 <path
-                  d="M128 90 C115 88 102 90 102 120 C115 122 128 115 132 102 Z"
-                  fill={selectedMuscleKey === 'chest' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.chest.recoveryPercentage).fill}
+                  d="M128 90 C115 92 102 96 102 120 C115 122 130 115 132 100 Z"
+                  fill={selectedMuscleKey === 'chest' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.chest.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'chest' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'chest' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'chest' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('chest')}
                 />
 
                 {/* Biceps */}
                 <path
-                  d="M46 122 C42 135 44 150 50 155 C54 150 56 135 52 122 Z"
-                  fill={selectedMuscleKey === 'biceps' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.biceps.recoveryPercentage).fill}
+                  d="M48 122 C44 135 46 150 52 155 C54 145 56 130 54 122 Z"
+                  fill={selectedMuscleKey === 'biceps' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.biceps.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'biceps' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('biceps')}
                 />
                 <path
-                  d="M154 122 C158 135 156 150 150 155 C146 150 144 135 148 122 Z"
-                  fill={selectedMuscleKey === 'biceps' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.biceps.recoveryPercentage).fill}
+                  d="M152 122 C156 135 154 150 148 155 C146 145 144 130 146 122 Z"
+                  fill={selectedMuscleKey === 'biceps' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.biceps.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'biceps' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('biceps')}
                 />
 
-                {/* Core / Abdominals */}
-                <rect
-                  x="82"
-                  y="126"
-                  width="36"
-                  height="50"
-                  rx="6"
-                  fill={selectedMuscleKey === 'abs' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.abs.recoveryPercentage).fill}
+                {/* Abdominals (Rectus Abdominis) */}
+                <path
+                  d="M86 125 C94 125 106 125 114 125 C114 175 112 185 100 190 C88 185 86 175 86 125 Z"
+                  fill={selectedMuscleKey === 'abs' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.abs.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'abs' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'abs' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'abs' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('abs')}
                 />
 
                 {/* Quadriceps */}
                 <path
-                  d="M68 190 C62 215 65 260 76 270 C84 265 88 220 86 190 Z"
-                  fill={selectedMuscleKey === 'quads' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.quads.recoveryPercentage).fill}
+                  d="M68 205 C64 225 66 265 76 270 C86 265 88 225 84 205 Z"
+                  fill={selectedMuscleKey === 'quads' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.quads.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'quads' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'quads' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'quads' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('quads')}
                 />
                 <path
-                  d="M132 190 C138 215 135 260 124 270 C116 265 112 220 114 190 Z"
-                  fill={selectedMuscleKey === 'quads' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.quads.recoveryPercentage).fill}
+                  d="M132 205 C136 225 134 265 124 270 C114 265 112 225 116 205 Z"
+                  fill={selectedMuscleKey === 'quads' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.quads.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'quads' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'quads' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'quads' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('quads')}
-                />
-
-                {/* Calves */}
-                <path
-                  d="M74 285 C70 310 74 345 80 355 C84 345 86 310 82 285 Z"
-                  fill={selectedMuscleKey === 'calves_front' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.calves_front.recoveryPercentage).fill}
-                  opacity={selectedMuscleKey === 'calves_front' ? 1 : 0.85}
-                  onClick={() => setSelectedMuscleKey('calves_front')}
-                />
-                <path
-                  d="M126 285 C130 310 126 345 120 355 C116 345 114 310 118 285 Z"
-                  fill={selectedMuscleKey === 'calves_front' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.calves_front.recoveryPercentage).fill}
-                  opacity={selectedMuscleKey === 'calves_front' ? 1 : 0.85}
-                  onClick={() => setSelectedMuscleKey('calves_front')}
                 />
               </g>
             )}
@@ -346,30 +328,30 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
             {/* POSTERIOR (BACK) MUSCLES */}
             {viewAngle === 'back' && (
               <g className="cursor-pointer transition-all">
-                {/* Trapezius */}
-                <polygon
-                  points="100,60 125,85 100,115 75,85"
-                  fill={selectedMuscleKey === 'traps_upper_back' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.traps_upper_back.recoveryPercentage).fill}
+                {/* Upper Back / Trapezius */}
+                <path
+                  d="M80 62 L120 62 L135 95 L100 115 L65 95 Z"
+                  fill={selectedMuscleKey === 'traps_upper_back' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.traps_upper_back.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'traps_upper_back' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'traps_upper_back' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'traps_upper_back' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('traps_upper_back')}
                 />
 
-                {/* Lats */}
+                {/* Latissimus Dorsi (Lats) */}
                 <path
-                  d="M68 95 C62 120 70 150 82 158 C84 140 82 110 75 95 Z"
-                  fill={selectedMuscleKey === 'lats' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.lats.recoveryPercentage).fill}
+                  d="M66 98 C75 110 82 135 84 165 C76 160 62 135 58 110 Z"
+                  fill={selectedMuscleKey === 'lats' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.lats.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'lats' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'lats' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'lats' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('lats')}
                 />
                 <path
-                  d="M132 95 C138 120 130 150 118 158 C116 140 118 110 125 95 Z"
-                  fill={selectedMuscleKey === 'lats' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.lats.recoveryPercentage).fill}
+                  d="M134 98 C125 110 118 135 116 165 C124 160 138 135 142 110 Z"
+                  fill={selectedMuscleKey === 'lats' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.lats.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'lats' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'lats' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'lats' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('lats')}
                 />
@@ -377,13 +359,13 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                 {/* Triceps */}
                 <path
                   d="M48 115 C44 130 46 145 52 150 C54 140 56 125 54 115 Z"
-                  fill={selectedMuscleKey === 'triceps' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.triceps.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'triceps' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.triceps.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'triceps' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('triceps')}
                 />
                 <path
                   d="M152 115 C156 130 154 145 148 150 C146 140 144 125 146 115 Z"
-                  fill={selectedMuscleKey === 'triceps' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.triceps.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'triceps' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.triceps.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'triceps' ? 1 : 0.85}
                   onClick={() => setSelectedMuscleKey('triceps')}
                 />
@@ -394,9 +376,9 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                   cy="195"
                   rx="15"
                   ry="18"
-                  fill={selectedMuscleKey === 'glutes' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.glutes.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'glutes' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.glutes.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'glutes' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'glutes' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'glutes' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('glutes')}
                 />
@@ -405,9 +387,9 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                   cy="195"
                   rx="15"
                   ry="18"
-                  fill={selectedMuscleKey === 'glutes' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.glutes.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'glutes' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.glutes.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'glutes' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'glutes' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'glutes' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('glutes')}
                 />
@@ -415,17 +397,17 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                 {/* Hamstrings */}
                 <path
                   d="M70 215 C66 235 68 265 76 270 C84 265 86 235 84 215 Z"
-                  fill={selectedMuscleKey === 'hamstrings' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.hamstrings.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'hamstrings' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.hamstrings.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'hamstrings' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'hamstrings' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'hamstrings' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('hamstrings')}
                 />
                 <path
                   d="M130 215 C134 235 132 265 124 270 C116 265 114 235 116 215 Z"
-                  fill={selectedMuscleKey === 'hamstrings' ? '#0F4C3A' : getRecoveryTheme(BODY_PARTS_DATA.hamstrings.recoveryPercentage).fill}
+                  fill={selectedMuscleKey === 'hamstrings' ? '#FF3B30' : getRecoveryTheme(BODY_PARTS_DATA.hamstrings.recoveryPercentage).fill}
                   opacity={selectedMuscleKey === 'hamstrings' ? 1 : 0.85}
-                  stroke={selectedMuscleKey === 'hamstrings' ? '#FFFFFF' : '#C7BFA'}
+                  stroke={selectedMuscleKey === 'hamstrings' ? '#FFFFFF' : '#3A3A4A'}
                   strokeWidth="1.5"
                   onClick={() => setSelectedMuscleKey('hamstrings')}
                 />
@@ -433,8 +415,8 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
             )}
           </svg>
 
-          <span className="text-xs font-semibold text-charcoal-700 mt-3">
-            Selected Region: <strong className="text-forest-950 font-bold">{selectedMuscle.name}</strong>
+          <span className="text-xs font-mono font-semibold text-zinc-400 mt-3">
+            Selected Region: <strong className="text-white font-bold">{selectedMuscle.name}</strong>
           </span>
         </div>
 
@@ -444,33 +426,33 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
         <div className="lg:col-span-7 space-y-4">
           
           {/* Recovery Diagnostic Card */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-[#FAF7F2] border border-cream-300 space-y-3.5">
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#181822] border border-white/10 space-y-3.5 shadow-md">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${theme.bg} ${theme.color}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${theme.bg} ${theme.color} font-mono`}>
                   {selectedMuscle.fatigueLevel} • {selectedMuscle.recoveryPercentage}% Recovery Index
                 </span>
-                <h4 className="text-lg sm:text-xl font-extrabold text-forest-950 mt-1.5">
+                <h4 className="text-lg sm:text-xl font-black text-white mt-1.5">
                   {selectedMuscle.name}
                 </h4>
-                <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
+                <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
                   {selectedMuscle.physiologicalRole}
                 </p>
               </div>
 
               <div className="text-right shrink-0">
-                <span className="text-[10px] uppercase font-bold text-charcoal-400 block font-mono">Last Stimulated</span>
-                <span className="text-xs font-bold text-forest-900">{selectedMuscle.lastTrained}</span>
+                <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 block">Last Stimulated</span>
+                <span className="text-xs font-black text-white font-mono">{selectedMuscle.lastTrained}</span>
               </div>
             </div>
 
             {/* Recovery Gauge Bar */}
-            <div className="space-y-1 pt-1">
+            <div className="space-y-1.5 pt-1">
               <div className="flex justify-between text-xs font-mono font-medium">
-                <span className="text-charcoal-600">Adaptive Cellular Recovery:</span>
-                <span className="font-bold text-forest-950">{selectedMuscle.recoveryPercentage}%</span>
+                <span className="text-zinc-400">Adaptive Cellular Recovery:</span>
+                <span className="font-bold text-white">{selectedMuscle.recoveryPercentage}%</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-cream-200 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-[#09090D] overflow-hidden border border-white/5">
                 <div 
                   className="h-full rounded-full transition-all duration-700 ease-out"
                   style={{ 
@@ -486,9 +468,9 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
               <button
                 type="button"
                 onClick={() => onStartMuscleWorkout(selectedMuscle.muscleGroup)}
-                className="w-full py-2.5 px-4 rounded-xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-soft"
+                className="w-full py-3 px-4 rounded-2xl bg-white hover:bg-zinc-100 text-black font-black text-xs flex items-center justify-center gap-1.5 transition shadow-lg"
               >
-                <Play className="w-3.5 h-3.5 fill-current text-mint-300" />
+                <Play className="w-3.5 h-3.5 fill-current text-black" />
                 <span>Initialize {selectedMuscle.muscleGroup} Training Protocol</span>
               </button>
             )}
@@ -496,8 +478,8 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
 
           {/* Evidence-Based Exercise Movements */}
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-forest-950 flex items-center gap-1.5">
-              <Dumbbell className="w-3.5 h-3.5 text-forest-900" />
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 font-mono">
+              <Dumbbell className="w-3.5 h-3.5 text-[#FF3B30]" />
               <span>Prescribed Resistance Arsenal ({matchingExercises.length} Movements)</span>
             </span>
 
@@ -506,15 +488,15 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
                 <div
                   key={ex.id}
                   onClick={() => onSelectExercise && onSelectExercise(ex)}
-                  className="p-3 rounded-2xl bg-white hover:bg-cream-50 border border-cream-200 hover:border-forest-800 transition cursor-pointer flex items-center justify-between group"
+                  className="p-3.5 rounded-2xl bg-[#181822] hover:bg-[#20202d] border border-white/10 hover:border-white/25 transition cursor-pointer flex items-center justify-between group"
                 >
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-forest-950 block">{ex.name}</span>
-                    <span className="text-[11px] text-charcoal-500 font-mono">
+                    <span className="text-xs font-black text-white block">{ex.name}</span>
+                    <span className="text-[11px] text-zinc-400 font-mono">
                       {ex.defaultSets} sets × {ex.defaultReps} reps • {ex.defaultWeightKg} kg
                     </span>
                   </div>
-                  <div className="w-6 h-6 rounded-lg bg-cream-100 group-hover:bg-forest-900 group-hover:text-cream-50 flex items-center justify-center text-charcoal-600 transition">
+                  <div className="w-6 h-6 rounded-lg bg-[#09090D] border border-white/10 group-hover:bg-white group-hover:text-black flex items-center justify-center text-zinc-400 transition">
                     <Plus className="w-3.5 h-3.5" />
                   </div>
                 </div>

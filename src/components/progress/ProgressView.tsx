@@ -38,7 +38,6 @@ export const ProgressView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Convert to small base64 thumbnail for localStorage
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
@@ -63,54 +62,54 @@ export const ProgressView: React.FC = () => {
   };
 
   const moodIcons: Record<string, { label: string; icon: string; bg: string }> = {
-    great: { label: 'Great', icon: '😄', bg: 'bg-emerald-50 text-emerald-900 border-emerald-200' },
-    good: { label: 'Good', icon: '🙂', bg: 'bg-mint-50 text-forest-900 border-mint-200' },
-    neutral: { label: 'Neutral', icon: '😐', bg: 'bg-cream-100 text-charcoal-700 border-cream-200' },
-    low: { label: 'Low', icon: '😔', bg: 'bg-amber-50 text-amber-900 border-amber-200' },
-    stressed: { label: 'Stressed', icon: '😣', bg: 'bg-coral-50 text-coral-900 border-coral-200' }
+    great: { label: 'Great', icon: '😄', bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+    good: { label: 'Good', icon: '🙂', bg: 'bg-white/10 text-white border-white/20' },
+    neutral: { label: 'Neutral', icon: '😐', bg: 'bg-white/5 text-zinc-300 border-white/10' },
+    low: { label: 'Low', icon: '😔', bg: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+    stressed: { label: 'Stressed', icon: '😣', bg: 'bg-[#FF3B30]/20 text-[#FF3B30] border-[#FF3B30]/30' }
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-8 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-20 md:pb-8 animate-in fade-in duration-200 text-white">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-mint-300 text-[10px] font-bold uppercase tracking-wider">
+          <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-wider font-mono border border-white/10">
             Habit Journal
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-forest-950 tracking-tight mt-1">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1.5">
             Progress & Observations
           </h2>
-          <p className="text-xs sm:text-sm text-charcoal-600">
+          <p className="text-xs sm:text-sm text-zinc-400">
             Log consistency and note subjective observations over time without unscientific outcome promises.
           </p>
         </div>
 
         <button
           onClick={() => setIsCheckInOpen(!isCheckInOpen)}
-          className="self-start sm:self-center flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-xs shadow-card transition shrink-0"
+          className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs shadow-lg transition active:scale-95 shrink-0"
         >
-          <Plus className="w-4 h-4 text-mint-300" />
+          <Plus className="w-4 h-4 text-[#FF3B30]" />
           <span>{isCheckInOpen ? 'Check-In Form' : 'New Check-In'}</span>
         </button>
       </div>
 
       {/* 7-Day Consistency Visualization */}
-      <div className="p-6 rounded-3xl bg-white border border-cream-300 shadow-card space-y-4">
+      <div className="p-6 sm:p-8 rounded-[2.5rem] bg-[#0C0C10] border border-white/10 shadow-2xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-forest-800" />
-            <h3 className="text-base font-bold text-forest-950">
+            <TrendingUp className="w-5 h-5 text-[#FF3B30]" />
+            <h3 className="text-lg font-black text-white">
               7-Day Consistency Trend
             </h3>
           </div>
-          <span className="text-xs font-semibold text-charcoal-500">
+          <span className="text-xs font-mono font-bold text-zinc-400">
             Past 7 check-ins
           </span>
         </div>
 
         {/* Bar Chart Visualization */}
-        <div className="grid grid-cols-7 gap-3 pt-4 items-end h-40 border-b border-cream-200 pb-4">
+        <div className="grid grid-cols-7 gap-3 pt-4 items-end h-44 border-b border-white/10 pb-4">
           {recent7.map((entry, idx) => {
             const heightPercent = Math.max(15, Math.round(entry.completionRate * 100));
             const dayLabel = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short' });
@@ -118,22 +117,22 @@ export const ProgressView: React.FC = () => {
 
             return (
               <div key={idx} className="flex flex-col items-center gap-2 h-full justify-end">
-                <span className="text-xs font-bold text-charcoal-700">
+                <span className="text-xs font-bold text-zinc-300 font-mono">
                   {Math.round(entry.completionRate * 100)}%
                 </span>
-                <div className="w-full bg-cream-100 rounded-2xl h-24 flex items-end p-1.5">
+                <div className="w-full bg-[#14141C] rounded-2xl h-28 flex items-end p-1.5 border border-white/5">
                   <div
                     className={`w-full rounded-xl transition-all duration-500 ${
                       entry.completionRate >= 0.75
-                        ? 'bg-forest-900'
+                        ? 'bg-[#FF3B30]'
                         : entry.completionRate >= 0.4
-                        ? 'bg-mint-500'
-                        : 'bg-amber-400'
-                    } ${isToday ? 'ring-2 ring-forest-600' : ''}`}
+                        ? 'bg-amber-400'
+                        : 'bg-zinc-600'
+                    } ${isToday ? 'ring-2 ring-white' : ''}`}
                     style={{ height: `${heightPercent}%` }}
                   />
                 </div>
-                <span className={`text-xs font-semibold ${isToday ? 'text-forest-950 font-bold' : 'text-charcoal-400'}`}>
+                <span className={`text-xs font-bold ${isToday ? 'text-white font-extrabold' : 'text-zinc-500'}`}>
                   {dayLabel}
                 </span>
               </div>
@@ -141,30 +140,30 @@ export const ProgressView: React.FC = () => {
           })}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-charcoal-600 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400 pt-1 font-mono">
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-forest-900 inline-block"></span>
+            <span className="w-3 h-3 rounded-full bg-[#FF3B30] inline-block"></span>
             <span>Completed (75%+)</span>
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-mint-500 inline-block"></span>
+            <span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
             <span>Partial (40–74%)</span>
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+            <span className="w-3 h-3 rounded-full bg-zinc-600 inline-block"></span>
             <span>Missed (&lt;40%)</span>
           </span>
         </div>
       </div>
 
       {/* Desktop 2-Column Responsive Layout for Check-in & Observation Timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (Desktop: 5 cols): Daily Check-In Logger Card */}
         {isCheckInOpen && (
-          <div className="lg:col-span-5 p-6 rounded-3xl bg-forest-900 text-cream-50 shadow-modal space-y-4">
+          <div className="lg:col-span-5 p-6 rounded-[2rem] bg-[#0C0C10] border border-white/10 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-mint-300" />
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#FF3B30]" />
                 <span>Log Today's Check-In ({todayStr})</span>
               </h3>
             </div>
@@ -172,7 +171,7 @@ export const ProgressView: React.FC = () => {
             <div className="space-y-4 text-xs sm:text-sm">
               {/* Mood selector */}
               <div>
-                <label className="block text-cream-200 font-semibold mb-2">
+                <label className="block text-zinc-300 font-bold mb-2">
                   How do you feel today?
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -183,12 +182,12 @@ export const ProgressView: React.FC = () => {
                       onClick={() => setMood(m)}
                       className={`py-2.5 px-1 rounded-2xl text-center border transition ${
                         mood === m
-                          ? 'bg-cream-50 text-forest-950 font-bold border-cream-50 shadow-sm'
-                          : 'bg-forest-800 text-cream-200 border-forest-700 hover:bg-forest-700'
+                          ? 'bg-white text-black font-extrabold border-white shadow-md'
+                          : 'bg-[#14141C] text-zinc-300 border-white/5 hover:bg-white/5'
                       }`}
                     >
                       <span className="text-lg block">{moodIcons[m].icon}</span>
-                      <span className="text-[10px] capitalize mt-0.5 block truncate">{m}</span>
+                      <span className="text-[10px] capitalize mt-0.5 block truncate font-mono">{m}</span>
                     </button>
                   ))}
                 </div>
@@ -196,7 +195,7 @@ export const ProgressView: React.FC = () => {
 
               {/* Energy selector */}
               <div>
-                <label className="block text-cream-200 font-semibold mb-2">
+                <label className="block text-zinc-300 font-bold mb-2">
                   Energy Level
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -205,10 +204,10 @@ export const ProgressView: React.FC = () => {
                       key={e}
                       type="button"
                       onClick={() => setEnergy(e)}
-                      className={`py-2.5 rounded-2xl text-center border font-semibold capitalize transition ${
+                      className={`py-2.5 rounded-2xl text-center border font-bold capitalize transition ${
                         energy === e
-                          ? 'bg-mint-400 text-forest-950 border-mint-400 font-bold'
-                          : 'bg-forest-800 text-cream-200 border-forest-700 hover:bg-forest-700'
+                          ? 'bg-white text-black border-white shadow-md'
+                          : 'bg-[#14141C] text-zinc-300 border-white/5 hover:bg-white/5'
                       }`}
                     >
                       {e} Energy
@@ -219,26 +218,26 @@ export const ProgressView: React.FC = () => {
 
               {/* Observation Notes */}
               <div>
-                <label className="block text-cream-200 font-semibold mb-1.5">
+                <label className="block text-zinc-300 font-bold mb-1.5">
                   Personal Observation (e.g. skin texture, scalp feel, sleep latency)
                 </label>
                 <textarea
                   value={observation}
                   onChange={(e) => setObservation(e.target.value)}
                   rows={3}
-                  placeholder="What did you observe today? (e.g. less morning flaking, scalp felt calm)..."
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-forest-800 border border-forest-700 text-white placeholder:text-cream-300/50 focus:outline-none focus:ring-2 focus:ring-mint-400 text-xs sm:text-sm"
+                  placeholder="What did you observe today?..."
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-black/40 border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF3B30] text-xs sm:text-sm"
                 />
               </div>
 
               {/* Optional Photo Attachment */}
               <div>
-                <label className="block text-cream-200 font-semibold mb-2">
+                <label className="block text-zinc-300 font-bold mb-2">
                   Optional Progress Snapshot (Stored locally on your device)
                 </label>
                 <div className="flex items-center gap-3">
-                  <label className="cursor-pointer px-4 py-2.5 rounded-2xl bg-forest-800 hover:bg-forest-700 border border-forest-700 text-cream-100 flex items-center gap-2 font-medium text-xs">
-                    <Camera className="w-4 h-4 text-mint-300" />
+                  <label className="cursor-pointer px-4 py-2.5 rounded-2xl bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-white flex items-center gap-2 font-bold text-xs">
+                    <Camera className="w-4 h-4 text-[#FF3B30]" />
                     <span>Choose Photo</span>
                     <input
                       type="file"
@@ -248,7 +247,7 @@ export const ProgressView: React.FC = () => {
                     />
                   </label>
                   {photoPreview && (
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-mint-400">
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-[#FF3B30]">
                       <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                     </div>
                   )}
@@ -258,7 +257,7 @@ export const ProgressView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveCheckIn}
-                className="w-full py-3.5 rounded-2xl bg-mint-400 hover:bg-mint-300 text-forest-950 font-bold text-sm shadow-card transition active:scale-98"
+                className="w-full py-3.5 rounded-full bg-white text-black font-extrabold text-sm shadow-lg hover:bg-zinc-200 transition active:scale-95"
               >
                 Save Daily Record
               </button>
@@ -269,10 +268,10 @@ export const ProgressView: React.FC = () => {
         {/* Right Column (Desktop: 7 cols): Observation History Timeline */}
         <div className={`${isCheckInOpen ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-forest-950">
+            <h3 className="text-lg font-black text-white">
               Observation Timeline
             </h3>
-            <span className="text-xs text-charcoal-500 font-medium">
+            <span className="text-xs text-zinc-400 font-mono font-medium">
               Neutral self-records ({progressHistory.length} total)
             </span>
           </div>
@@ -285,21 +284,21 @@ export const ProgressView: React.FC = () => {
               return (
                 <div
                   key={entry.id}
-                  className="p-5 rounded-3xl bg-white border border-cream-300 shadow-soft space-y-2.5 text-xs sm:text-sm"
+                  className="p-5 sm:p-6 rounded-[2rem] bg-[#0C0C10] border border-white/10 shadow-card space-y-3 text-xs sm:text-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-forest-800" />
-                      <span className="font-bold text-forest-950">
+                      <Calendar className="w-4 h-4 text-[#FF3B30]" />
+                      <span className="font-extrabold text-white">
                         {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </span>
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-cream-100 text-charcoal-700 font-semibold">
-                        {completionPercent}% Routine Done
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 font-mono">
+                        {completionPercent}% Done
                       </span>
                     </div>
 
                     {entryMood && (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${entryMood.bg}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${entryMood.bg}`}>
                         <span>{entryMood.icon}</span>
                         <span>{entryMood.label}</span>
                       </span>
@@ -307,14 +306,14 @@ export const ProgressView: React.FC = () => {
                   </div>
 
                   {entry.observation && (
-                    <p className="text-charcoal-700 bg-cream-50 p-3 rounded-2xl border border-cream-200 leading-relaxed font-sans">
-                      <strong className="text-forest-900 font-semibold">You observed:</strong> "{entry.observation}"
+                    <p className="text-zinc-300 bg-black/40 p-3.5 rounded-2xl border border-white/5 leading-relaxed">
+                      <strong className="text-white font-bold">You observed:</strong> "{entry.observation}"
                     </p>
                   )}
 
                   {entry.photoUrl && (
                     <div className="pt-1">
-                      <div className="w-24 h-24 rounded-2xl overflow-hidden border border-cream-200 shadow-sm">
+                      <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/10 shadow-sm">
                         <img src={entry.photoUrl} alt="Progress Record" className="w-full h-full object-cover" />
                       </div>
                     </div>

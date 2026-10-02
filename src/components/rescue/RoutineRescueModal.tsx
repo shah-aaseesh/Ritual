@@ -18,53 +18,53 @@ export const RoutineRescueModal: React.FC = () => {
   const totalRescueMinutes = rescueSteps.reduce((acc, curr) => acc + curr.estimatedMinutes, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-modal border border-cream-200 space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-[#121217] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-white/10 space-y-5">
         {/* Header Icon & Warm Title */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center mx-auto shadow-soft">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto shadow-lg">
             <HeartHandshake className="w-7 h-7" />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/70 px-2.5 py-0.5 rounded-full">
-            Routine Rescue
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full font-mono">
+            Protocol Recovery
           </span>
-          <h3 className="text-xl font-extrabold text-forest-950">
-            You planned a lot. Let’s make it easier.
+          <h3 className="text-xl font-black text-white">
+            Life gets busy. Let’s calibrate down.
           </h3>
-          <p className="text-xs text-charcoal-600 leading-relaxed max-w-xs mx-auto">
-            Life gets busy, and missing a few days is completely normal. Rather than feeling overwhelmed, let’s shrink your daily commitment down to an effortless <strong className="text-forest-900 font-bold">{totalRescueMinutes} minutes</strong>.
+          <p className="text-xs text-zinc-400 leading-relaxed max-w-xs mx-auto">
+            Missing days happens to every elite athlete. Rather than abandoning momentum, let’s condense your daily commitment to an effortless <strong className="text-white font-bold">{totalRescueMinutes} minutes</strong>.
           </p>
         </div>
 
         {/* Simplified Minimum Viable Routine (MVR) */}
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-[11px] font-bold text-forest-900 uppercase tracking-wider">
-            <span>Minimum Viable Routine (MVR):</span>
-            <span>{rescueSteps.length} Steps • {totalRescueMinutes} min total</span>
+          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+            <span>Minimum Viable Protocol (MVP):</span>
+            <span>{rescueSteps.length} Steps • {totalRescueMinutes}m total</span>
           </div>
 
           <div className="space-y-2">
             {rescueSteps.map((step, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-soft space-y-1 text-xs"
+                className="p-3.5 rounded-2xl bg-[#09090D] border border-white/10 shadow-sm space-y-1 text-xs"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-forest-950">
+                  <div className="flex items-center gap-1.5 font-black text-white">
                     {step.timeOfDay === 'morning' ? (
-                      <Sun className="w-3.5 h-3.5 text-amber-600" />
+                      <Sun className="w-3.5 h-3.5 text-amber-400" />
                     ) : (
-                      <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                      <Moon className="w-3.5 h-3.5 text-indigo-400" />
                     )}
                     <span className="capitalize">{step.timeOfDay}:</span>
                     <span>{step.action}</span>
                   </div>
-                  <span className="flex items-center gap-1 text-[10px] text-charcoal-500 font-semibold shrink-0">
+                  <span className="flex items-center gap-1 text-[10px] text-zinc-400 font-mono font-semibold shrink-0">
                     <Clock className="w-3 h-3" />
                     {step.estimatedMinutes}m
                   </span>
                 </div>
-                <p className="text-[11px] text-charcoal-600 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   {step.shortExplanation}
                 </p>
               </div>
@@ -77,18 +77,18 @@ export const RoutineRescueModal: React.FC = () => {
           <button
             type="button"
             onClick={() => acceptRescueRoutine(rescueSteps)}
-            className="w-full py-3.5 px-4 rounded-2xl bg-forest-900 hover:bg-forest-800 text-cream-50 font-bold text-sm shadow-card flex items-center justify-center gap-2 transition active:scale-98"
+            className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-zinc-100 text-black font-black text-sm shadow-xl flex items-center justify-center gap-2 transition active:scale-98"
           >
-            <Sparkles className="w-4 h-4 text-mint-300" />
-            <span>Adopt Simplified Routine ({totalRescueMinutes} min)</span>
+            <Sparkles className="w-4 h-4 text-black" />
+            <span>Adopt Streamlined Protocol ({totalRescueMinutes}m)</span>
           </button>
 
           <button
             type="button"
             onClick={dismissRescueRoutine}
-            className="w-full py-2.5 px-4 rounded-2xl bg-cream-200 hover:bg-cream-300 text-charcoal-700 font-semibold text-xs transition"
+            className="w-full py-2.5 px-4 rounded-2xl bg-[#181822] hover:bg-[#20202c] border border-white/10 text-zinc-300 font-bold text-xs transition"
           >
-            Keep Original Full Routine
+            Keep Full Target Protocol
           </button>
         </div>
       </div>
