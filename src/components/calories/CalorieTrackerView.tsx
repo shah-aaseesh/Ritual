@@ -5,16 +5,18 @@ import {
   Droplets, 
   Beef, 
   Wheat, 
-  Cookie,
-  ChevronLeft,
-  ChevronRight,
-  Flame,
-  Search,
-  Sliders
+  Cookie, 
+  ChevronLeft, 
+  ChevronRight, 
+  Flame, 
+  Search, 
+  Sliders,
+  Camera
 } from 'lucide-react';
 import { FoodItem, FoodLogEntry, MealCategory } from '../../types';
 import { PRESET_FOODS, DEFAULT_MACRO_TARGETS, DEMO_FOOD_LOGS } from '../../data/calorieData';
 import { useApp } from '../../context/AppContext';
+import { FoodCameraModal } from './FoodCameraModal';
 
 type CalorieSubView = 'hub' | 'meal_detail' | 'hydration' | 'food_library' | 'targets' | 'custom_food';
 
@@ -24,6 +26,7 @@ export const CalorieTrackerView: React.FC = () => {
   // Nested Navigation View State
   const [subView, setSubView] = useState<CalorieSubView>('hub');
   const [activeMealCategory, setActiveMealCategory] = useState<MealCategory>('breakfast');
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState<boolean>(false);
 
   // Macro Targets
   const [macroTargets, setMacroTargets] = useState(DEFAULT_MACRO_TARGETS);
@@ -211,14 +214,25 @@ export const CalorieTrackerView: React.FC = () => {
                 </h1>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSubView('custom_food')}
-                className="self-start sm:self-center px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-lg flex items-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Quick Add Macros</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCameraModalOpen(true)}
+                  className="px-4 py-2 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs transition shadow-lg flex items-center gap-1.5 active:scale-95 animate-pulse"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Snap Meal (Gemini AI)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSubView('custom_food')}
+                  className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-lg flex items-center gap-1.5 active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Quick Add</span>
+                </button>
+              </div>
             </div>
 
             {/* Caloric Big Dial & Triple Concentric Progress */}
@@ -403,12 +417,30 @@ export const CalorieTrackerView: React.FC = () => {
           </div>
 
           {/* Quick Tools Tile Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div
+              onClick={() => setIsCameraModalOpen(true)}
+              className="p-4 rounded-2xl bg-[#1C1215] hover:bg-[#25151A] border border-[#FF3B30]/30 hover:border-[#FF3B30] cursor-pointer transition flex items-center gap-3 group shadow-card"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/20 text-[#FF3B30] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Camera className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-white group-hover:text-[#FF3B30] transition">Snap Meal Photo</h4>
+                  <span className="px-1.5 py-0.2 rounded bg-[#FF3B30]/20 text-[#FF3B30] text-[9px] font-mono font-bold">&lt;1s</span>
+                </div>
+                <p className="text-[10px] text-zinc-400">Instant Gemini Vision Macros</p>
+              </div>
+            </div>
+
             <div
               onClick={() => setSubView('food_library')}
               className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
             >
-              <Search className="w-5 h-5 text-[#FF3B30]" />
+              <div className="w-10 h-10 rounded-xl bg-white/5 text-[#FF3B30] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Search className="w-5 h-5" />
+              </div>
               <div>
                 <h4 className="text-xs font-black text-white group-hover:text-[#FF3B30] transition">Food Database</h4>
                 <p className="text-[10px] text-zinc-400">Search verified whole foods</p>
@@ -419,7 +451,9 @@ export const CalorieTrackerView: React.FC = () => {
               onClick={() => setSubView('hydration')}
               className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
             >
-              <Droplets className="w-5 h-5 text-cyan-400" />
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Droplets className="w-5 h-5" />
+              </div>
               <div>
                 <h4 className="text-xs font-black text-white group-hover:text-cyan-400 transition">Hydration Engine</h4>
                 <p className="text-[10px] text-zinc-400">Electrolyte & volume logs</p>
@@ -430,7 +464,9 @@ export const CalorieTrackerView: React.FC = () => {
               onClick={() => setSubView('targets')}
               className="p-4 rounded-2xl bg-[#121217] hover:bg-[#181822] border border-white/10 cursor-pointer transition flex items-center gap-3 group"
             >
-              <Sliders className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Sliders className="w-5 h-5" />
+              </div>
               <div>
                 <h4 className="text-xs font-black text-white group-hover:text-amber-400 transition">Target Calibrator</h4>
                 <p className="text-[10px] text-zinc-400">Calibrate protein & carbs</p>
@@ -457,14 +493,25 @@ export const CalorieTrackerView: React.FC = () => {
                 </h2>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSubView('food_library')}
-                className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-md flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Search Food</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCameraModalOpen(true)}
+                  className="px-4 py-2 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs transition shadow-md flex items-center gap-1.5 active:scale-95 animate-pulse"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Snap Meal (Gemini AI)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSubView('food_library')}
+                  className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs transition shadow-md flex items-center gap-1 active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Search Food</span>
+                </button>
+              </div>
             </div>
 
             {/* Meal Specific Macro Totals */}
@@ -495,15 +542,31 @@ export const CalorieTrackerView: React.FC = () => {
             </h3>
 
             {getMealLogs(activeMealCategory).length === 0 ? (
-              <div className="p-8 rounded-[2rem] bg-[#121217] border border-white/10 text-center space-y-3">
-                <p className="text-xs text-zinc-400 font-mono">No items logged for {activeMealCategory} yet.</p>
-                <button
-                  type="button"
-                  onClick={() => setSubView('food_library')}
-                  className="px-4 py-2 rounded-full bg-white text-black font-black text-xs shadow-md"
-                >
-                  + Add from Food Database
-                </button>
+              <div className="p-8 rounded-[2rem] bg-[#121217] border border-white/10 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-[#FF3B30]">
+                  <Camera className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white">No items logged for {activeMealCategory}</h4>
+                  <p className="text-xs text-zinc-400 font-mono mt-0.5">Take a plate photo with Gemini AI Vision or search verified whole foods.</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraModalOpen(true)}
+                    className="px-4 py-2.5 rounded-full bg-[#FF3B30] hover:bg-[#E0352B] text-white font-black text-xs shadow-lg flex items-center gap-1.5 active:scale-95"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Snap Photo (Gemini AI &lt;1s)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSubView('food_library')}
+                    className="px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-black text-xs shadow-md"
+                  >
+                    + Food Database
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -895,6 +958,14 @@ export const CalorieTrackerView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Gemini AI Vision Food Camera Modal */}
+      <FoodCameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        defaultMeal={activeMealCategory}
+        onFoodLogged={(meal, food, quantity) => handleLogFood(food, quantity, meal)}
+      />
     </div>
   );
 };
