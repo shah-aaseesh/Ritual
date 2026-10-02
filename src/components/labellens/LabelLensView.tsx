@@ -20,14 +20,32 @@ import {
   ClipboardPaste,
   CheckCircle,
   Terminal,
-  Code2,
   Copy,
   Check,
-  X
+  ChevronRight,
+  ArrowLeft,
+  FileText,
+  ShieldCheck,
+  Activity,
+  Layers,
+  FlaskConical,
+  Zap
 } from 'lucide-react';
+
+export type LabelLensSubView = 
+  | 'hub' 
+  | 'audit_sheet' 
+  | 'matrix' 
+  | 'claims' 
+  | 'alternatives' 
+  | 'samples' 
+  | 'ai_inspector';
 
 export const LabelLensView: React.FC = () => {
   const { profile, addShelfProduct, showToast, aiSettings } = useApp();
+
+  // Active Mobile Sub-View Navigation
+  const [activeSubView, setActiveSubView] = useState<LabelLensSubView>('hub');
 
   const [productName, setProductName] = useState<string>('Follicle Reactivate Scalp Serum');
   const [frontClaimText, setFrontClaimText] = useState<string>(SAMPLE_PRODUCTS[0].frontLabelText);
@@ -39,7 +57,6 @@ export const LabelLensView: React.FC = () => {
 
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
   const [showManualEditor, setShowManualEditor] = useState<boolean>(false);
-  const [activeAnalysisTab, setActiveAnalysisTab] = useState<'all' | 'ingredients' | 'claims'>('all');
 
   // Quick Paste Drawer
   const [isQuickPasteOpen, setIsQuickPasteOpen] = useState<boolean>(false);
@@ -48,8 +65,7 @@ export const LabelLensView: React.FC = () => {
 
   // AI Inspector State
   const [latestDebugTrace, setLatestDebugTrace] = useState<any>(null);
-  const [isDebugModalOpen, setIsDebugModalOpen] = useState<boolean>(false);
-  const [debugTab, setDebugTab] = useState<'response' | 'image' | 'prompt' | 'parsed'>('response');
+  const [debugTab, setDebugTab] = useState<'response' | 'prompt'>('response');
   const [hasCopiedRaw, setHasCopiedRaw] = useState<boolean>(false);
 
   const [analysisResult, setAnalysisResult] = useState<ProductAnalysisResult>(() => {
@@ -87,7 +103,7 @@ export const LabelLensView: React.FC = () => {
       sample.name
     );
     setAnalysisResult(res);
-    showToast(`Loaded sample: ${sample.name}`, 'info');
+    showToast(`Loaded: ${sample.name}`, 'info');
   };
 
   const handleReanalyze = (newIngText: string, newClaimText: string, newName: string) => {
@@ -205,10 +221,11 @@ export const LabelLensView: React.FC = () => {
     });
 
     setSaveModalOpen(false);
+    showToast('Saved to Smart Shelf', 'success');
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-8 animate-in fade-in duration-200 text-white">
+    <div className="space-y-5 pb-24 text-white animate-in fade-in duration-200">
       {/* Hidden File Inputs */}
       <input
         type="file"
@@ -227,102 +244,497 @@ export const LabelLensView: React.FC = () => {
         className="hidden"
       />
 
-      {/* Top Hero Banner */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-wider font-mono border border-white/10">
-            Scientific Audit
-          </span>
-          <span className="text-xs text-zinc-400 font-mono font-medium">Hero Feature</span>
-        </div>
-        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-          Label Lens
-        </h2>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-          Decode what's inside wellness packaging. We audit active ingredient evidence against published literature and evaluate marketing claim credibility.
-        </p>
-      </div>
-
-      {/* Desktop 2-Column Responsive Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (Desktop: 5 cols): Inputs, Sample Selectors, Scanner, Manual Editor */}
-        <div className="lg:col-span-5 space-y-5">
-          {/* 3 Sample Product Selectors */}
-          <div className="space-y-2.5">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block font-mono">
-              Choose a Sample Product or Upload:
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {SAMPLE_PRODUCTS.map((sample) => {
-                const isSelected = selectedSampleId === sample.id;
-                return (
-                  <button
-                    key={sample.id}
-                    type="button"
-                    onClick={() => handleSelectSample(sample)}
-                    className={`p-3.5 rounded-[1.5rem] border text-left transition-all duration-200 flex flex-col justify-between ${
-                      isSelected
-                        ? 'bg-white text-black border-white shadow-lg'
-                        : 'bg-[#121217] text-zinc-300 border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <div>
-                      <span className={`text-[10px] font-bold block truncate font-mono ${isSelected ? 'text-[#FF3B30]' : 'text-zinc-400'}`}>
-                        {sample.category}
-                      </span>
-                      <p className={`text-xs font-black mt-1 line-clamp-2 leading-tight ${isSelected ? 'text-black' : 'text-white'}`}>
-                        {sample.name.split(' ')[0]} {sample.name.split(' ')[1]}
-                      </p>
-                    </div>
-                    <span className={`text-[9px] mt-2 block font-medium ${isSelected ? 'text-zinc-700' : 'text-zinc-500'}`}>
-                      {sample.suggestedClaims.length} claims
-                    </span>
-                  </button>
-                );
-              })}
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 1: AUDIT SHEET */}
+      {/* ========================================================================= */}
+      {activeSubView === 'audit_sheet' && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Active Product</span>
+              <span className="text-xs font-black text-white truncate max-w-[180px] block">{productName}</span>
             </div>
           </div>
 
-          {/* Capture / Upload & Manual Edit Action Bar */}
-          <div className="p-6 rounded-[2rem] bg-[#0C0C10] border border-white/10 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#FF3B30]" />
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  Scan Your Physical Label
+          <IngredientDebunkPaper
+            productName={productName}
+            brand={saveBrand}
+            rawIngredientText={ingredientText}
+            analysis={analysisResult}
+          />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 2: 4-DIMENSION MATRIX & SYNTHESIS */}
+      {/* ========================================================================= */}
+      {activeSubView === 'matrix' && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Scientific Matrix</span>
+              <span className="text-xs font-black text-white truncate max-w-[180px] block">{productName}</span>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF3B30] font-mono">
+                  Objective 4-Pillar Metric
                 </span>
+                <h3 className="text-xl font-black text-white">Scientific Evaluation Dimensions</h3>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[11px] font-mono font-bold">
+                {analysisResult.summary.goalRelevanceScore}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* 1. Goal Relevance */}
+              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                    1. Goal Relevance
+                  </span>
+                  <span className="text-xs">🎯</span>
+                </div>
+                <div className="text-lg font-black text-white">
+                  {analysisResult.summary.goalRelevanceScore}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {analysisResult.summary.goalRelevanceDescription}
+                </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                {latestDebugTrace && (
-                  <button
-                    onClick={() => setIsDebugModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-[11px] font-bold hover:bg-white/20 transition active:scale-95"
-                  >
-                    <Terminal className="w-3 h-3 text-[#FF3B30]" />
-                    <span>Inspect AI Trace</span>
-                  </button>
-                )}
+              {/* 2. Evidence Quality */}
+              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                    2. Evidence Quality
+                  </span>
+                  <span className="text-xs">🔬</span>
+                </div>
+                <div className="text-lg font-black text-white">
+                  {analysisResult.summary.evidenceQualityScore}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {analysisResult.summary.evidenceQualityDescription}
+                </p>
+              </div>
 
-                <button
-                  onClick={() => setShowManualEditor(!showManualEditor)}
-                  className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white transition"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>{showManualEditor ? 'Hide Editor' : 'Edit Text'}</span>
-                </button>
+              {/* 3. Dose Transparency */}
+              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                    3. Dose Transparency
+                  </span>
+                  <span className="text-xs">📊</span>
+                </div>
+                <div className="text-lg font-black text-white">
+                  {analysisResult.summary.doseTransparencyScore}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {analysisResult.summary.doseTransparencyDescription}
+                </p>
+              </div>
+
+              {/* 4. Claim Credibility */}
+              <div className="p-4 rounded-[1.5rem] bg-[#181822] border border-white/10 shadow-soft space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                    4. Claim Credibility
+                  </span>
+                  <span className="text-xs">🛡️</span>
+                </div>
+                <div className="text-lg font-black text-white">
+                  {analysisResult.summary.claimCredibilityScore}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {analysisResult.summary.claimCredibilityDescription}
+                </p>
               </div>
             </div>
 
-            {/* Barcode Scanner Primary Button */}
+            {/* Synthesis Paragraph Card */}
+            <div className="p-5 rounded-[1.5rem] bg-black/40 border border-white/10 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              <div className="flex items-center gap-1.5 text-white font-bold mb-2 uppercase tracking-wider text-[11px] font-mono">
+                <Sparkles className="w-4 h-4 text-[#FF3B30]" />
+                <span>Clinical Synthesis</span>
+              </div>
+              <p className="font-sans text-zinc-300 leading-relaxed">
+                "{analysisResult.summary.synthesisText}"
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 3: FRONT-PACK CLAIM AUDIT */}
+      {/* ========================================================================= */}
+      {activeSubView === 'claims' && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Claims Audited</span>
+              <span className="text-xs font-black text-white">{analysisResult.detectedClaims.length} Claims</span>
+            </div>
+          </div>
+
+          <div className="space-y-3.5">
+            {analysisResult.detectedClaims.length === 0 ? (
+              <div className="p-8 rounded-[2rem] bg-[#121217] border border-white/10 text-center space-y-2">
+                <ShieldCheck className="w-8 h-8 text-zinc-500 mx-auto" />
+                <p className="text-sm font-bold text-white">No front-pack marketing claims detected</p>
+                <p className="text-xs text-zinc-400">Add front label text like "Clinically Proven" or "100% Natural" to test credibility.</p>
+              </div>
+            ) : (
+              analysisResult.detectedClaims.map((claim) => (
+                <div
+                  key={claim.id}
+                  className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-3.5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                        Audited Claim Statement
+                      </span>
+                      <h4 className="text-base font-black text-white mt-0.5">
+                        "{claim.displayName}"
+                      </h4>
+                    </div>
+                    <VerdictBadge verdict={claim.verdict} size="sm" />
+                  </div>
+
+                  <div className="space-y-2 text-xs text-zinc-300">
+                    <div className="p-3.5 rounded-2xl bg-[#181822] border border-white/5 space-y-1">
+                      <strong className="text-white font-bold block text-xs">
+                        What this phrase usually means:
+                      </strong>
+                      <p className="text-zinc-400 leading-relaxed">{claim.whatItMeans}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-[#181822] border border-white/5 space-y-1">
+                      <strong className="text-white font-bold block text-xs">
+                        What clinical evidence or data is missing:
+                      </strong>
+                      <p className="text-zinc-400 leading-relaxed">{claim.missingInformation}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-zinc-500 italic pt-2 border-t border-white/10">
+                    {claim.supportRationale}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 4: CLINICALLY UPGRADED ALTERNATIVES */}
+      {/* ========================================================================= */}
+      {activeSubView === 'alternatives' && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Formulation Matches</span>
+              <span className="text-xs font-black text-white">{matchingFormulations.length} Upgrades</span>
+            </div>
+          </div>
+
+          <ClinicalRecommendations
+            products={matchingFormulations}
+            title="Evidence-Based Alternative Formulations"
+            subtitle="Higher-bioavailability, clean-label clinical formulations matching the active ingredients detected on this label."
+          />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 5: SAMPLE BENCHMARK LIBRARY */}
+      {/* ========================================================================= */}
+      {activeSubView === 'samples' && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Sample Library</span>
+              <span className="text-xs font-black text-white">{SAMPLE_PRODUCTS.length} Benchmarks</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {SAMPLE_PRODUCTS.map((sample) => {
+              const isSelected = selectedSampleId === sample.id;
+              return (
+                <div
+                  key={sample.id}
+                  className={`p-5 rounded-[2rem] border transition-all duration-200 flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-white text-black border-white shadow-2xl'
+                      : 'bg-[#121217] text-zinc-300 border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <span className={`text-[10px] font-extrabold uppercase tracking-widest font-mono ${isSelected ? 'text-[#FF3B30]' : 'text-zinc-400'}`}>
+                      {sample.category}
+                    </span>
+                    <h4 className={`text-base font-black ${isSelected ? 'text-black' : 'text-white'}`}>
+                      {sample.name}
+                    </h4>
+                    <p className={`text-xs ${isSelected ? 'text-zinc-700' : 'text-zinc-400'}`}>
+                      Brand: <span className="font-bold">{sample.brandSuggestion}</span>
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-current/10 mt-4 flex items-center justify-between">
+                    <span className={`text-[11px] font-bold ${isSelected ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                      {sample.suggestedClaims.length} Claims Included
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSelectSample(sample);
+                        setActiveSubView('audit_sheet');
+                      }}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold transition active:scale-95 ${
+                        isSelected
+                          ? 'bg-black text-white hover:bg-zinc-800'
+                          : 'bg-white text-black hover:bg-zinc-200'
+                      }`}
+                    >
+                      Audit This Sample ›
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 6: AI VISION & OCR INSPECTOR */}
+      {/* ========================================================================= */}
+      {activeSubView === 'ai_inspector' && latestDebugTrace && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#121218] border border-white/10 sticky top-0 z-20 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubView('hub')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#FF3B30]" />
+              <span>‹ Label Lens Hub</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">Model Trace</span>
+              <span className="text-xs font-black text-white">{latestDebugTrace.model || 'Vision AI'}</span>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-white/10 text-[#FF3B30]">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Live AI Extraction Trace</h3>
+                  <p className="text-xs text-zinc-400">Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(latestDebugTrace.rawResponse || '');
+                  setHasCopiedRaw(true);
+                  setTimeout(() => setHasCopiedRaw(false), 2000);
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition"
+              >
+                {hasCopiedRaw ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{hasCopiedRaw ? 'Copied' : 'Copy JSON'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDebugTab('response')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+                  debugTab === 'response' ? 'bg-white text-black font-extrabold' : 'bg-[#181822] text-zinc-400'
+                }`}
+              >
+                Raw LLM Response
+              </button>
+              <button
+                onClick={() => setDebugTab('prompt')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+                  debugTab === 'prompt' ? 'bg-white text-black font-extrabold' : 'bg-[#181822] text-zinc-400'
+                }`}
+              >
+                Prompt Instructions Sent
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/60 border border-white/5 font-mono text-xs text-emerald-400 whitespace-pre-wrap max-h-96 overflow-y-auto">
+              {debugTab === 'response' ? (latestDebugTrace.rawResponse || 'No response recorded') : (latestDebugTrace.prompt || 'No prompt recorded')}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MAIN HUB VIEW (Nested Mobile Dashboard) */}
+      {/* ========================================================================= */}
+      {activeSubView === 'hub' && (
+        <div className="space-y-6">
+          {/* Top Title & Scanner Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-wider font-mono border border-white/10">
+                  Scientific Audit Suite
+                </span>
+                <span className="text-xs text-zinc-400 font-mono font-medium">Hero Hub</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">
+                Label Lens
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400 max-w-xl">
+                Audit wellness labels against published literature, PubMed trials, and clinical dosages.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setSaveModalOpen(true)}
+              className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs shadow-lg transition active:scale-95"
+            >
+              <BookmarkPlus className="w-4 h-4 text-[#FF3B30]" />
+              <span>Save to Smart Shelf</span>
+            </button>
+          </div>
+
+          {/* ACTIVE AUDITED PRODUCT CARD */}
+          <div className="p-6 rounded-[2rem] bg-[#121217] border border-white/10 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-44 h-44 bg-[#FF3B30]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">
+                    Currently Loaded Product
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+                    Audited
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tight">
+                  {productName}
+                </h3>
+                <p className="text-xs text-zinc-400 font-medium">
+                  Brand: <span className="text-white font-bold">{saveBrand}</span> • Category: <span className="text-white font-bold">{analysisResult.category}</span>
+                </p>
+              </div>
+
+              {/* 4 Quick Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
+                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Relevance</span>
+                  <span className="text-xs font-black text-white">{analysisResult.summary.goalRelevanceScore}</span>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
+                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Evidence</span>
+                  <span className="text-xs font-black text-white">{analysisResult.summary.evidenceQualityScore}</span>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
+                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Dose Clarity</span>
+                  <span className="text-xs font-black text-white">{analysisResult.summary.doseTransparencyScore}</span>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-[#181822] border border-white/5 text-center">
+                  <span className="text-[9px] font-mono uppercase text-zinc-400 block">Claims</span>
+                  <span className="text-xs font-black text-white">{analysisResult.summary.claimCredibilityScore}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Action Button into Audit Sheet */}
+            <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <FlaskConical className="w-4 h-4 text-[#FF3B30]" />
+                <span><strong className="text-white">{analysisResult.detectedIngredients.length}</strong> active compounds identified</span>
+              </div>
+              <button
+                onClick={() => setActiveSubView('audit_sheet')}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition active:scale-95 shadow-md"
+              >
+                <span>View Rx Audit Sheet</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#FF3B30]" />
+              </button>
+            </div>
+          </div>
+
+          {/* INSTANT SCAN ACTION BAR */}
+          <div className="p-5 rounded-[2rem] bg-[#0C0C10] border border-white/10 shadow-2xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <Camera className="w-4 h-4 text-[#FF3B30]" />
+                <span>Scan New Physical Product</span>
+              </span>
+              <button
+                onClick={() => setShowManualEditor(!showManualEditor)}
+                className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white transition"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{showManualEditor ? 'Hide Editor' : 'Edit Ingredients'}</span>
+              </button>
+            </div>
+
+            {/* Barcode Primary CTA */}
             <button
               type="button"
               onClick={() => setIsBarcodeModalOpen(true)}
               disabled={isScanning}
-              className="w-full p-4 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center gap-2.5 text-xs font-extrabold shadow-lg transition-all active:scale-[0.99]"
+              className="w-full p-4 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center gap-2.5 text-xs font-extrabold shadow-lg transition active:scale-[0.99]"
             >
               <ScanBarcode className="w-4 h-4 text-[#FF3B30] animate-pulse" />
-              <span>Scan Product Barcode (Instant 100% Match)</span>
+              <span>Scan Barcode (Instant Optical Barcode Match)</span>
             </button>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -330,7 +742,7 @@ export const LabelLensView: React.FC = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isScanning}
-                className="p-3 rounded-full bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-white flex items-center justify-center gap-2 text-xs font-bold transition disabled:opacity-50"
+                className="p-3.5 rounded-full bg-[#14141C] hover:bg-[#1E1E28] border border-white/10 text-white flex items-center justify-center gap-2 text-xs font-bold transition disabled:opacity-50"
               >
                 <Upload className="w-4 h-4 text-[#FF3B30]" />
                 <span>Scan Bottle Photo</span>
@@ -339,66 +751,60 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsQuickPasteOpen(!isQuickPasteOpen)}
-                className={`p-3 rounded-full border text-xs font-bold flex items-center justify-center gap-2 transition ${
+                className={`p-3.5 rounded-full border text-xs font-bold flex items-center justify-center gap-2 transition ${
                   isQuickPasteOpen
                     ? 'bg-white text-black border-white shadow-md'
                     : 'bg-[#14141C] hover:bg-[#1E1E28] text-white border-white/10'
                 }`}
               >
                 <ClipboardPaste className="w-4 h-4 text-[#FF3B30]" />
-                <span>Paste from Web</span>
+                <span>Paste Text from Web</span>
               </button>
             </div>
 
-            {/* Quick Paste Drawer */}
+            {/* Quick Paste Box */}
             {isQuickPasteOpen && (
               <div className="p-4 rounded-2xl bg-[#14141C] border border-white/10 space-y-3 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[#FF3B30]" />
-                    <span className="text-xs font-bold text-white">
-                      Paste from ChatGPT / Product Page
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-zinc-400">
-                    Auto-Filters Noise
+                    Paste Product Ingredients / E-Commerce text
                   </span>
+                  <span className="text-[10px] text-zinc-400">Auto AI Denoise</span>
                 </div>
 
                 <textarea
                   value={quickPasteInput}
                   onChange={(e) => setQuickPasteInput(e.target.value)}
-                  placeholder="Paste ingredients (e.g. 'Melatonin 5mg, L-Theanine 10mg, Pectin, Glucose Syrup, Citric Acid...')"
+                  placeholder="Paste ingredients (e.g. 'Melatonin 5mg, L-Theanine 100mg, Pectin, Glucose Syrup, Citric Acid...')"
                   rows={3}
                   className="w-full p-3 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-[#FF3B30] placeholder:text-zinc-500"
                 />
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPasteClean()}
-                    disabled={isCleaningText || !quickPasteInput.trim()}
-                    className="flex-1 py-2.5 px-3 rounded-full bg-white text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50 hover:bg-zinc-200"
-                  >
-                    {isCleaningText ? (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 animate-spin text-[#FF3B30]" />
-                        <span>Isolating Actives with AI...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5 text-[#FF3B30]" />
-                        <span>Clean & Debunk on Canvas</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleQuickPasteClean()}
+                  disabled={isCleaningText || !quickPasteInput.trim()}
+                  className="w-full py-2.5 px-3 rounded-full bg-white text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50 hover:bg-zinc-200"
+                >
+                  {isCleaningText ? (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 animate-spin text-[#FF3B30]" />
+                      <span>Isolating Actives with AI...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-[#FF3B30]" />
+                      <span>Clean & Debunk On Canvas</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
-            {/* OCR In-Flight Progress */}
+            {/* OCR Progress */}
             {isScanning && (
-              <div className="p-4 rounded-2xl bg-[#14141C] border border-white/10 text-white space-y-2 animate-in fade-in duration-200">
+              <div className="p-4 rounded-2xl bg-[#14141C] border border-white/10 space-y-2 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-300 font-medium flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 animate-spin text-[#FF3B30]" />
@@ -415,7 +821,7 @@ export const LabelLensView: React.FC = () => {
               </div>
             )}
 
-            {/* Manual Text Editor Drawer */}
+            {/* Manual Editor */}
             {showManualEditor && (
               <div className="pt-3 border-t border-white/10 space-y-3 animate-in fade-in duration-200">
                 <div>
@@ -452,230 +858,164 @@ export const LabelLensView: React.FC = () => {
             )}
           </div>
 
-          <DisclaimerBanner />
-        </div>
-
-        {/* Right Column (Desktop: 7 cols): 4-Dimension Matrix, Summary, Ingredients & Claims */}
-        <div className="lg:col-span-7 space-y-5">
-          {/* 4-DIMENSION EVALUATION MATRIX */}
+          {/* NESTED MOBILE APP DRILL-DOWN TILES */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-white">
-                Scientific Evaluation Dimensions
-              </h3>
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                4-Pillar Matrix
-              </span>
-            </div>
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block font-mono">
+              Deep-Dive Scientific Modules
+            </span>
 
-            <div className="grid grid-cols-2 gap-3">
-              {/* 1. Goal Relevance */}
-              <div className="p-4 rounded-[1.5rem] bg-[#121217] border border-white/10 shadow-card space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                  1. Goal Relevance
-                </span>
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-extrabold text-white">
-                    {analysisResult.summary.goalRelevanceScore}
-                  </span>
-                  <span className="text-sm">🎯</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Tile 1: Rx Clinical Audit Sheet */}
+              <button
+                type="button"
+                onClick={() => setActiveSubView('audit_sheet')}
+                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-white group-hover:text-white">
+                      Clinical Rx Audit Sheet
+                    </h4>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {analysisResult.detectedIngredients.length} actives • PubMed trials & evidence tiers
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">
-                  {analysisResult.summary.goalRelevanceDescription}
-                </p>
-              </div>
-
-              {/* 2. Evidence Quality */}
-              <div className="p-4 rounded-[1.5rem] bg-[#121217] border border-white/10 shadow-card space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                  2. Evidence Quality
-                </span>
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-extrabold text-white">
-                    {analysisResult.summary.evidenceQualityScore}
-                  </span>
-                  <span className="text-sm">🔬</span>
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <ChevronRight className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">
-                  {analysisResult.summary.evidenceQualityDescription}
-                </p>
-              </div>
+              </button>
 
-              {/* 3. Dose Transparency */}
-              <div className="p-4 rounded-[1.5rem] bg-[#121217] border border-white/10 shadow-card space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                  3. Dose Transparency
-                </span>
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-extrabold text-white">
-                    {analysisResult.summary.doseTransparencyScore}
-                  </span>
-                  <span className="text-sm">📊</span>
+              {/* Tile 2: 4-Dimension Matrix & Synthesis */}
+              <button
+                type="button"
+                onClick={() => setActiveSubView('matrix')}
+                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <Activity className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-white group-hover:text-white">
+                      4-Dimension Matrix
+                    </h4>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Relevance, evidence, dose & claim scorecards
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">
-                  {analysisResult.summary.doseTransparencyDescription}
-                </p>
-              </div>
-
-              {/* 4. Claim Credibility */}
-              <div className="p-4 rounded-[1.5rem] bg-[#121217] border border-white/10 shadow-card space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                  4. Claim Credibility
-                </span>
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-extrabold text-white">
-                    {analysisResult.summary.claimCredibilityScore}
-                  </span>
-                  <span className="text-sm">🛡️</span>
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <ChevronRight className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">
-                  {analysisResult.summary.claimCredibilityDescription}
-                </p>
-              </div>
-            </div>
+              </button>
 
-            {/* Synthesis Paragraph Card */}
-            <div className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 text-xs sm:text-sm text-zinc-300 leading-relaxed shadow-card">
-              <div className="flex items-center gap-1.5 text-white font-bold mb-1.5 uppercase tracking-wider text-[11px] font-mono">
-                <Sparkles className="w-4 h-4 text-[#FF3B30]" />
-                <span>Synthesis Summary</span>
-              </div>
-              <p className="font-sans text-zinc-300">
-                "{analysisResult.summary.synthesisText}"
-              </p>
-            </div>
-          </div>
-
-          {/* Save to Smart Shelf CTA */}
-          <div className="flex items-center justify-between p-5 bg-[#0C0C10] rounded-[2rem] border border-white/10 text-white shadow-2xl">
-            <div>
-              <h4 className="text-sm sm:text-base font-black text-white">Save this analysis</h4>
-              <p className="text-xs text-zinc-400">Organize this product in your Smart Shelf and link it to your routine.</p>
-            </div>
-            <button
-              onClick={() => setSaveModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-white text-black font-extrabold text-xs shadow-md flex items-center gap-1.5 transition shrink-0 hover:bg-zinc-200"
-            >
-              <BookmarkPlus className="w-4 h-4 text-[#FF3B30]" />
-              <span>Save to Shelf</span>
-            </button>
-          </div>
-
-          {/* Section Tabs: All, Ingredients, Claims */}
-          <div className="flex items-center gap-2 border-b border-white/10 pb-2.5">
-            <button
-              onClick={() => setActiveAnalysisTab('all')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${
-                activeAnalysisTab === 'all'
-                  ? 'bg-white text-black font-extrabold'
-                  : 'bg-[#121217] text-zinc-400 hover:text-white'
-              }`}
-            >
-              All ({analysisResult.detectedIngredients.length + analysisResult.detectedClaims.length})
-            </button>
-            <button
-              onClick={() => setActiveAnalysisTab('ingredients')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${
-                activeAnalysisTab === 'ingredients'
-                  ? 'bg-white text-black font-extrabold'
-                  : 'bg-[#121217] text-zinc-400 hover:text-white'
-              }`}
-            >
-              Ingredients ({analysisResult.detectedIngredients.length})
-            </button>
-            <button
-              onClick={() => setActiveAnalysisTab('claims')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${
-                activeAnalysisTab === 'claims'
-                  ? 'bg-white text-black font-extrabold'
-                  : 'bg-[#121217] text-zinc-400 hover:text-white'
-              }`}
-            >
-              Claims ({analysisResult.detectedClaims.length})
-            </button>
-          </div>
-
-          {/* THE CLINICAL INGREDIENT DEBUNK PAPER */}
-          {(activeAnalysisTab === 'all' || activeAnalysisTab === 'ingredients') && (
-            <div className="space-y-3">
-              <IngredientDebunkPaper
-                productName={productName}
-                brand={saveBrand}
-                rawIngredientText={ingredientText}
-                analysis={analysisResult}
-              />
-            </div>
-          )}
-
-          {/* CLAIM AUDIT BREAKDOWN */}
-          {(activeAnalysisTab === 'all' || activeAnalysisTab === 'claims') && (
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span>Front-Pack Claim Analysis</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 font-mono">
-                    {analysisResult.detectedClaims.length} detected
-                  </span>
-                </h3>
-              </div>
-
-              {analysisResult.detectedClaims.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-[#121217] border border-white/10 text-center text-xs text-zinc-400">
-                  No front-pack marketing claims detected. Add claims like "Clinically Proven" or "100% Natural" to test.
+              {/* Tile 3: Front-Pack Claim Audit */}
+              <button
+                type="button"
+                onClick={() => setActiveSubView('claims')}
+                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-white group-hover:text-white">
+                      Claim Credibility Audit
+                    </h4>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {analysisResult.detectedClaims.length} marketing claims verified
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {analysisResult.detectedClaims.map((claim) => (
-                    <div
-                      key={claim.id}
-                      className="p-5 rounded-[2rem] bg-[#121217] border border-white/10 shadow-card space-y-3 transition hover:border-white/20"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
-                            Detected Claim
-                          </span>
-                          <h4 className="text-base font-black text-white">
-                            "{claim.displayName}"
-                          </h4>
-                        </div>
-                        <VerdictBadge verdict={claim.verdict} size="sm" />
-                      </div>
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
 
-                      <div className="space-y-2 text-xs sm:text-sm text-zinc-300">
-                        <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1">
-                          <strong className="text-white font-bold block text-xs">
-                            What this phrase usually means:
-                          </strong>
-                          <p className="text-zinc-400">{claim.whatItMeans}</p>
-                        </div>
+              {/* Tile 4: Clinically Upgraded Alternatives */}
+              <button
+                type="button"
+                onClick={() => setActiveSubView('alternatives')}
+                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <Zap className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-white group-hover:text-white">
+                      Alternative Formulations
+                    </h4>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {matchingFormulations.length} clinically matched formulations
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
 
-                        <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1">
-                          <strong className="text-white font-bold block text-xs">
-                            What clinical evidence or data is missing:
-                          </strong>
-                          <p className="text-zinc-400">{claim.missingInformation}</p>
-                        </div>
-                      </div>
+              {/* Tile 5: Sample Benchmark Library */}
+              <button
+                type="button"
+                onClick={() => setActiveSubView('samples')}
+                className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                    <Layers className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-white group-hover:text-white">
+                      Sample Benchmark Library
+                    </h4>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Test Hair, Sleep & Recovery reference labs
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
 
-                      <p className="text-xs text-zinc-500 italic pt-1.5 border-t border-white/10">
-                        {claim.supportRationale}
+              {/* Tile 6: AI Vision / OCR Trace Inspector (if trace available) */}
+              {latestDebugTrace && (
+                <button
+                  type="button"
+                  onClick={() => setActiveSubView('ai_inspector')}
+                  className="p-5 rounded-[2rem] bg-[#121217] hover:bg-[#181822] border border-white/10 text-left transition-all duration-200 flex items-center justify-between group shadow-card hover:border-white/20"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FF3B30] group-hover:scale-110 transition-transform">
+                      <Terminal className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-white group-hover:text-white">
+                        AI Model Inspector
+                      </h4>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        Latency: {latestDebugTrace.durationMs || 0}ms • Tokens: {latestDebugTrace.tokens?.total_tokens || 'N/A'}
                       </p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-white/10 transition">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </button>
               )}
             </div>
-          )}
+          </div>
 
-          {/* Clinically Matched Alternative Formulations */}
-          <ClinicalRecommendations
-            products={matchingFormulations}
-            title="Evidence-Based Alternative Formulations"
-            subtitle="Higher-bioavailability, clean-label clinical formulations matching the active ingredients detected on this label."
-          />
+          <DisclaimerBanner />
         </div>
-      </div>
+      )}
 
       {/* Save To Smart Shelf Modal */}
       {saveModalOpen && (
@@ -750,126 +1090,6 @@ export const LabelLensView: React.FC = () => {
                 className="flex-1 py-3 rounded-full bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition"
               >
                 Save Product
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* AI Inspector / Debug Modal */}
-      {isDebugModalOpen && latestDebugTrace && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#121218] text-white rounded-[2rem] max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-white/10 overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#181822]">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-black/40 text-[#FF3B30]">
-                  <Terminal className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span>AI Model Processing Inspector</span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-mono">
-                      {latestDebugTrace.model}
-                    </span>
-                  </h3>
-                  <p className="text-[11px] text-zinc-400">
-                    Live raw payload & JSON inspection
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsDebugModalOpen(false)}
-                className="p-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Metrics Bar */}
-            <div className="px-5 py-2.5 bg-black/30 border-b border-white/10 flex items-center justify-between text-[11px] font-mono text-zinc-400">
-              <div className="flex items-center gap-4">
-                <span>⏱️ Latency: <strong className="text-white">{latestDebugTrace.durationMs || 0}ms</strong></span>
-                {latestDebugTrace.tokens && (
-                  <span>📊 Tokens: <strong className="text-white">{latestDebugTrace.tokens.total_tokens || latestDebugTrace.tokens.completion_tokens || 'N/A'}</strong></span>
-                )}
-              </div>
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(latestDebugTrace.rawResponse || '');
-                  setHasCopiedRaw(true);
-                  setTimeout(() => setHasCopiedRaw(false), 2000);
-                }}
-                className="flex items-center gap-1 text-[11px] text-[#FF3B30] hover:text-white font-sans font-bold transition"
-              >
-                {hasCopiedRaw ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Raw</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="px-5 pt-3 border-b border-white/10 flex items-center gap-2 bg-[#121218]">
-              <button
-                onClick={() => setDebugTab('response')}
-                className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
-                  debugTab === 'response'
-                    ? 'border-white text-white'
-                    : 'border-transparent text-zinc-500 hover:text-white'
-                }`}
-              >
-                <Code2 className="w-3.5 h-3.5" />
-                <span>Raw AI Response</span>
-              </button>
-
-              <button
-                onClick={() => setDebugTab('prompt')}
-                className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
-                  debugTab === 'prompt'
-                    ? 'border-white text-white'
-                    : 'border-transparent text-zinc-500 hover:text-white'
-                }`}
-              >
-                <Terminal className="w-3.5 h-3.5" />
-                <span>Prompt Sent</span>
-              </button>
-            </div>
-
-            {/* Content Area */}
-            <div className="p-5 overflow-y-auto flex-1 font-mono text-xs">
-              {debugTab === 'response' && (
-                <div className="p-4 rounded-2xl bg-black/50 border border-white/5 text-emerald-400 whitespace-pre-wrap leading-relaxed overflow-x-auto">
-                  {latestDebugTrace.rawResponse || 'No raw response recorded'}
-                </div>
-              )}
-
-              {debugTab === 'prompt' && (
-                <div className="p-4 rounded-2xl bg-black/50 border border-white/5 text-zinc-300 whitespace-pre-wrap leading-relaxed overflow-x-auto">
-                  {latestDebugTrace.prompt || 'No prompt recorded'}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-white/10 bg-[#181822] flex items-center justify-between font-sans">
-              <span className="text-[11px] text-zinc-400">
-                Dev inspector for AI prompts and responses.
-              </span>
-              <button
-                onClick={() => setIsDebugModalOpen(false)}
-                className="py-2 px-4 rounded-full bg-white text-black font-extrabold text-xs shadow-md transition hover:bg-zinc-200"
-              >
-                Close
               </button>
             </div>
           </div>
