@@ -42,9 +42,18 @@ export async function extractLabelFromImageWithAI(
   const googleVisionKey = (import.meta as any).env?.VITE_GOOGLE_VISION_API_KEY || '';
   if (googleVisionKey && googleVisionKey.length > 5) {
     try {
-      if (onProgress) onProgress(20, 'Scanning with Google Cloud Vision OCR...');
+      if (onProgress) onProgress(20, 'Scanning characters with Google Cloud Vision OCR...');
       const googleText = await extractTextWithGoogleVision(base64DataUrl, googleVisionKey);
       if (googleText && googleText.length > 10) {
+        if (onProgress) onProgress(45, 'Google Vision characters extracted. De-noising & structuring with LLM...');
+        
+        // Pass high-fidelity raw OCR text to LLM for de-noising & dose structuring
+        const denoisedResult = await denoiseAndStructureOCRWithLLM(googleText, userGoal, apiKey, onProgress);
+        if (denoisedResult) {
+          if (onProgress) onProgress(100, 'De-noised Label Analysis Complete!');
+          return denoisedResult;
+        }
+
         const cleanedIngredients = cleanAndNormalizeOCRText(googleText);
         const analysis = analyzeLabelText(googleText, '', userGoal, 'Scanned Product');
         
@@ -190,11 +199,20 @@ Return ONLY valid JSON in this exact schema:
     }
   }
 
-  // 2. Fallback: Canvas-enhanced Tesseract OCR + Local Clinical Matrix
-  if (onProgress) onProgress(30, 'Running enhanced local image OCR...');
+  // 3. Fallback: Canvas-enhanced Tesseract OCR + Local Clinical Matrix
+  if (onProgress) onProgress(30, 'Running enhanced image OCR...');
   const ocrText = await performBrowserOCR(imageSource, (p, s) => {
-    if (onProgress) onProgress(30 + Math.round(p * 0.6), s);
+    if (onProgress) onProgress(30 + Math.round(p * 0.4), s);
   });
+
+  if (ocrText && ocrText.length > 10) {
+    if (onProgress) onProgress(75, 'De-noising OCR text with AI...');
+    const denoised = await denoiseAndStructureOCRWithLLM(ocrText, userGoal, apiKey, onProgress);
+    if (denoised) {
+      if (onProgress) onProgress(100, 'Analysis Complete');
+      return denoised;
+    }
+  }
 
   const analysis = analyzeLabelText(ocrText, '', userGoal, 'Scanned Product');
   
@@ -215,6 +233,158 @@ Return ONLY valid JSON in this exact schema:
     analysis,
     source: 'local_ocr'
   };
+}
+
+/**
+ * Uses LLM to de-noise raw OCR text, repair broken characters/words,
+ * and extract exact active doses, carrier ingredients, and marketing claims.
+ */
+export async function denoiseAndStructureOCRWithLLM(
+  rawOCRText: string,
+  userGoal: WellnessGoal = 'hair_health',
+  apiKey?: string,
+  onProgress?: (percent: number, status: string) => void
+): Promise<VisionLabelExtractionResult | null> {
+  const effectiveKey = (apiKey && apiKey.trim().length > 5)
+    ? apiKey.trim()
+    : (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+
+  if (!effectiveKey || !rawOCRText || rawOCRText.trim().length < 10) {
+    return null;
+  }
+
+  if (onProgress) onProgress(50, 'AI De-noising & structuring ingredient composition...');
+
+  const prompt = `You are an expert cosmetic chemist, pharmacologist, and label transcriber.
+You are given raw, noisy OCR text extracted from a wellness/skincare/supplement product label.
+
+Raw OCR Text:
+---
+${rawOCRText}
+---
+
+Your task:
+1. Denoise and fix broken words, optical character recognition errors, misaligned numbers, and split units.
+2. Separate and identify:
+   - "productName": Clean name of the product.
+   - "brand": Brand name if present.
+   - "activesWithDose": Array of active ingredients & nutrients with exact numeric dose and unit (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}, {"name": "L-Theanine", "dose": "10.0 mg"}, {"name": "Chamomile Extract", "dose": "10 mg"}, {"name": "Vitamin D2", "dose": "15.0 mcg"}]). Skip generic macronutrients (Energy, Protein, Carbohydrates, Fat, Sugar) unless they are active vitamins/minerals.
+   - "fullIngredientsList": Clean array of all ingredients from the ingredients list (e.g. ["Liquid Glucose", "Sugar", "Maltodextrin", "Water", "Pectin", "Acidity Regulators", "Medium Chain Triglycerides", "Beet Root Powder"]).
+   - "claims": Array of marketing or front-of-pack claims found (e.g. ["100% RDA", "Non-Habit Forming"]).
+   - "clinicalSynthesis": Concise 1-2 sentence evidence summary explaining how the actives function.
+
+Return ONLY a valid JSON object matching this schema without markdown fences:
+{
+  "productName": "string",
+  "brand": "string",
+  "activesWithDose": [
+    { "name": "string", "dose": "string" }
+  ],
+  "fullIngredientsList": ["string"],
+  "claims": ["string"],
+  "clinicalSynthesis": "string"
+}`;
+
+  const candidateModels = [
+    'openrouter/free',
+    'google/gemma-4-31b-it:free',
+    'google/gemma-4-26b-a4b-it:free',
+    'qwen/qwen3.8-27b:free'
+  ];
+
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${effectiveKey.trim()}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://ritual-wellness.app',
+          'X-Title': 'Ritual Wellness AI'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert cosmetic chemist and label de-noiser. Output only valid JSON.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.1
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const rawContent = data.choices?.[0]?.message?.content || '';
+        const cleaned = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+        let parsed: any = null;
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch (jsonErr) {
+          const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+        }
+
+        if (parsed) {
+          const prodName = parsed.productName || 'Audited Product';
+          const brandName = parsed.brand || '';
+          const claims = Array.isArray(parsed.claims) ? parsed.claims.join(', ') : (parsed.claims || '');
+
+          // Build composite ingredient string with active doses attached
+          const activeDoseStrings: string[] = [];
+          if (Array.isArray(parsed.activesWithDose)) {
+            parsed.activesWithDose.forEach((act: any) => {
+              if (act.name && act.dose) {
+                activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
+              } else if (act.name) {
+                activeDoseStrings.push(act.name.trim());
+              }
+            });
+          }
+
+          const fullListStrings: string[] = Array.isArray(parsed.fullIngredientsList) 
+            ? parsed.fullIngredientsList.map((s: string) => s.trim()).filter(Boolean)
+            : [];
+
+          // Merge active doses with full ingredients list cleanly
+          const combinedList: string[] = [...activeDoseStrings];
+          for (const item of fullListStrings) {
+            const itemLower = item.toLowerCase();
+            const alreadyIncluded = activeDoseStrings.some(a => a.toLowerCase().includes(itemLower) || itemLower.includes(a.toLowerCase().split('(')[0].trim()));
+            if (!alreadyIncluded) {
+              combinedList.push(item);
+            }
+          }
+
+          const finalIngredientText = combinedList.length > 0 ? combinedList.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
+          const analysis = analyzeLabelText(finalIngredientText, claims, userGoal, prodName);
+
+          if (parsed.clinicalSynthesis) {
+            analysis.summary.synthesisText = parsed.clinicalSynthesis;
+          }
+
+          return {
+            productName: prodName,
+            brand: brandName,
+            ingredientText: finalIngredientText,
+            claimText: claims,
+            analysis,
+            source: 'openrouter_vision'
+          };
+        }
+      }
+    } catch (err) {
+      console.warn(`LLM Denoising with ${model} failed, trying fallback:`, err);
+    }
+  }
+
+  return null;
 }
 
 export async function analyzeIngredientsWithAI(
