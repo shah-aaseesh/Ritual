@@ -3,11 +3,12 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
 export const POPULAR_OPENROUTER_MODELS = [
-  { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free / Vision + Text)' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct (Free)' },
+  { id: 'google/gemma-4-31b:free', name: 'Google: Gemma 4 31B Multimodal (Free)' },
+  { id: 'google/gemma-4-26b-a4b:free', name: 'Google: Gemma 4 26B A4B MoE (Free)' },
+  { id: 'google/gemini-2.0-flash-exp:free', name: 'Google: Gemini 2.0 Flash (Free)' },
   { id: 'qwen/qwen-2.5-vl-72b-instruct:free', name: 'Qwen 2.5 VL 72B Vision (Free)' },
-  { id: 'deepseek/deepseek-r1:free', name: 'DeepSeek R1 Reasoning (Free)' },
-  { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (Free)' }
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct (Free)' },
+  { id: 'deepseek/deepseek-r1:free', name: 'DeepSeek R1 Reasoning (Free)' }
 ];
 
 export async function analyzeIngredientsWithAI(
