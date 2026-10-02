@@ -1,141 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  WellnessGoal, 
-  HealthGoal,
-  TrainingExperience
-} from '../../types';
-import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { 
   Leaf, 
   ArrowRight, 
-  Check, 
   Bot, 
   ChevronRight, 
-  Dumbbell, 
+  Sparkles, 
   ShieldCheck,
-  ScanLine,
-  Utensils,
-  FileText
+  Activity,
+  Flame,
+  User,
+  Mail,
+  Scale,
+  Ruler,
+  Calendar,
+  Utensils
 } from 'lucide-react';
 
-interface CombinedGoalOption {
-  id: string;
-  category: 'fitness' | 'wellness';
-  healthGoalKey?: HealthGoal;
-  wellnessGoalKey?: WellnessGoal;
-  title: string;
-  desc: string;
-  icon: string;
-  badge: string;
-  defaultPillar: 'health' | 'wellness';
-}
-
-const ALL_GOAL_OPTIONS: CombinedGoalOption[] = [
-  {
-    id: 'hypertrophy_strength',
-    category: 'fitness',
-    healthGoalKey: 'hypertrophy_strength',
-    wellnessGoalKey: 'body_care',
-    title: 'Muscle Growth & Hypertrophy',
-    desc: 'Progressive overload tracking, power output, and muscle protein synthesis.',
-    icon: '🏋️',
-    badge: 'High Protein • Creatine Monohydrate',
-    defaultPillar: 'health'
-  },
-  {
-    id: 'fat_loss_recomp',
-    category: 'fitness',
-    healthGoalKey: 'fat_loss_recomp',
-    wellnessGoalKey: 'body_care',
-    title: 'Fat Loss & Body Recomposition',
-    desc: 'Caloric deficit management with maximum lean muscle mass retention.',
-    icon: '⚡',
-    badge: 'Macro Deficit • Thermogenic',
-    defaultPillar: 'health'
-  },
-  {
-    id: 'athletic_conditioning',
-    category: 'fitness',
-    healthGoalKey: 'athletic_conditioning',
-    wellnessGoalKey: 'sleep_recovery',
-    title: 'Athletic Conditioning & Endurance',
-    desc: 'VO2 max recovery kinetics, intra-workout electrolytes, and stamina.',
-    icon: '🏃',
-    badge: 'Electrolyte Balance • CNS Recovery',
-    defaultPillar: 'health'
-  },
-  {
-    id: 'hair_health',
-    category: 'wellness',
-    wellnessGoalKey: 'hair_health',
-    healthGoalKey: 'longevity_health',
-    title: 'Hair Health & Follicle Density',
-    desc: 'Scalp microcirculation, follicle reactivation, and shedding reduction.',
-    icon: '🌿',
-    badge: '3% Redensyl • Procapil',
-    defaultPillar: 'wellness'
-  },
-  {
-    id: 'body_care',
-    category: 'wellness',
-    wellnessGoalKey: 'body_care',
-    healthGoalKey: 'hypertrophy_strength',
-    title: 'Skin & Body Barrier Health',
-    desc: 'Clear body acne, keratosis pilaris, and lipid barrier restoration.',
-    icon: '💧',
-    badge: '1% Salicylic Acid • Niacinamide',
-    defaultPillar: 'wellness'
-  },
-  {
-    id: 'sleep_recovery',
-    category: 'wellness',
-    wellnessGoalKey: 'sleep_recovery',
-    healthGoalKey: 'longevity_health',
-    title: 'Sleep Latency & Deep Recovery',
-    desc: 'Lower sleep latency, modulate nocturnal cortisol, and promote deep REM sleep.',
-    icon: '🌙',
-    badge: 'Melatonin • Mg Bisglycinate',
-    defaultPillar: 'wellness'
-  }
-];
-
 export const OnboardingFlow: React.FC = () => {
-  const { completeOnboarding, aiSettings, updateAISettings, setActivePillar, setActiveTab } = useApp();
+  const { completeOnboarding, aiSettings, updateAISettings, setActiveTab } = useApp();
 
-  // Wizard Step State
-  // 1: Name, Age & Goal Selection -> 2: Ritual AI Feature Suite Showcase -> 3: Matched Clinical Formulations
+  // Step 1: Account Creation & Bio-Metrics Intake
+  // Step 2: Instant Calculated BMI & Maintenance Calories Blueprint
+  // Step 3: Account Verification & Dashboard Launch
   const [step, setStep] = useState<number>(1);
   const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState<number>(24);
-  const [selectedGoalId, setSelectedGoalId] = useState<string>('hypertrophy_strength');
-  const [trainingExp, setTrainingExp] = useState<TrainingExperience>('intermediate');
+  const [heightFeet, setHeightFeet] = useState<number>(5);
+  const [heightInches, setHeightInches] = useState<number>(9);
+  const [weightKg, setWeightKg] = useState<number>(70);
 
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
   const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'google/gemini-3.1-flash-lite');
 
-  const selectedGoal = ALL_GOAL_OPTIONS.find(g => g.id === selectedGoalId) || ALL_GOAL_OPTIONS[0];
+  // Bio-Metrics Calculation Engine
+  const metrics = useMemo(() => {
+    // Height in cm: 1 ft = 30.48 cm, 1 inch = 2.54 cm
+    const totalInches = (heightFeet * 12) + heightInches;
+    const heightCm = Math.round(totalInches * 2.54);
+    const heightM = heightCm / 100;
 
-  // Matched Formulations Catalog based on selected goal
-  const matchedProducts = React.useMemo(() => {
-    if (selectedGoal.category === 'fitness') {
-      return MOSAIC_PRODUCTS_CATALOG.filter(p => 
-        p.category.includes('Athletic') || p.category.includes('Recovery') || p.category.includes('Hydration') || p.category.includes('Protein')
-      ).slice(0, 3);
+    // BMI Formula: weight (kg) / (height (m))^2
+    const rawBmi = heightM > 0 ? weightKg / (heightM * heightM) : 22.5;
+    const bmi = parseFloat(rawBmi.toFixed(1));
+
+    let bmiCategory = 'Healthy Normal Weight';
+    let bmiColor = 'text-emerald-700 bg-emerald-50 border-emerald-300';
+    let bmiProgressPercent = 50;
+
+    if (bmi < 18.5) {
+      bmiCategory = 'Underweight';
+      bmiColor = 'text-sky-700 bg-sky-50 border-sky-300';
+      bmiProgressPercent = Math.max(10, Math.round((bmi / 18.5) * 30));
+    } else if (bmi <= 24.9) {
+      bmiCategory = 'Healthy Normal Weight';
+      bmiColor = 'text-emerald-700 bg-emerald-50 border-emerald-300';
+      bmiProgressPercent = 30 + Math.round(((bmi - 18.5) / (24.9 - 18.5)) * 40);
+    } else if (bmi <= 29.9) {
+      bmiCategory = 'Overweight / High Muscle';
+      bmiColor = 'text-amber-700 bg-amber-50 border-amber-300';
+      bmiProgressPercent = 70 + Math.round(((bmi - 25) / (29.9 - 25)) * 20);
     } else {
-      return MOSAIC_PRODUCTS_CATALOG.filter(p => 
-        p.category.includes('Hair') || p.category.includes('Body') || p.category.includes('Sleep') || p.category.includes('Skin')
-      ).slice(0, 3);
+      bmiCategory = 'Obesity Tier';
+      bmiColor = 'text-rose-700 bg-rose-50 border-rose-300';
+      bmiProgressPercent = 95;
     }
-  }, [selectedGoal]);
+
+    // BMR via Mifflin-St Jeor Equation
+    // Men: (10 × weight in kg) + (6.25 × height in cm) - (5 × age in yrs) + 5
+    // Women: (10 × weight in kg) + (6.25 × height in cm) - (5 × age in yrs) - 161
+    const genderOffset = gender === 'male' ? 5 : -161;
+    const bmr = Math.round((10 * weightKg) + (6.25 * heightCm) - (5 * age) + genderOffset);
+
+    // Maintenance Calories (TDEE with standard active multiplier 1.45 for workout routine)
+    const maintenanceCalories = Math.round(bmr * 1.45);
+
+    // Calibrated Daily Macros
+    const proteinG = Math.round(weightKg * 2.0); // 2g per kg for optimal synthesis & muscle retention
+    const fatG = Math.round((maintenanceCalories * 0.25) / 9); // 25% healthy fats
+    const carbsG = Math.max(60, Math.round((maintenanceCalories - (proteinG * 4) - (fatG * 9)) / 4));
+
+    return {
+      heightCm,
+      bmi,
+      bmiCategory,
+      bmiColor,
+      bmiProgressPercent,
+      bmr,
+      maintenanceCalories,
+      proteinG,
+      carbsG,
+      fatG
+    };
+  }, [gender, age, heightFeet, heightInches, weightKg]);
 
   const handleQuickSkip = () => {
-    setActivePillar('health');
-    setActiveTab('home');
     completeOnboarding({
       name: 'Athlete',
+      email: 'user@ritual.health',
       age: 24,
+      heightFeet: 5,
+      heightInches: 10,
+      weightKg: 72,
+      gender: 'male',
+      bmi: 22.8,
+      bmiCategory: 'Healthy Normal Weight',
+      bmr: 1720,
+      maintenanceCalories: 2490,
       primaryGoal: 'hair_health',
       healthGoal: 'hypertrophy_strength',
       trainingExperience: 'intermediate',
@@ -143,28 +117,48 @@ export const OnboardingFlow: React.FC = () => {
       alreadyOwnsProducts: true,
       isOnboarded: true
     });
+    setActiveTab('home');
   };
 
   const handleFinishOnboarding = () => {
-    setActivePillar(selectedGoal.defaultPillar);
-    setActiveTab('home');
+    // Save calibrated macros to localStorage for CalorieTracker
+    try {
+      localStorage.setItem('ritual_macro_targets', JSON.stringify({
+        calories: metrics.maintenanceCalories,
+        proteinG: metrics.proteinG,
+        carbsG: metrics.carbsG,
+        fatG: metrics.fatG,
+        waterMl: 3000
+      }));
+    } catch (e) {}
+
     completeOnboarding({
-      name: name.trim() || 'Aarav',
+      name: name.trim() || 'Alex',
+      email: email.trim() || `${(name.trim() || 'alex').toLowerCase().replace(/\s+/g, '')}@gmail.com`,
       age,
-      primaryGoal: selectedGoal.wellnessGoalKey || 'hair_health',
-      healthGoal: selectedGoal.healthGoalKey || 'hypertrophy_strength',
-      trainingExperience: trainingExp,
+      heightFeet,
+      heightInches,
+      weightKg,
+      gender,
+      bmi: metrics.bmi,
+      bmiCategory: metrics.bmiCategory,
+      bmr: metrics.bmr,
+      maintenanceCalories: metrics.maintenanceCalories,
+      primaryGoal: 'hair_health',
+      healthGoal: 'hypertrophy_strength',
+      trainingExperience: 'intermediate',
       dailyTime: '10_min',
       alreadyOwnsProducts: true,
       isOnboarded: true
     });
+    setActiveTab('home');
   };
 
   return (
     <div className="min-h-screen bg-[#FBF9F5] text-charcoal-900 flex flex-col justify-between p-4 sm:p-8 max-w-2xl mx-auto selection:bg-[#44926C] selection:text-white">
       {/* Top Header */}
       <div>
-        <div className="flex items-center justify-between pb-6 border-b border-mint-200/80">
+        <div className="flex items-center justify-between pb-5 border-b border-mint-200/80">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-forest-900 flex items-center justify-center text-white shadow-soft">
               <Leaf className="w-4 h-4 text-mint-300" />
@@ -172,7 +166,7 @@ export const OnboardingFlow: React.FC = () => {
             <div>
               <span className="text-base font-black tracking-tight text-forest-950">RITUAL</span>
               <span className="text-[10px] text-charcoal-500 font-semibold block -mt-0.5 tracking-wider uppercase font-mono">
-                Performance & Health OS
+                Account & Bio-Metrics Intake
               </span>
             </div>
           </div>
@@ -182,7 +176,7 @@ export const OnboardingFlow: React.FC = () => {
               onClick={handleQuickSkip}
               className="px-3.5 py-1.5 rounded-full bg-cream-50 hover:bg-mint-100 text-xs font-bold text-forest-900 border border-mint-200 transition active:scale-95"
             >
-              <span>Quick Skip ›</span>
+              <span>Quick Demo ›</span>
             </button>
 
             <button
@@ -196,299 +190,437 @@ export const OnboardingFlow: React.FC = () => {
         </div>
 
         {/* ========================================================================= */}
-        {/* STEP 1: PROFILE BASELINES & PRIMARY GOAL                                  */}
+        {/* STEP 1: ACCOUNT DETAILS & BIO-METRIC INPUTS                               */}
         {/* ========================================================================= */}
         {step === 1 && (
-          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-2">
+          <div className="space-y-5 pt-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-1.5">
               <span className="text-xs font-mono font-black uppercase tracking-widest text-forest-700">
-                Step 1 of 3 • Profile & Focus
+                Step 1 of 3 • Bio-Metrics Intake
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-forest-950 tracking-tight">
-                Welcome to Ritual. Set your focus.
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
+                Create Account & Enter Baselines
               </h2>
-              <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
-                Tell us your primary target to calibrate your workout log, calorie targets, and clinical insights.
+              <p className="text-xs text-charcoal-600 leading-relaxed">
+                We use your height, weight, age, and email to calculate your exact BMI, BMR, and daily maintenance calories.
               </p>
             </div>
 
-            {/* Name & Age Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex, Jordan, Aarav"
-                  className="w-full px-4 py-3 rounded-2xl bg-white border border-mint-200 text-charcoal-900 text-sm focus:outline-none focus:ring-2 focus:ring-mint-500 shadow-card font-medium"
-                  autoFocus
-                />
+            {/* Form Fields Card */}
+            <div className="p-5 sm:p-6 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-4">
+              
+              {/* Row 1: Name & Email */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
+                    <User className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Your Full Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex Sharma"
+                    className="w-full px-4 py-3 rounded-xl bg-cream-50/70 border border-mint-200 text-charcoal-900 text-sm focus:outline-none focus:ring-2 focus:ring-mint-500 font-medium"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
+                    <Mail className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Email Address</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="alex@example.com"
+                    className="w-full px-4 py-3 rounded-xl bg-cream-50/70 border border-mint-200 text-charcoal-900 text-sm focus:outline-none focus:ring-2 focus:ring-mint-500 font-medium font-mono"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                  Your Age
-                </label>
-                <div className="flex items-center gap-1.5">
-                  {[20, 24, 28, 32, 36].map((presetAge) => (
+              {/* Row 2: Biological Sex & Age */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
+                    <Activity className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Biological Sex</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      key={presetAge}
                       type="button"
-                      onClick={() => setAge(presetAge)}
-                      className={`flex-1 py-3 rounded-xl border text-xs font-black transition ${
-                        age === presetAge
+                      onClick={() => setGender('male')}
+                      className={`py-2.5 rounded-xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${
+                        gender === 'male'
                           ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                          : 'bg-white text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                          : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
                       }`}
                     >
-                      {presetAge}
+                      <span>♂ Male</span>
                     </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Primary Goal Selector Cards */}
-            <div className="space-y-2 pt-2">
-              <label className="block text-xs font-mono uppercase text-charcoal-500">
-                Select Primary Health & Performance Focus
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {ALL_GOAL_OPTIONS.map((opt) => {
-                  const isSelected = selectedGoalId === opt.id;
-                  return (
                     <button
-                      key={opt.id}
                       type="button"
-                      onClick={() => setSelectedGoalId(opt.id)}
-                      className={`p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between space-y-2 shadow-soft ${
-                        isSelected
-                          ? 'bg-mint-50/90 text-forest-950 border-mint-400 ring-2 ring-forest-800'
-                          : 'bg-white text-charcoal-800 border-mint-200/80 hover:border-mint-400'
+                      onClick={() => setGender('female')}
+                      className={`py-2.5 rounded-xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${
+                        gender === 'female'
+                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
+                          : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-2xl">{opt.icon}</span>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-forest-900 border-forest-900 text-white' : 'border-mint-200'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-black text-forest-950">
-                          {opt.title}
-                        </h4>
-                        <p className="text-[11px] text-charcoal-600 mt-0.5 line-clamp-2 leading-relaxed">
-                          {opt.desc}
-                        </p>
-                      </div>
-
-                      <div className="pt-1">
-                        <span className="px-2 py-0.5 rounded-full bg-mint-100 text-[9px] font-mono font-bold text-forest-800 border border-mint-200 block truncate">
-                          {opt.badge}
-                        </span>
-                      </div>
+                      <span>♀ Female</span>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Training Experience Selector */}
-            <div className="space-y-2 pt-1">
-              <label className="block text-xs font-mono uppercase text-charcoal-500">
-                Training Experience Level
-              </label>
-              <div className="grid grid-cols-3 gap-2 font-mono text-xs">
-                {(['beginner', 'intermediate', 'advanced'] as const).map((lvl) => (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => setTrainingExp(lvl)}
-                    className={`py-2.5 rounded-xl border capitalize font-bold transition ${
-                      trainingExp === lvl
-                        ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                        : 'bg-white text-charcoal-700 border-mint-200 hover:bg-mint-50'
-                    }`}
-                  >
-                    {lvl}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 2: RITUAL INTEGRATED SUITE CAPABILITIES                              */}
-        {/* ========================================================================= */}
-        {step === 2 && (
-          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-2">
-              <span className="text-xs font-mono font-black uppercase tracking-widest text-forest-700">
-                Step 2 of 3 • Core Feature Suite
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-forest-950 tracking-tight">
-                Everything you need in one place
-              </h2>
-              <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
-                Ritual unifies workout tracking, macro vision AI, formulation debunking, and medical lab records.
-              </p>
-            </div>
-
-            {/* 4 Core Features Showcase Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-              {/* Feature 1: 🏋️ Workout & 3D Anatomy */}
-              <div className="p-4 rounded-2xl bg-white border border-mint-200 shadow-card space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shadow-soft">
-                  <Dumbbell className="w-5 h-5 text-mint-300" />
+                  </div>
                 </div>
+
                 <div>
-                  <h4 className="text-sm font-black text-forest-950">
-                    Workout Log & 3D Anatomy
-                  </h4>
-                  <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                    Interactive 3D muscle anatomy heatmap, exercise library, set/rep logging & progressive overload tracking.
-                  </p>
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Age (Years): <strong className="text-forest-950 font-black">{age}</strong></span>
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {[18, 21, 24, 28, 32, 36].map((a) => (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => setAge(a)}
+                        className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition ${
+                          age === a
+                            ? 'bg-forest-900 text-white border-forest-900 shadow-soft font-black'
+                            : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <span className="inline-block text-[10px] font-mono font-bold text-mint-700">
-                  ⚡ Interactive Muscle Recovery
-                </span>
               </div>
 
-              {/* Feature 2: 🔬 Dual-Slot Myth Buster */}
-              <div className="p-4 rounded-2xl bg-white border border-mint-200 shadow-card space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shadow-soft">
-                  <ScanLine className="w-5 h-5 text-mint-300" />
+              {/* Row 3: Height in Feet & Inches */}
+              <div className="space-y-2 pt-1 border-t border-mint-100">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500">
+                    <Ruler className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Height in Feet & Inches</span>
+                  </label>
+                  <span className="text-xs font-mono font-black text-forest-900">
+                    {heightFeet}' {heightInches}" ({metrics.heightCm} cm)
+                  </span>
                 </div>
-                <div>
-                  <h4 className="text-sm font-black text-forest-950">
-                    Dual Myth Buster & Label Lens
-                  </h4>
-                  <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                    Dual-slot Front (claims) & Back (ingredients) scan. Detects fairy dusting with direct PubMed study links.
-                  </p>
-                </div>
-                <span className="inline-block text-[10px] font-mono font-bold text-mint-700">
-                  🔬 Direct PubMed Citations
-                </span>
-              </div>
 
-              {/* Feature 3: 🥗 AI Calorie & Macro Scanner */}
-              <div className="p-4 rounded-2xl bg-white border border-mint-200 shadow-card space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shadow-soft">
-                  <Utensils className="w-5 h-5 text-mint-300" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-forest-950">
-                    Smart AI Calorie Tracker
-                  </h4>
-                  <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                    &lt;1s Multimodal AI food photo scanner, barcode lookups, macro breakdown rings, and water tracker.
-                  </p>
-                </div>
-                <span className="inline-block text-[10px] font-mono font-bold text-mint-700">
-                  📸 Photo-to-Macros AI
-                </span>
-              </div>
-
-              {/* Feature 4: 📋 Medical Docs AI & Lab Vault */}
-              <div className="p-4 rounded-2xl bg-white border border-mint-200 shadow-card space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shadow-soft">
-                  <FileText className="w-5 h-5 text-mint-300" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-forest-950">
-                    Medical Docs & Lab Vault
-                  </h4>
-                  <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                    Upload blood tests and medical PDF reports. AI flags out-of-range biomarkers and synthesizes insights.
-                  </p>
-                </div>
-                <span className="inline-block text-[10px] font-mono font-bold text-mint-700">
-                  🩺 Clinical Blood Work AI
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 3: MATCHED CLINICAL FORMULATIONS & LAUNCH                            */}
-        {/* ========================================================================= */}
-        {step === 3 && (
-          <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <div className="space-y-2">
-              <span className="text-xs font-mono font-black uppercase tracking-widest text-forest-700">
-                Step 3 of 3 • Clinical Match
-              </span>
-              <h2 className="text-3xl font-black text-forest-950 tracking-tight">
-                Formulations for {selectedGoal.title}
-              </h2>
-              <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
-                Clean, 100% disclosed clinical formulations calibrated for your goal.
-              </p>
-            </div>
-
-            {/* Matched Products List */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase text-forest-950">
-                  <ShieldCheck className="w-4 h-4 text-forest-800" />
-                  <span>Evidence-Backed Formulations</span>
-                </div>
-                <span className="text-[10px] text-charcoal-500 font-mono">Fully Disclosed</span>
-              </div>
-
-              <div className="space-y-2.5">
-                {matchedProducts.map((prod) => (
-                  <div
-                    key={prod.id}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-white border border-mint-200/80 flex items-center justify-between gap-3.5 shadow-card hover:border-mint-400 transition group"
-                  >
-                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                      <div className="w-14 h-14 rounded-xl bg-cream-50 border border-mint-200 shrink-0 overflow-hidden relative flex items-center justify-center">
-                        {prod.imageUrl && (
-                          <img
-                            src={prod.imageUrl}
-                            alt={prod.product}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-black text-forest-950 truncate">{prod.product}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 text-[9px] font-mono font-bold shrink-0 border border-mint-200">
-                            {prod.potencyBadge}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-charcoal-600 leading-snug line-clamp-2">{prod.description}</p>
-                        <span className="text-[10px] text-mint-700 font-mono block">
-                          ✓ {prod.clinicalAdvantage}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-mono font-black text-forest-950 block">
-                        {prod.currency}{prod.sitePrice}
-                      </span>
-                      <span className="text-[9px] text-charcoal-500 font-mono block uppercase">
-                        {prod.bioavailabilityRating}
-                      </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[11px] font-mono text-charcoal-500 block mb-1">Feet (ft)</span>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[4, 5, 6, 7].map((ft) => (
+                        <button
+                          key={ft}
+                          type="button"
+                          onClick={() => setHeightFeet(ft)}
+                          className={`py-2 rounded-xl border text-xs font-bold transition ${
+                            heightFeet === ft
+                              ? 'bg-forest-900 text-white border-forest-900 font-black'
+                              : 'bg-cream-50 text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                          }`}
+                        >
+                          {ft} ft
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))}
+
+                  <div>
+                    <span className="text-[11px] font-mono text-charcoal-500 block mb-1">Inches (in)</span>
+                    <div className="grid grid-cols-6 gap-1">
+                      {[0, 2, 4, 6, 8, 10].map((inc) => (
+                        <button
+                          key={inc}
+                          type="button"
+                          onClick={() => setHeightInches(inc)}
+                          className={`py-2 rounded-xl border text-xs font-bold transition ${
+                            heightInches === inc
+                              ? 'bg-forest-900 text-white border-forest-900 font-black'
+                              : 'bg-cream-50 text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                          }`}
+                        >
+                          {inc}"
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Body Weight in Kg */}
+              <div className="space-y-2 pt-1 border-t border-mint-100">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500">
+                    <Scale className="w-3.5 h-3.5 text-forest-800" />
+                    <span>Body Weight in Kgs</span>
+                  </label>
+                  <span className="text-xs font-mono font-black text-forest-900">
+                    {weightKg} kg ({(weightKg * 2.20462).toFixed(1)} lbs)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="40"
+                    max="140"
+                    step="1"
+                    value={weightKg}
+                    onChange={(e) => setWeightKg(parseInt(e.target.value))}
+                    className="flex-1 accent-forest-900 h-2 bg-mint-100 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setWeightKg(w => Math.max(40, w - 1))}
+                      className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm flex items-center justify-center"
+                    >
+                      -
+                    </button>
+                    <span className="w-12 text-center text-xs font-mono font-black text-forest-950">
+                      {weightKg} kg
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setWeightKg(w => Math.min(140, w + 1))}
+                      className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Calculation Preview Strip */}
+            <div className="p-4 rounded-2xl bg-mint-50/80 border border-mint-200/90 flex items-center justify-between gap-3 shadow-soft">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-forest-900 text-white flex items-center justify-center shrink-0">
+                  <Flame className="w-4 h-4 text-mint-300" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
+                    Live Calculation Preview
+                  </span>
+                  <span className="text-xs font-black text-forest-950">
+                    BMI {metrics.bmi} • {metrics.maintenanceCalories} kcal/day Maintenance
+                  </span>
+                </div>
+              </div>
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${metrics.bmiColor}`}>
+                {metrics.bmiCategory}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 2: METRICS BLUEPRINT & MAINTENANCE CALORIES                          */}
+        {/* ========================================================================= */}
+        {step === 2 && (
+          <div className="space-y-5 pt-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono font-black uppercase tracking-widest text-forest-700">
+                Step 2 of 3 • Bio-Metabolic Blueprint
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
+                Your Calculated BMI & Maintenance Energy
+              </h2>
+              <p className="text-xs text-charcoal-600 leading-relaxed">
+                Calculated using the clinical Mifflin-St Jeor formula and WHO BMI benchmarks.
+              </p>
+            </div>
+
+            {/* 2 Big Highlight Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {/* Card 1: BMI */}
+              <div className="p-5 rounded-[2rem] bg-white border border-mint-200 shadow-card space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 tracking-wider">
+                    BODY MASS INDEX (BMI)
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${metrics.bmiColor}`}>
+                    {metrics.bmiCategory}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-forest-950 font-mono">
+                    {metrics.bmi}
+                  </span>
+                  <span className="text-xs text-charcoal-500 font-mono">kg/m²</span>
+                </div>
+
+                {/* Visual Bar Scale */}
+                <div className="space-y-1 pt-1">
+                  <div className="w-full h-2.5 rounded-full bg-cream-100 overflow-hidden flex">
+                    <div className="w-[18.5%] bg-sky-400" title="Underweight" />
+                    <div className="w-[32%] bg-emerald-500" title="Normal" />
+                    <div className="w-[25%] bg-amber-400" title="Overweight" />
+                    <div className="w-[24.5%] bg-rose-500" title="Obese" />
+                  </div>
+                  <div className="flex justify-between text-[9px] font-mono text-charcoal-400">
+                    <span>18.5</span>
+                    <span>24.9</span>
+                    <span>29.9</span>
+                    <span>40+</span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-charcoal-600 leading-relaxed">
+                  Based on height of <strong>{heightFeet}'{heightInches}"</strong> and body weight of <strong>{weightKg} kg</strong>.
+                </p>
+              </div>
+
+              {/* Card 2: Maintenance Calories (TDEE) */}
+              <div className="p-5 rounded-[2rem] bg-white border border-mint-200 shadow-card space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 tracking-wider">
+                    DAILY MAINTENANCE (TDEE)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200 text-[10px] font-mono font-bold">
+                    Active Multiplier
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-forest-950 font-mono">
+                    {metrics.maintenanceCalories}
+                  </span>
+                  <span className="text-xs text-charcoal-500 font-mono">kcal/day</span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-charcoal-600 font-mono pt-1">
+                  <span>Basal BMR (At Rest):</span>
+                  <strong className="text-forest-950">{metrics.bmr} kcal</strong>
+                </div>
+
+                <p className="text-[11px] text-charcoal-600 leading-relaxed">
+                  Your baseline daily energy burn. Use this target in the Calorie Tracker for lean recomposition or maintenance.
+                </p>
+              </div>
+            </div>
+
+            {/* Calibrated Macro Split Target Breakdown */}
+            <div className="p-5 rounded-[2rem] bg-white border border-mint-200 shadow-card space-y-3.5">
+              <div className="flex items-center justify-between border-b border-mint-100 pb-2.5">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase text-forest-950">
+                  <Utensils className="w-4 h-4 text-forest-800" />
+                  <span>Calibrated Daily Macro Split for {weightKg} kg Bodyweight</span>
+                </div>
+                <span className="text-[10px] font-mono text-charcoal-500 font-bold">2.0g Protein / kg</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-3 rounded-xl bg-coral-50/70 border border-coral-200">
+                  <span className="text-[10px] font-mono font-black uppercase text-coral-700 block">
+                    Protein
+                  </span>
+                  <span className="text-lg font-black text-forest-950 font-mono">
+                    {metrics.proteinG}g
+                  </span>
+                  <span className="text-[10px] text-charcoal-500 block">~{metrics.proteinG * 4} kcal</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+                  <span className="text-[10px] font-mono font-black uppercase text-amber-700 block">
+                    Carbohydrates
+                  </span>
+                  <span className="text-lg font-black text-forest-950 font-mono">
+                    {metrics.carbsG}g
+                  </span>
+                  <span className="text-[10px] text-charcoal-500 block">~{metrics.carbsG * 4} kcal</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-teal-50/70 border border-teal-200">
+                  <span className="text-[10px] font-mono font-black uppercase text-teal-700 block">
+                    Fats
+                  </span>
+                  <span className="text-lg font-black text-forest-950 font-mono">
+                    {metrics.fatG}g
+                  </span>
+                  <span className="text-[10px] text-charcoal-500 block">~{metrics.fatG * 9} kcal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: ACCOUNT CREATED & VERIFIED LAUNCH                                 */}
+        {/* ========================================================================= */}
+        {step === 3 && (
+          <div className="space-y-5 pt-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono font-black uppercase tracking-widest text-forest-700">
+                Step 3 of 3 • Account Verified
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
+                Welcome to Ritual, {name || 'Alex'}!
+              </h2>
+              <p className="text-xs text-charcoal-600 leading-relaxed">
+                Your profile has been created and your bio-metrics are synchronized across your Workout Log, Calorie Tracker, and Lab Vault.
+              </p>
+            </div>
+
+            {/* Account ID Card */}
+            <div className="p-6 rounded-[2.5rem] bg-gradient-to-br from-forest-950 to-forest-900 text-white shadow-xl space-y-4 relative overflow-hidden border border-mint-700/30">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-500/20 border border-mint-400/40 text-mint-300 flex items-center justify-center font-black text-lg">
+                    {(name.trim() || 'Alex').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white">{name || 'Alex Sharma'}</h3>
+                    <span className="text-xs text-mint-200 font-mono">{email || 'alex@example.com'}</span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-mint-500/20 text-mint-300 border border-mint-400/30 text-[10px] font-mono font-bold">
+                  Active Account
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-[10px] font-mono text-mint-300 uppercase block">BMI Score</span>
+                  <span className="text-base font-black text-white font-mono">{metrics.bmi}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-[10px] font-mono text-mint-300 uppercase block">Maintenance</span>
+                  <span className="text-base font-black text-white font-mono">{metrics.maintenanceCalories} kcal</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-[10px] font-mono text-mint-300 uppercase block">Daily Protein</span>
+                  <span className="text-base font-black text-white font-mono">{metrics.proteinG}g</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-[10px] font-mono text-mint-300 uppercase block">Height/Weight</span>
+                  <span className="text-base font-black text-white font-mono">{weightKg}kg • {heightFeet}'{heightInches}"</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Access Highlights */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="p-3.5 rounded-2xl bg-white border border-mint-200 shadow-card flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-forest-800 shrink-0" />
+                <div>
+                  <span className="text-xs font-black text-forest-950 block">Workout Logger</span>
+                  <span className="text-[10px] text-charcoal-500 block">3D Muscle Anatomy</span>
+                </div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-white border border-mint-200 shadow-card flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-forest-800 shrink-0" />
+                <div>
+                  <span className="text-xs font-black text-forest-950 block">AI Calorie Tracker</span>
+                  <span className="text-[10px] text-charcoal-500 block">Photo Vision Scanner</span>
+                </div>
               </div>
             </div>
           </div>
@@ -496,7 +628,7 @@ export const OnboardingFlow: React.FC = () => {
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="pt-6 pb-2 border-t border-mint-200 mt-6">
+      <div className="pt-5 pb-2 border-t border-mint-200 mt-5">
         <div className="flex items-center gap-3">
           {step > 1 && (
             <button
@@ -512,12 +644,13 @@ export const OnboardingFlow: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                if (step === 1 && !name.trim()) setName('Athlete');
+                if (step === 1 && !name.trim()) setName('Alex');
+                if (step === 1 && !email.trim()) setEmail('alex@example.com');
                 setStep(s => s + 1);
               }}
               className="flex-1 py-4 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm shadow-soft flex items-center justify-center gap-2 transition active:scale-98"
             >
-              <span>{step === 1 ? 'Next: Explore Features' : 'Next: Matched Formulations'}</span>
+              <span>{step === 1 ? 'Calculate BMI & Maintenance Calories' : 'Verify Account & Continue'}</span>
               <ArrowRight className="w-4 h-4 text-mint-300" />
             </button>
           ) : (
@@ -526,7 +659,7 @@ export const OnboardingFlow: React.FC = () => {
               onClick={handleFinishOnboarding}
               className="flex-1 py-4 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm shadow-soft flex items-center justify-center gap-2 transition active:scale-98"
             >
-              <span>Enter Ritual Dashboard</span>
+              <span>Launch Ritual Dashboard</span>
               <ChevronRight className="w-5 h-5 text-mint-300" />
             </button>
           )}

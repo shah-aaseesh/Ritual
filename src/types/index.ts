@@ -28,7 +28,16 @@ export type ClaimVerdict =
 
 export interface UserProfile {
   name: string;
+  email?: string;
   age?: number;
+  heightFeet?: number;
+  heightInches?: number;
+  weightKg?: number;
+  gender?: 'male' | 'female' | 'other';
+  bmi?: number;
+  bmiCategory?: string;
+  bmr?: number;
+  maintenanceCalories?: number;
   primaryGoal: WellnessGoal;
   healthGoal?: HealthGoal;
   trainingExperience?: TrainingExperience;

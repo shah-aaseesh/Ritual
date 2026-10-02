@@ -13,7 +13,7 @@ import {
   Sliders,
   Camera
 } from 'lucide-react';
-import { FoodItem, FoodLogEntry, MealCategory } from '../../types';
+import { FoodItem, FoodLogEntry, MealCategory, DailyMacroTarget } from '../../types';
 import { PRESET_FOODS, DEFAULT_MACRO_TARGETS, DEMO_FOOD_LOGS } from '../../data/calorieData';
 import { useApp } from '../../context/AppContext';
 import { FoodCameraModal } from './FoodCameraModal';
@@ -21,15 +21,34 @@ import { FoodCameraModal } from './FoodCameraModal';
 type CalorieSubView = 'hub' | 'meal_detail' | 'hydration' | 'food_library' | 'targets' | 'custom_food';
 
 export const CalorieTrackerView: React.FC = () => {
-  const { showToast } = useApp();
+  const { profile, showToast } = useApp();
 
   // Nested Navigation View State
   const [subView, setSubView] = useState<CalorieSubView>('hub');
   const [activeMealCategory, setActiveMealCategory] = useState<MealCategory>('breakfast');
   const [isCameraModalOpen, setIsCameraModalOpen] = useState<boolean>(false);
 
-  // Macro Targets
-  const [macroTargets, setMacroTargets] = useState(DEFAULT_MACRO_TARGETS);
+  // Macro Targets (dynamically calibrated from user's onboarding profile or stored preferences)
+  const [macroTargets, setMacroTargets] = useState<DailyMacroTarget>(() => {
+    const saved = localStorage.getItem('ritual_macro_targets');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    if (profile.maintenanceCalories) {
+      const weight = profile.weightKg || 70;
+      const proteinG = Math.round(weight * 2.0);
+      const fatG = Math.round((profile.maintenanceCalories * 0.25) / 9);
+      const carbsG = Math.max(50, Math.round((profile.maintenanceCalories - (proteinG * 4) - (fatG * 9)) / 4));
+      return {
+        calories: profile.maintenanceCalories,
+        proteinG,
+        carbsG,
+        fatG,
+        waterMl: 3000
+      };
+    }
+    return DEFAULT_MACRO_TARGETS;
+  });
 
   // Food logs for today
   const [foodLogs, setFoodLogs] = useState<FoodLogEntry[]>(() => {
@@ -798,7 +817,7 @@ export const CalorieTrackerView: React.FC = () => {
                 <input
                   type="number"
                   value={macroTargets.calories}
-                  onChange={(e) => setMacroTargets(prev => ({ ...prev, calories: parseInt(e.target.value) || 2000 }))}
+                  onChange={(e) => setMacroTargets((prev: DailyMacroTarget) => ({ ...prev, calories: parseInt(e.target.value) || 2000 }))}
                   className="w-full px-4 py-3 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
               </div>
@@ -809,7 +828,7 @@ export const CalorieTrackerView: React.FC = () => {
                   <input
                     type="number"
                     value={macroTargets.proteinG}
-                    onChange={(e) => setMacroTargets(prev => ({ ...prev, proteinG: parseInt(e.target.value) || 150 }))}
+                    onChange={(e) => setMacroTargets((prev: DailyMacroTarget) => ({ ...prev, proteinG: parseInt(e.target.value) || 150 }))}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
@@ -818,7 +837,7 @@ export const CalorieTrackerView: React.FC = () => {
                   <input
                     type="number"
                     value={macroTargets.carbsG}
-                    onChange={(e) => setMacroTargets(prev => ({ ...prev, carbsG: parseInt(e.target.value) || 200 }))}
+                    onChange={(e) => setMacroTargets((prev: DailyMacroTarget) => ({ ...prev, carbsG: parseInt(e.target.value) || 200 }))}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>
@@ -827,7 +846,7 @@ export const CalorieTrackerView: React.FC = () => {
                   <input
                     type="number"
                     value={macroTargets.fatG}
-                    onChange={(e) => setMacroTargets(prev => ({ ...prev, fatG: parseInt(e.target.value) || 60 }))}
+                    onChange={(e) => setMacroTargets((prev: DailyMacroTarget) => ({ ...prev, fatG: parseInt(e.target.value) || 60 }))}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-mint-200 text-forest-950 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-mint-500"
                   />
                 </div>

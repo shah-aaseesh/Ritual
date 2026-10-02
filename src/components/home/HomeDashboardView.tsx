@@ -37,15 +37,8 @@ export const HomeDashboardView: React.FC = () => {
     return acc + Math.round((entry.food?.calories || 0) * (entry.quantity || 1));
   }, 0);
 
-  const targetCalories = DEFAULT_MACRO_TARGETS.calories;
+  const targetCalories = profile.maintenanceCalories || DEFAULT_MACRO_TARGETS.calories;
   const calPercent = Math.min(100, Math.round((currentCalories / targetCalories) * 100));
-
-  const goalName = profile.healthGoal ? {
-    hypertrophy_strength: 'Hypertrophy & Strength',
-    fat_loss_recomp: 'Fat Loss & Recomp',
-    athletic_conditioning: 'Athletic Conditioning',
-    longevity_health: 'Metabolic Longevity'
-  }[profile.healthGoal] : profile.primaryGoal.replace('_', ' ');
 
   return (
     <div className="space-y-6 pb-24 max-w-4xl mx-auto animate-in fade-in duration-200 text-charcoal-900">
@@ -58,12 +51,22 @@ export const HomeDashboardView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-0.5">
             {getGreeting()}, {profile.name || 'Friend'}
           </h1>
+          {profile.email && (
+            <span className="text-xs text-charcoal-500 font-mono block">
+              {profile.email}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {profile.bmi && (
+            <span className="px-3 py-1.5 rounded-full bg-white border border-mint-200 text-xs font-mono font-bold text-charcoal-700 shadow-soft">
+              BMI: <strong className="text-forest-900">{profile.bmi}</strong>
+            </span>
+          )}
           <span className="px-3.5 py-1.5 rounded-full bg-white border border-mint-200 text-xs font-mono font-bold text-charcoal-700 flex items-center gap-1.5 shadow-soft">
             <span className="w-2 h-2 rounded-full bg-mint-500 animate-pulse" />
-            <span>Target: <strong className="text-forest-900 capitalize">{goalName}</strong></span>
+            <span>TDEE: <strong className="text-forest-900">{targetCalories} kcal</strong></span>
           </span>
         </div>
       </div>
