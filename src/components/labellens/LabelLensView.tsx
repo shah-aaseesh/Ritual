@@ -4,16 +4,16 @@ import { SAMPLE_PRODUCTS, SampleProductLabel } from '../../data/sampleProducts';
 import { analyzeLabelText, fileToBase64DataUrl } from '../../services/analyzer';
 import { extractLabelFromImageWithAI } from '../../services/aiService';
 import { ProductAnalysisResult, EvidenceTier } from '../../types';
-import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
+import { VerdictBadge } from '../common/EvidenceBadge';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { ImageCropModal } from '../common/ImageCropModal';
+import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Camera, 
   Upload, 
   Sparkles, 
-  ExternalLink, 
   Edit3, 
   BookmarkPlus,
   ScanBarcode
@@ -535,80 +535,16 @@ export const LabelLensView: React.FC = () => {
           </div>
 
           {/* ========================================================================= */}
-          {/* INGREDIENT ANALYSIS BREAKDOWN                                             */}
+          {/* THE SIGNATURE CLINICAL INGREDIENT DEBUNK PAPER                            */}
           {/* ========================================================================= */}
           {(activeAnalysisTab === 'all' || activeAnalysisTab === 'ingredients') && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-forest-950 flex items-center gap-2">
-                  <span>Recognized Ingredients</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-cream-200 text-charcoal-700">
-                    {analysisResult.detectedIngredients.length} detected
-                  </span>
-                </h3>
-              </div>
-
-              {analysisResult.detectedIngredients.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-white border border-cream-300 text-center text-xs text-charcoal-500">
-                  No matching ingredients recognized from the database. Try selecting a sample product or editing text.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {analysisResult.detectedIngredients.map(({ ingredient, doesLabelDiscloseDose, relevanceToGoal, explanation }) => (
-                    <div
-                      key={ingredient.id}
-                      className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-300 shadow-soft space-y-2.5 transition hover:border-mint-300"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-sm sm:text-base font-bold text-forest-950 font-sans">
-                              {ingredient.name}
-                            </h4>
-                            <EvidenceBadge tier={ingredient.evidenceTier} size="sm" />
-                          </div>
-                          <p className="text-xs text-charcoal-600 mt-0.5 font-medium">
-                            {ingredient.commonPurpose}
-                          </p>
-                        </div>
-
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ${
-                          relevanceToGoal === 'high' 
-                            ? 'bg-mint-100 text-forest-900 border border-mint-200' 
-                            : 'bg-cream-100 text-charcoal-600'
-                        }`}>
-                          {relevanceToGoal === 'high' ? '🎯 High Goal Fit' : 'Supporting'}
-                        </span>
-                      </div>
-
-                      <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed bg-cream-50/80 p-3 rounded-2xl border border-cream-200">
-                        {explanation}
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-charcoal-500 pt-1.5 border-t border-cream-100 flex-wrap gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-charcoal-700">Dose Disclosed:</span>
-                          <span className={`font-medium ${doesLabelDiscloseDose ? 'text-emerald-700' : 'text-amber-800'}`}>
-                            {doesLabelDiscloseDose ? '✓ Stated on pack' : '⚠️ Undisclosed %'}
-                          </span>
-                        </div>
-
-                        {ingredient.sourceUrl && (
-                          <a
-                            href={ingredient.sourceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-forest-800 hover:text-mint-600 font-semibold transition"
-                          >
-                            <span>{ingredient.sourceLabel || 'PubMed Reference'}</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <IngredientDebunkPaper
+                productName={productName}
+                brand={saveBrand}
+                rawIngredientText={ingredientText}
+                analysis={analysisResult}
+              />
             </div>
           )}
 

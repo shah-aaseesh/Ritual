@@ -14,9 +14,10 @@ import {
   POPULAR_OPENROUTER_MODELS 
 } from '../../services/aiService';
 import { fileToBase64DataUrl } from '../../services/analyzer';
-import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
+import { VerdictBadge } from '../common/EvidenceBadge';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { ImageCropModal } from '../common/ImageCropModal';
+import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Leaf, 
@@ -702,41 +703,17 @@ export const OnboardingFlow: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Debunking Results */}
+                {/* Debunking Results with Animated Prescription Slip */}
                 {scannedProducts[activeProdIndex].ingredientAnalysis && (
-                  <div className="p-4 sm:p-5 rounded-3xl bg-mint-50/90 border border-mint-200 shadow-soft space-y-3 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-forest-900 flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-mint-600" />
-                        <span>Ingredient Evidence Debrief</span>
-                      </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-900 text-mint-300">
-                        {scannedProducts[activeProdIndex].ingredientAnalysis?.detectedIngredients.length} Actives Found
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-charcoal-800 font-sans leading-relaxed">
-                      "{scannedProducts[activeProdIndex].ingredientAnalysis?.summary.synthesisText}"
-                    </p>
-
-                    <div className="space-y-2 pt-2 border-t border-mint-200/70">
-                      {scannedProducts[activeProdIndex].ingredientAnalysis?.detectedIngredients.map((d, i) => (
-                        <div key={i} className="p-2.5 rounded-xl bg-white border border-mint-200 text-xs flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <strong className="font-bold text-forest-950">{d.ingredient.name}</strong>
-                              <EvidenceBadge tier={d.ingredient.evidenceTier} size="sm" />
-                            </div>
-                            <p className="text-charcoal-600 text-[11px] mt-0.5">{d.explanation}</p>
-                          </div>
-                          {d.ingredient.sourceUrl && (
-                            <a href={d.ingredient.sourceUrl} target="_blank" rel="noreferrer" className="text-forest-800 hover:text-mint-600 shrink-0">
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="pt-2 animate-in fade-in">
+                    <IngredientDebunkPaper
+                      productName={scannedProducts[activeProdIndex].name || `Product ${activeProdIndex + 1}`}
+                      brand={scannedProducts[activeProdIndex].brand}
+                      rawIngredientText={scannedProducts[activeProdIndex].ingredientText}
+                      analysis={scannedProducts[activeProdIndex].ingredientAnalysis!}
+                    />
+                  </div>
+                )}
 
                     {/* Similar Mosaic Wellness Products match */}
                     {scannedProducts[activeProdIndex].matchedMosaic && scannedProducts[activeProdIndex].matchedMosaic!.length > 0 && (
@@ -771,8 +748,6 @@ export const OnboardingFlow: React.FC = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
               </div>
             )}
           </div>
