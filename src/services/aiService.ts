@@ -87,8 +87,11 @@ Output in this clean format:
             ]
           }],
           generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 2048
+            temperature: 0.0,
+            thinkingConfig: {
+              thinkingBudget: 0
+            },
+            maxOutputTokens: 1024
           }
         })
       });
@@ -167,7 +170,7 @@ Output in this clean format:
 /**
  * Resizes and compresses image to max 2048px with high clarity for GPT-4o / Gemini multi-tile vision
  */
-export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 2048): Promise<string> {
+export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, maxDimension = 1400): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -193,7 +196,7 @@ export async function optimizeImageForVisionAI(fileOrDataUrl: File | string, max
         return;
       }
       ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.92));
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
     img.onerror = () => {
       if (typeof fileOrDataUrl === 'string') {
