@@ -33,8 +33,45 @@ export const FUNCTIONAL_PATTERNS: { test: RegExp; name: string; tier: EvidenceTi
   { test: /jojoba|simmondsia/i, name: 'Jojoba Seed Oil', tier: 'promising_limited', purpose: 'Biomimetic Sebum Lipid', expl: 'Chemically resembles human sebum, regulating lipid balance without clogging follicles.' }
 ];
 
-// Patterns for nutrition panel headers and macro lines that should not be parsed as standalone active ingredients
+// Comprehensive regex for nutrition panel headers, packaging metadata, macros, and legal text to completely exclude
+export const NON_INGREDIENT_FILTER_REGEX = /^(energy|calories|protein|carbohydrates?|total sugars?|added sugars?|fat|saturated fat|trans fat|cholesterol|sodium|potassium|chloride|dietary fiber|mrp|net qty|net quantity|batch|mfg|exp|best before|fssai|marketed|manufactured|trademark|feedback|email|call|phone|store below|store in|keep out|dosage|recommended|serving size|per serving|each gummy|each tablet|each capsule|not for medicinal|appropriate overages|icmr|rda|approx|ins\s*\d+|ins\b|contains\s+natural|qty\.?\s*per|nutritional|composition|loss on storage|not to be sold|unit sale price|for feedback|customercare)/i;
+
+export function isPureIngredient(item: string): boolean {
+  if (!item) return false;
+  const trimmed = item.trim();
+  if (trimmed.length < 2) return false;
+  if (/^[0-9\W]+$/.test(trimmed)) return false;
+  if (NON_INGREDIENT_FILTER_REGEX.test(trimmed)) return false;
+  if (/^[a-z]['"]?$/i.test(trimmed)) return false;
+  if (/^(z+|z'|zz|zzz)$/i.test(trimmed)) return false;
+  return true;
+}
+
+export function sanitizeIngredientList(items: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const item of items) {
+    const trimmed = item
+      .replace(/^[^\w\(\)]+/g, '')
+      .replace(/[^\w\(\)\.\s]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!isPureIngredient(trimmed)) continue;
+
+    const lower = trimmed.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      result.push(trimmed);
+    }
+  }
+
+  return result;
+}
+
 const NUTRITION_IGNORE_PATTERNS = [
+  NON_INGREDIENT_FILTER_REGEX,
   /nutritional information/i,
   /composition/i,
   /each gummy/i,
@@ -50,28 +87,7 @@ const NUTRITION_IGNORE_PATTERNS = [
   /loss on storage/i,
   /qty\.?\s*per serving/i,
   /rda limits/i,
-  /%?\s*rda/i,
-  /^energy(\s*\(kcal\))?/i,
-  /^protein(\s*\(g\))?/i,
-  /^carbohydrates?(\s*\(g\))?/i,
-  /^total sugar(\s*\(g\))?/i,
-  /^added sugar(\s*\(g\))?/i,
-  /^fat(\s*\(g\))?/i,
-  /^saturated fat(\s*\(g\))?/i,
-  /^trans fat(\s*\(g\))?/i,
-  /^cholesterol(\s*\(mg\))?/i,
-  /^sodium(\s*\(mg\))?/i,
-  /trademark under/i,
-  /feedback or queries/i,
-  /store below/i,
-  /marketed by/i,
-  /fssai/i,
-  /batch no/i,
-  /mfg\.?\s*date/i,
-  /best before/i,
-  /mrp/i,
-  /net quantity/i,
-  /contains natural flavouring/i
+  /%?\s*rda/i
 ];
 
 /**
@@ -488,21 +504,27 @@ export function cleanAndNormalizeOCRText(raw: string): string {
     }
   }
 
-  // If dynamic extraction found entries, return the clean formatted list
+  // If dynamic extraction found entries, return the strictly sanitized list
   if (dynamicExtracted.length > 0) {
-    return dynamicExtracted.join(', ');
+    const sanitized = sanitizeIngredientList(dynamicExtracted);
+    if (sanitized.length > 0) {
+      return sanitized.join(', ');
+    }
   }
 
-  // Fallback generic line cleaner
-  return raw
-    .replace(/[|—–_•·]/g, ' ')
-    .replace(/^[^\w\d\s]+$/gm, '')
-    .replace(/\b[0o]%\b/gi, '0%')
-    .replace(/(\d+)\s*[%％]/g, '$1%')
-    .replace(/(\d+)\s*mg\b/gi, '$1mg')
-    .replace(/(\d+)\s*ml\b/gi, '$1ml')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Fallback: tokenize raw text, strip non-ingredient packaging lines, and sanitize
+  const rawTokens = raw
+    .replace(/[|—–_•·]/g, ',')
+    .split(/[,;\n]/)
+    .map(s => s.trim())
+    .filter(s => isPureIngredient(s));
+
+  const sanitizedFallback = sanitizeIngredientList(rawTokens);
+  if (sanitizedFallback.length > 0) {
+    return sanitizedFallback.join(', ');
+  }
+
+  return '';
 }
 
 /**

@@ -1,4 +1,4 @@
-import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl, cleanAndNormalizeOCRText } from './analyzer';
+import { analyzeLabelText, performBrowserOCR, fileToBase64DataUrl, cleanAndNormalizeOCRText, sanitizeIngredientList, isPureIngredient } from './analyzer';
 import { MOSAIC_PRODUCTS_CATALOG } from '../data/mosaicProducts';
 import { ProductAnalysisResult, WellnessGoal, MosaicProduct } from '../types';
 
@@ -158,9 +158,8 @@ Return ONLY valid JSON in this exact schema:
 
           // Merge active table composition into ingredient text if available from JSON
           if (parsed.tableComposition && Array.isArray(parsed.tableComposition) && parsed.tableComposition.length > 0) {
-            const skipMacros = /^(energy|protein|carbohydrate|total sugar|added sugar|fat|saturated fat|trans fat|cholesterol)/i;
             const tableItems = parsed.tableComposition
-              .filter((item: any) => item.name && !skipMacros.test(item.name.trim()))
+              .filter((item: any) => item.name && isPureIngredient(item.name.trim()))
               .map((item: any) => `${item.name.trim()} (${item.amount || ''} ${item.unit || ''})`.trim());
 
             if (tableItems.length > 0) {
@@ -172,6 +171,12 @@ Return ONLY valid JSON in this exact schema:
           // If JSON parsing yielded no ingredients (e.g. model output Markdown tables/freeform text), dynamically parse rawContent
           if (!ingText || ingText.trim().length < 3) {
             ingText = cleanAndNormalizeOCRText(rawContent);
+          } else {
+            const tokens = ingText.split(/[,;\n]/).map((s: string) => s.trim()).filter(Boolean);
+            const sanitized = sanitizeIngredientList(tokens);
+            if (sanitized.length > 0) {
+              ingText = sanitized.join(', ');
+            }
           }
 
           if (ingText && ingText.trim().length > 3) {
@@ -263,15 +268,15 @@ Raw OCR Text:
 ${rawOCRText}
 ---
 
-Your task:
-1. Denoise and fix broken words, optical character recognition errors, misaligned numbers, and split units.
-2. Separate and identify:
-   - "productName": Clean name of the product.
-   - "brand": Brand name if present.
-   - "activesWithDose": Array of active ingredients & nutrients with exact numeric dose and unit (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}, {"name": "L-Theanine", "dose": "10.0 mg"}, {"name": "Chamomile Extract", "dose": "10 mg"}, {"name": "Vitamin D2", "dose": "15.0 mcg"}]). Skip generic macronutrients (Energy, Protein, Carbohydrates, Fat, Sugar) unless they are active vitamins/minerals.
-   - "fullIngredientsList": Clean array of all ingredients from the ingredients list (e.g. ["Liquid Glucose", "Sugar", "Maltodextrin", "Water", "Pectin", "Acidity Regulators", "Medium Chain Triglycerides", "Beet Root Powder"]).
-   - "claims": Array of marketing or front-of-pack claims found (e.g. ["100% RDA", "Non-Habit Forming"]).
-   - "clinicalSynthesis": Concise 1-2 sentence evidence summary explaining how the actives function.
+Your task is to isolate ONLY pure ingredients and discard all packaging noise:
+1. "productName": Clean name of the product.
+2. "brand": Brand name if present on label.
+3. "activesWithDose": Array of active ingredients & nutrients with exact numeric dose and unit (e.g. [{"name": "Tart Cherry Extract", "dose": "200 mg"}, {"name": "Melatonin", "dose": "5.0 mg"}, {"name": "L-Theanine", "dose": "10.0 mg"}, {"name": "Chamomile Extract", "dose": "10 mg"}, {"name": "Vitamin D2", "dose": "15.0 mcg"}]).
+   - STRICTLY EXCLUDE: Energy, Calories, Protein, Carbohydrates, Sugar, Fat, Saturated Fat, Sodium, Cholesterol.
+4. "fullIngredientsList": Array of pure chemical/botanical/carrier ingredient names (e.g. ["Liquid Glucose", "Sugar", "Maltodextrin", "Water", "Pectin", "Medium Chain Triglycerides", "Beet Root Powder"]).
+   - STRICTLY EXCLUDE: Nutritional facts headers, RDA limits, %RDA, ICMR-NIN guidelines, overages statement, FSSAI number, Marketed by, Batch No, Mfg Date, Best Before, MRP, Net quantity, storage warnings, and single letter artifacts like Z' or ZZ.
+5. "claims": Array of marketing or front-of-pack claims found (e.g. ["100% RDA", "Non-Habit Forming"]).
+6. "clinicalSynthesis": Concise 1-2 sentence evidence summary explaining how the actives function.
 
 Return ONLY a valid JSON object matching this schema without markdown fences:
 {
@@ -307,7 +312,7 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
           messages: [
             {
               role: 'system',
-              content: 'You are an expert cosmetic chemist and label de-noiser. Output only valid JSON.'
+              content: 'You are an expert cosmetic chemist and label de-noiser. Extract ONLY ingredients and discard all packaging/macro noise. Output only valid JSON.'
             },
             {
               role: 'user',
@@ -340,16 +345,18 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
           const activeDoseStrings: string[] = [];
           if (Array.isArray(parsed.activesWithDose)) {
             parsed.activesWithDose.forEach((act: any) => {
-              if (act.name && act.dose) {
+              if (act.name && act.dose && isPureIngredient(act.name)) {
                 activeDoseStrings.push(`${act.name.trim()} (${act.dose.trim()})`);
-              } else if (act.name) {
+              } else if (act.name && isPureIngredient(act.name)) {
                 activeDoseStrings.push(act.name.trim());
               }
             });
           }
 
           const fullListStrings: string[] = Array.isArray(parsed.fullIngredientsList) 
-            ? parsed.fullIngredientsList.map((s: string) => s.trim()).filter(Boolean)
+            ? parsed.fullIngredientsList
+                .map((s: string) => s.trim())
+                .filter((s: string) => isPureIngredient(s))
             : [];
 
           // Merge active doses with full ingredients list cleanly
@@ -362,7 +369,8 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
             }
           }
 
-          const finalIngredientText = combinedList.length > 0 ? combinedList.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
+          const sanitizedItems = sanitizeIngredientList(combinedList);
+          const finalIngredientText = sanitizedItems.length > 0 ? sanitizedItems.join(', ') : cleanAndNormalizeOCRText(rawOCRText);
           const analysis = analyzeLabelText(finalIngredientText, claims, userGoal, prodName);
 
           if (parsed.clinicalSynthesis) {
