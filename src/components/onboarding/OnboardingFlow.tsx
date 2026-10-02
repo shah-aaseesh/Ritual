@@ -693,16 +693,26 @@ export const OnboardingFlow: React.FC = () => {
                         </span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {scannedProducts[activeProdIndex].matchedMosaic!.map((m) => (
-                            <div key={m.id} className="p-2.5 rounded-xl bg-white border border-cream-300 text-xs space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="font-bold text-forest-950 truncate">{m.product}</span>
-                                <span className="font-bold text-forest-800 text-[11px]">{m.currency}{m.sitePrice}</span>
+                            <div key={m.id} className="p-2.5 rounded-2xl bg-white border border-cream-300 text-xs space-y-1.5 flex items-start gap-2.5">
+                              {m.imageUrl && (
+                                <img
+                                  src={m.imageUrl}
+                                  alt={m.product}
+                                  className="w-10 h-10 rounded-xl object-cover bg-cream-100 border border-cream-200 shrink-0 mt-0.5"
+                                  loading="lazy"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="font-bold text-forest-950 truncate">{m.product}</span>
+                                  <span className="font-bold text-forest-800 text-[11px] shrink-0">{m.currency}{m.sitePrice}</span>
+                                </div>
+                                <p className="text-[10px] text-charcoal-500 line-clamp-1">{m.whyItFits}</p>
+                                <a href={m.officialUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-forest-800 hover:underline inline-flex items-center gap-1 mt-0.5">
+                                  <span>Official Link</span>
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
                               </div>
-                              <p className="text-[10px] text-charcoal-500 line-clamp-1">{m.whyItFits}</p>
-                              <a href={m.officialUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-forest-800 hover:underline inline-flex items-center gap-1">
-                                <span>Official Link</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
                             </div>
                           ))}
                         </div>

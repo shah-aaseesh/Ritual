@@ -155,6 +155,7 @@ export interface MosaicProduct {
   sitePrice: number;
   currency: string;
   officialUrl: string;
+  imageUrl?: string;
   whyItFits: string;
   keyIngredients: string[];
   targetGoal: WellnessGoal;

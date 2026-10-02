@@ -444,41 +444,45 @@ export const RoutineView: React.FC = () => {
           {contextualMosaicProducts.map((p) => (
             <div
               key={p.id}
-              className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-200 shadow-soft space-y-2.5 text-xs flex flex-col justify-between"
+              className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-200 shadow-soft space-y-3 text-xs flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
+              <div className="flex items-start gap-3">
+                {p.imageUrl && (
+                  <img
+                    src={p.imageUrl}
+                    alt={p.product}
+                    className="w-14 h-14 rounded-2xl object-cover bg-cream-100 border border-cream-200 shrink-0"
+                    loading="lazy"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-bold text-charcoal-400 uppercase tracking-wider">
                       {p.brand}
                     </span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-cream-100 text-charcoal-600">
-                      Optional Example
+                    <span className="font-bold text-forest-900 text-xs shrink-0">
+                      {p.currency}{p.sitePrice}
                     </span>
                   </div>
-                  <h4 className="text-xs font-bold text-forest-950 mt-0.5">
+                  <h4 className="text-xs font-bold text-forest-950 mt-0.5 line-clamp-2">
                     {p.product}
                   </h4>
                 </div>
-
-                <span className="font-bold text-forest-900 text-xs shrink-0">
-                  {p.currency}{p.sitePrice}
-                </span>
               </div>
 
               <p className="text-charcoal-600 text-[11px] leading-relaxed">
-                <strong className="text-forest-900 font-semibold">Why it fits this step:</strong> {p.whyItFits}
+                <strong className="text-forest-900 font-semibold">Why it fits:</strong> {p.whyItFits}
               </p>
 
-              <div className="flex items-center justify-between pt-1 border-t border-cream-100 text-[11px]">
-                <span className="text-charcoal-500 truncate max-w-[200px]">
+              <div className="flex items-center justify-between pt-1.5 border-t border-cream-100 text-[11px]">
+                <span className="text-charcoal-500 truncate max-w-[170px]">
                   Actives: {p.keyIngredients.join(', ')}
                 </span>
                 <a
                   href={p.officialUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 font-semibold text-forest-800 hover:text-mint-600 transition"
+                  className="flex items-center gap-1 font-semibold text-forest-800 hover:text-mint-600 transition shrink-0"
                 >
                   <span>Official site</span>
                   <ExternalLink className="w-3 h-3" />
