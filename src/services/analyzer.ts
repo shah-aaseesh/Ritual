@@ -5,9 +5,28 @@ import {
   DetectedIngredient, 
   ClaimInfo, 
   LabelAnalysisSummary, 
-  ProductAnalysisResult 
+  ProductAnalysisResult,
+  EvidenceTier
 } from '../types';
 import { createWorker } from 'tesseract.js';
+
+export const FUNCTIONAL_PATTERNS: { test: RegExp; name: string; tier: EvidenceTier; purpose: string; expl: string }[] = [
+  { test: /aqua|water/i, name: 'Purified Water (Aqua)', tier: 'supporting_ingredient', purpose: 'Solvent & Delivery Vehicle', expl: 'Essential pharmaceutical-grade solvent carrier allowing skin and scalp absorption of active ingredients.' },
+  { test: /glycerin/i, name: 'Glycerin', tier: 'strong_evidence', purpose: 'Primary Biological Humectant', expl: 'Proven natural moisturizing factor (NMF) that binds water in the stratum corneum and prevents epidermal moisture loss.' },
+  { test: /hyaluron|sodium hyaluronate/i, name: 'Sodium Hyaluronate (Hyaluronic Acid)', tier: 'strong_evidence', purpose: 'High-Molecular Humectant', expl: 'Holds up to 1000x its weight in water, providing multi-depth hydration and tissue plumping.' },
+  { test: /panthenol|provitamin b5/i, name: 'Panthenol (Pro-Vitamin B5)', tier: 'strong_evidence', purpose: 'Barrier Repair & Follicle Conditioning', expl: 'Penetrates hair cortex and skin barrier to enhance hydration, elasticity, and reduce transepidermal water loss.' },
+  { test: /dimethicone|cyclomethicone|silicone/i, name: 'Dimethicone', tier: 'supporting_ingredient', purpose: 'Barrier Sealant & Texture Agent', expl: 'Breathable emollient that forms a non-comedogenic protective film preventing moisture evaporation.' },
+  { test: /phenoxyethanol|ethylhexylglycerin/i, name: 'Phenoxyethanol', tier: 'supporting_ingredient', purpose: 'Antimicrobial Preservative', expl: 'Safe, globally approved cosmetic preservative preventing bacterial and fungal contamination.' },
+  { test: /cetearyl alcohol|cetyl alcohol|stearyl alcohol/i, name: 'Cetearyl Alcohol', tier: 'supporting_ingredient', purpose: 'Fatty Alcohol Emollient & Stabilizer', expl: 'Non-drying plant-derived fatty alcohol that softens skin and stabilizes emulsions.' },
+  { test: /caprylic|capric triglyceride/i, name: 'Caprylic/Capric Triglyceride', tier: 'supporting_ingredient', purpose: 'Coconut-Derived Emollient', expl: 'Lightweight, non-greasy lipid carrier derived from coconut oil that reinforces lipid membranes.' },
+  { test: /tocopherol|vitamin e/i, name: 'Tocopherol (Vitamin E)', tier: 'strong_evidence', purpose: 'Lipid-Soluble Antioxidant', expl: 'Protects cell membranes from lipid peroxidation and stabilizes active botanical oils.' },
+  { test: /disodium edta|tetrasodium edta/i, name: 'Disodium EDTA', tier: 'supporting_ingredient', purpose: 'Chelating Agent', expl: 'Binds trace metal ions to prevent formula degradation and maintain chemical stability.' },
+  { test: /citric acid|sodium hydroxide|lactic acid/i, name: 'Citric Acid / pH Balancer', tier: 'supporting_ingredient', purpose: 'pH Regulator', expl: 'Adjusts formulation pH to match physiological skin/scalp acid mantle (pH 4.5–5.5).' },
+  { test: /centella|cica|madecassoside/i, name: 'Centella Asiatica (Cica)', tier: 'strong_evidence', purpose: 'Anti-Inflammatory & Wound Healing', expl: 'Rich in triterpenoids that calm redness, soothe micro-inflammation, and promote collagen synthesis.' },
+  { test: /allantoin/i, name: 'Allantoin', tier: 'strong_evidence', purpose: 'Soothing & Keratolytic Agent', expl: 'Promotes cellular desquamation and epithelialization, calming irritated epidermal tissue.' },
+  { test: /argan|argania/i, name: 'Argan Kernel Oil', tier: 'promising_limited', purpose: 'Nutritive Lipid Replenisher', expl: 'Rich in linoleic acid and oleic acid to lubricate hair shafts and seal damaged cuticle scales.' },
+  { test: /jojoba|simmondsia/i, name: 'Jojoba Seed Oil', tier: 'promising_limited', purpose: 'Biomimetic Sebum Lipid', expl: 'Chemically resembles human sebum, regulating scalp lipid balance without clogging follicles.' }
+];
 
 /**
  * Parses raw ingredient label text and matches against evidence database
@@ -55,16 +74,14 @@ export function analyzeLabelText(
     const norm = segment.toLowerCase();
     let matched = false;
 
+    // 1. Check primary clinical evidence database
     for (const dbItem of INGREDIENTS_DATABASE) {
       const nameMatch = norm.includes(dbItem.name.toLowerCase());
       const aliasMatch = dbItem.aliases.some(a => norm.includes(a.toLowerCase()));
 
       if (nameMatch || aliasMatch) {
         if (!detectedMap.has(dbItem.id)) {
-          // Check if dose is disclosed in this segment (e.g. "3%", "2.0% w/w", "300 mg", "5mg")
           const hasDose = /\d+(\.\d+)?\s*(%|mg|mcg|g|ml|iu|w\/w)/i.test(segment);
-          
-          // Determine goal relevance
           let relevance: 'high' | 'moderate' | 'supporting' | 'general' = 'general';
           if (dbItem.relevantGoals.includes(userGoal)) {
             relevance = (dbItem.evidenceTier === 'strong_evidence' || dbItem.evidenceTier === 'conditional_evidence') 
@@ -87,8 +104,67 @@ export function analyzeLabelText(
       }
     }
 
-    if (!matched && segment.length > 3 && !/water|aqua|glycerin|fragrance|parfum|edta|benzoate|preservative/i.test(segment)) {
-      unmatchedList.push(segment);
+    // 2. Check functional cosmetic/carrier patterns
+    if (!matched && segment.length > 2) {
+      for (const pattern of FUNCTIONAL_PATTERNS) {
+        if (pattern.test.test(norm)) {
+          const synthId = 'func-' + pattern.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          if (!detectedMap.has(synthId)) {
+            const hasDose = /\d+(\.\d+)?\s*(%|mg|mcg|g|ml|iu|w\/w)/i.test(segment);
+            detectedMap.set(synthId, {
+              ingredient: {
+                id: synthId,
+                name: pattern.name,
+                aliases: [],
+                category: 'general',
+                commonPurpose: pattern.purpose,
+                evidenceTier: pattern.tier,
+                conditionsOrLimitations: 'Standard cosmetic formulation component.',
+                doseMatters: false,
+                shortExplanation: pattern.expl,
+                sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/',
+                sourceLabel: 'Cosmetic Dermatology Formulation Reference',
+                relevantGoals: []
+              },
+              rawTextMatch: segment,
+              relevanceToGoal: 'supporting',
+              doesLabelDiscloseDose: hasDose,
+              explanation: pattern.expl
+            });
+          }
+          matched = true;
+          break;
+        }
+      }
+    }
+
+    // 3. For any remaining specific ingredient, provide clean cosmetic explanation
+    if (!matched && segment.length > 2 && !/^(and|with|for|the|or|contains)$/i.test(segment.trim())) {
+      const cleanName = segment.trim().replace(/^[\s•\-_,]+|[\s•\-_,]+$/g, '');
+      const synthId = 'gen-' + cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      if (cleanName.length > 2 && !detectedMap.has(synthId)) {
+        const hasDose = /\d+(\.\d+)?\s*(%|mg|mcg|g|ml|iu|w\/w)/i.test(segment);
+        detectedMap.set(synthId, {
+          ingredient: {
+            id: synthId,
+            name: cleanName,
+            aliases: [],
+            category: 'general',
+            commonPurpose: 'Formulation Component / Botanical',
+            evidenceTier: 'supporting_ingredient',
+            conditionsOrLimitations: 'Contributes to formulation texture, stability, or carrier delivery.',
+            doseMatters: false,
+            shortExplanation: `Cosmetic formulation ingredient: ${cleanName}.`,
+            sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/',
+            sourceLabel: 'INCI Cosmetic Ingredient Dictionary',
+            relevantGoals: []
+          },
+          rawTextMatch: segment,
+          relevanceToGoal: 'general',
+          doesLabelDiscloseDose: hasDose,
+          explanation: `Functional formulation constituent in ${productName}. Contributes to product stability, texture, or carrier delivery.`
+        });
+      }
     }
   }
 

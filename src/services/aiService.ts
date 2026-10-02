@@ -43,23 +43,37 @@ export async function extractLabelFromImageWithAI(
     try {
       if (onProgress) onProgress(25, 'Multimodal Vision AI reading bottle typography...');
 
-      const prompt = `You are an expert cosmetic dermatologist, chemist, and high-precision label reader.
+      const prompt = `You are an expert cosmetic dermatologist, formulation chemist, and high-precision label reader.
 Analyze this cosmetic / wellness product packaging photo carefully.
 
 Instructions:
 1. Product Name: Read the main product title.
-2. Brand Name: Identify the manufacturing brand if visible.
-3. Ingredients List: Transcribe ALL ingredients accurately in order, fixing optical blur/artifacts into standard INCI cosmetic names separated by commas (e.g. "Aqua, Glycerin, Niacinamide 5%, Salicylic Acid 2%, Rosmarinus Officinalis (Rosemary) Extract, Saw Palmetto, Phenoxyethanol"). Include concentrations if shown (e.g. "3%", "5mg").
+2. Brand Name: Identify the brand if visible.
+3. Ingredients List: Transcribe ALL ingredients accurately in order, fixing optical blur/artifacts into standard INCI cosmetic names separated by commas (e.g. "Aqua, Glycerin, Niacinamide 5%, Salicylic Acid 2%, Rosmarinus Officinalis Extract, Saw Palmetto, Phenoxyethanol").
 4. Front-Pack Claims: Extract all marketing or clinical claims (e.g. "Clinically Proven", "Reduces hair fall in 30 days", "Dermatologically Tested", "Chemical-Free", "100% Ayurvedic").
-5. Clinical Note: 2 sentences summarizing evidence for the goal "${userGoal}".
+5. Explain EVERY single ingredient on the bottle (actives, humectants, carriers, preservatives, botanicals).
 
 Return ONLY valid JSON in this exact structure:
 {
-  "productName": "Exact product name or best guess",
-  "brand": "Brand name or Unknown",
-  "extractedIngredientsText": "Aqua, Niacinamide 5%, Salicylic Acid 2%...",
-  "extractedClaimsText": "Clinically Proven, Chemical-Free...",
-  "clinicalSynthesis": "Summary note..."
+  "productName": "Exact product name",
+  "brand": "Brand name",
+  "extractedIngredientsText": "Aqua, Glycerin, Niacinamide 5%, Salicylic Acid 2%, Rosmarinus Officinalis Extract, Phenoxyethanol",
+  "extractedClaimsText": "Clinically Proven, Chemical-Free",
+  "clinicalSynthesis": "Summary note for goal ${userGoal}...",
+  "ingredientsDetailed": [
+    {
+      "name": "Niacinamide 5%",
+      "purpose": "Active Vitamin B3",
+      "tier": "strong_evidence",
+      "explanation": "Proven to regulate sebum, strengthen skin barrier, and reduce micro-inflammation."
+    },
+    {
+      "name": "Glycerin",
+      "purpose": "Humectant",
+      "tier": "strong_evidence",
+      "explanation": "Essential biological humectant that draws moisture into the skin/scalp."
+    }
+  ]
 }`;
 
       const selectedModel = model || 'google/gemma-4-31b:free';
@@ -97,7 +111,6 @@ Return ONLY valid JSON in this exact structure:
         try {
           parsed = JSON.parse(cleaned);
         } catch (jsonErr) {
-          // If JSON parse had small wrapping, attempt regex match
           const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
           if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
         }
@@ -111,6 +124,20 @@ Return ONLY valid JSON in this exact structure:
         const analysis = analyzeLabelText(ingText, claimText, userGoal, prodName);
         if (parsed.clinicalSynthesis) {
           analysis.summary.synthesisText = parsed.clinicalSynthesis;
+        }
+
+        // If Vision model provided detailed ingredient notes, merge them
+        if (parsed.ingredientsDetailed && Array.isArray(parsed.ingredientsDetailed)) {
+          parsed.ingredientsDetailed.forEach((item: any) => {
+            if (!item.name) return;
+            const existing = analysis.detectedIngredients.find(
+              d => d.ingredient.name.toLowerCase().includes(item.name.toLowerCase()) || 
+                   item.name.toLowerCase().includes(d.ingredient.name.toLowerCase())
+            );
+            if (existing && item.explanation) {
+              existing.explanation = item.explanation;
+            }
+          });
         }
 
         if (onProgress) onProgress(100, 'Vision AI Analysis Complete!');
