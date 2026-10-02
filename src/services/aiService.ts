@@ -45,20 +45,6 @@ export async function extractLabelWithGeminiDirect(
 
   if (onProgress) onProgress(35, `Reading packaging with Google Gemini ${modelName.includes('3.8') ? '3.8 Flash' : '3.5 Flash'} (Free AI Studio)...`);
 
-  const prompt = `You are an expert cosmetic dermatologist and clinical pharmacologist.
-Look closely at this packaging image.
-Your task is to transcribe the COMPLETE and EXACT ingredient list from the "Ingredients:" or "Composition:" section on the bottle, word-for-word in order.
-
-STRICTLY DO NOT include:
-- Directions for use, usage instructions, or dosage recommendations (e.g. "Take 1 gummy daily", "Apply on wet hair", "Massage gently into scalp", "Swallow with water")
-- Storage instructions & safety warnings (e.g. "Store below 25°C", "Keep away from direct sunlight", "Keep out of reach of children", "Not for medicinal use", "Consult physician")
-- Manufacturer, marketing & distributor info (e.g. "Marketed by", "Manufactured by", "FSSAI Lic No", "Batch No", "Mfg Date", "Best Before", "Expiry", "MRP", "Net Quantity", customer care emails, phone numbers, addresses)
-- General macronutrient facts (e.g. "Energy", "Calories", "Total Carbohydrate", "Protein", "Total Sugar", "Fat", "Saturated Fat", "Trans Fat", "Sodium", "RDA%")
-- Generic marketing boilerplate
-
-Transcribe EVERY SINGLE ingredient in exact order without skipping any item. (e.g. Aqua, Glycerin, C15-19 Alkane, Cetearyl Alcohol, Paraffinum Liquidum, Isopropyl Palmitate, Glyceryl Stearate SE, Butyrospermum Parkii Butter, Dimethicone, Phenoxyethanol...).
-Return ONLY the comma-separated or bulleted ingredient list.`;
-
   const base64Pure = base64DataUrl.replace(/^data:image\/\w+;base64,/, '');
   const mimeMatch = base64DataUrl.match(/^data:(image\/\w+);base64,/);
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
@@ -75,9 +61,21 @@ Return ONLY the comma-separated or bulleted ingredient list.`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          system_instruction: {
+            parts: [{
+              text: 'You are an expert cosmetic dermatologist, clinical pharmacologist, and label transcriber. Your task is to extract the Brand, Product Name, and the 100% complete and exact ingredient list from the packaging in order. Exclude directions, warnings, storage, FSSAI, batch numbers, manufacturer details, and nutrition tables.'
+            }]
+          },
           contents: [{
             parts: [
-              { text: prompt },
+              {
+                text: `Examine this packaging photo carefully.
+Extract and output in this exact structure:
+
+**Brand:** [Brand name if visible, or Unknown]
+**Product Name:** [Product name if visible, or Scanned Product]
+**Ingredients:** [Transcribe every single chemical, botanical, and active ingredient word-for-word in exact order, separated by commas or newlines. Do not skip or summarize any item.]`
+              },
               {
                 inline_data: {
                   mime_type: mimeType,
@@ -100,10 +98,30 @@ Return ONLY the comma-separated or bulleted ingredient list.`;
         const rawText = candidate?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n') || '';
 
         let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+        // Extract Brand
+        let brandName = '';
+        const brandMatch = cleaned.match(/\*\*Brand:\*\*\s*([^\n]+)/i) || cleaned.match(/Brand:\s*([^\n]+)/i);
+        if (brandMatch && !/unknown|none|n\/a/i.test(brandMatch[1])) {
+          brandName = brandMatch[1].trim();
+        }
+
+        // Extract Product Name
+        let prodName = 'Scanned Product';
+        const prodMatch = cleaned.match(/\*\*Product Name:\*\*\s*([^\n]+)/i) || cleaned.match(/Product Name:\s*([^\n]+)/i);
+        if (prodMatch && !/unknown|none|n\/a/i.test(prodMatch[1])) {
+          prodName = prodMatch[1].trim();
+        }
+
+        // Extract Ingredients section
+        let ingredientSection = cleaned;
+        const ingMatch = cleaned.match(/\*\*Ingredients:\*\*\s*([\s\S]+)/i) || cleaned.match(/Ingredients:\s*([\s\S]+)/i);
+        if (ingMatch) {
+          ingredientSection = ingMatch[1];
+        }
 
         // Harvest all ingredient lines / tokens
-        const rawTokens = cleaned
+        const rawTokens = ingredientSection
           .replace(/[|—–_•·\*]/g, ',')
           .split(/[,;\n]/)
           .map((s: string) => s.trim())
@@ -113,20 +131,20 @@ Return ONLY the comma-separated or bulleted ingredient list.`;
         const finalIngText = sanitized.length > 0 ? sanitized.join(', ') : cleanAndNormalizeOCRText(rawText);
 
         if (finalIngText && finalIngText.trim().length > 3) {
-          const analysis = analyzeLabelText(finalIngText, '', userGoal, 'Scanned Product');
+          const analysis = analyzeLabelText(finalIngText, '', userGoal, prodName);
 
           if (onProgress) onProgress(100, 'Gemini 3.5 Flash Vision Analysis Complete!');
 
           return {
-            productName: 'Scanned Product',
-            brand: '',
+            productName: prodName,
+            brand: brandName,
             ingredientText: finalIngText,
             claimText: '',
             analysis,
             source: 'openrouter_vision',
             debugTrace: {
               model: `Google AI Studio: ${geminiModel}`,
-              prompt,
+              prompt: 'System Instruction + Multimodal Image Transcription',
               rawResponse: rawText,
               imageThumbnail: base64DataUrl,
               durationMs,
