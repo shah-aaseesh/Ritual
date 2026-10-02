@@ -239,6 +239,37 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
           </div>
         </div>
 
+        {/* Formulation Sense-Check Banner (Instant Verdict) */}
+        {provenActivesCount > 0 ? (
+          <div className="mb-5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-600/30 flex items-start gap-3">
+            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <div className="space-y-0.5 text-xs">
+              <span className="font-extrabold text-emerald-950 block">
+                Formulation Makes Sense: Scientifically Sound Actives Detected
+              </span>
+              <p className="text-emerald-900/90 leading-relaxed text-[11px]">
+                Found <strong>{provenActivesCount} clinically verified active ingredient{provenActivesCount > 1 ? 's' : ''}</strong> that directly target this goal. The remaining {fillersCount} items are standard carriers and stabilizers (struck through below).
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-5 p-4 rounded-2xl bg-coral-500/10 border border-coral-600/30 flex items-start gap-3">
+            <div className="w-6 h-6 rounded-full bg-coral-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+              <X className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <div className="space-y-0.5 text-xs">
+              <span className="font-extrabold text-coral-950 block">
+                Questionable Formulation: Mostly Base Carriers / Marketing Gimmicks
+              </span>
+              <p className="text-coral-900/90 leading-relaxed text-[11px]">
+                No proven clinical active ingredients found with effective therapeutic dosage for this wellness goal.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Dynamic Scanning State Banner */}
         {animationStep === 'analyzing' && (
           <div className="mb-4 p-3 rounded-2xl bg-forest-950 text-mint-300 text-xs font-bold flex items-center justify-center gap-2 animate-pulse">
