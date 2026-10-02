@@ -13,8 +13,10 @@ import {
   findMatchingMosaicProducts, 
   POPULAR_OPENROUTER_MODELS 
 } from '../../services/aiService';
+import { fileToBase64DataUrl } from '../../services/analyzer';
 import { EvidenceBadge, VerdictBadge } from '../common/EvidenceBadge';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
+import { ImageCropModal } from '../common/ImageCropModal';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Leaf, 
@@ -62,6 +64,9 @@ export const OnboardingFlow: React.FC = () => {
   const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
   const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'openrouter/free');
   const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState<boolean>(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropIsClaim, setCropIsClaim] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const claimFileInputRef = useRef<HTMLInputElement>(null);
@@ -163,16 +168,30 @@ export const OnboardingFlow: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isClaim: boolean) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>, isClaim: boolean) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    try {
+      const base64Url = await fileToBase64DataUrl(file);
+      setImageToCrop(base64Url);
+      setCropIsClaim(isClaim);
+      setIsCropModalOpen(true);
+    } catch (err) {
+      showToast('Could not read image file. Please try again.', 'warning');
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedBase64: string) => {
+    setIsCropModalOpen(false);
     setIsAnalyzing(true);
-    setOcrStatus('Scanning photo typography with Vision AI...');
+    setOcrStatus('Scanning cropped photo with Vision AI...');
 
     try {
       const visionResult = await extractLabelFromImageWithAI(
-        file,
+        croppedBase64,
         goal,
         aiSettings.openRouterApiKey,
         aiSettings.selectedModel,
@@ -183,7 +202,7 @@ export const OnboardingFlow: React.FC = () => {
         const copy = [...prev];
         const cur = copy[activeProdIndex] || copy[0];
         
-        if (isClaim) {
+        if (cropIsClaim) {
           copy[activeProdIndex] = {
             ...cur,
             claimText: visionResult.claimText || cur.claimText || visionResult.ingredientText
@@ -207,8 +226,8 @@ export const OnboardingFlow: React.FC = () => {
 
       showToast(
         visionResult.source === 'openrouter_vision'
-          ? 'Vision AI parsed label typography with high precision!'
-          : 'Label scanned and parsed with local clinical OCR',
+          ? 'Vision AI isolated & parsed ingredients with high precision!'
+          : 'Label scanned and parsed with local clinical engine',
         'success'
       );
     } catch (err) {
@@ -216,7 +235,7 @@ export const OnboardingFlow: React.FC = () => {
     } finally {
       setIsAnalyzing(false);
       setOcrStatus('');
-      if (e.target) e.target.value = '';
+      setImageToCrop(null);
     }
   };
 
@@ -267,7 +286,7 @@ export const OnboardingFlow: React.FC = () => {
         ref={fileInputRef}
         accept="image/*"
         capture="environment"
-        onChange={(e) => handleFileUpload(e, false)}
+        onChange={(e) => handleFileSelected(e, false)}
         className="hidden"
       />
       <input
@@ -275,7 +294,7 @@ export const OnboardingFlow: React.FC = () => {
         ref={claimFileInputRef}
         accept="image/*"
         capture="environment"
-        onChange={(e) => handleFileUpload(e, true)}
+        onChange={(e) => handleFileSelected(e, true)}
         className="hidden"
       />
 
@@ -1006,6 +1025,23 @@ export const OnboardingFlow: React.FC = () => {
         onClose={() => setIsBarcodeModalOpen(false)}
         onProductFound={handleOnboardingBarcodeProduct}
         userGoal={goal}
+      />
+
+      {/* On-Screen Ingredient Cropper Modal */}
+      <ImageCropModal
+        isOpen={isCropModalOpen}
+        imageSrc={imageToCrop}
+        title={cropIsClaim ? 'Crop Front Packaging Claims' : 'Crop Ingredients Section'}
+        subtitle={
+          cropIsClaim
+            ? 'Crop around front-of-pack claims and product title to isolate marketing claims.'
+            : 'Crop around ONLY the ingredient list & active composition table to eliminate packaging noise.'
+        }
+        onCropComplete={handleCropComplete}
+        onCancel={() => {
+          setIsCropModalOpen(false);
+          setImageToCrop(null);
+        }}
       />
     </div>
   );
