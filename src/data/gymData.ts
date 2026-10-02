@@ -45,26 +45,98 @@ export const PRESET_EXERCISES: ExerciseDefinition[] = [
   { id: 'zone2-cardio', name: 'Zone 2 Incline Treadmill Walk', muscleGroup: 'Cardio', category: 'Cardio', defaultSets: 1, defaultReps: 30, defaultWeightKg: 0, instructions: '12% incline, 4.5 km/h, sustain 120-135 BPM.' }
 ];
 
-export const PRESET_ROUTINE_TEMPLATES = [
+export interface WorkoutTemplate {
+  id: string;
+  category: 'All' | 'Starter' | 'Sweat Mode' | 'Strength';
+  subtitle: string;
+  title: string;
+  intervals: number;
+  durationMinutes: number;
+  powerSurgeMinutes?: number;
+  targetBpm: number;
+  targetKcal: number;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  exerciseIds: string[];
+}
+
+export const PRESET_ROUTINE_TEMPLATES: WorkoutTemplate[] = [
+  {
+    id: 'fat-melt-hiit',
+    category: 'Sweat Mode',
+    subtitle: 'Fat Melt',
+    title: '30 min HIIT Cycle',
+    intervals: 20,
+    durationMinutes: 30,
+    powerSurgeMinutes: 25,
+    targetBpm: 155,
+    targetKcal: 380,
+    level: 'Intermediate',
+    exerciseIds: ['zone2-cardio', 'hanging-leg-raise', 'barbell-squat', 'dips']
+  },
+  {
+    id: 'hill-blaster',
+    category: 'Sweat Mode',
+    subtitle: 'Hill Blaster',
+    title: '24 Intervals Climb',
+    intervals: 24,
+    durationMinutes: 45,
+    powerSurgeMinutes: 35,
+    targetBpm: 165,
+    targetKcal: 520,
+    level: 'Advanced',
+    exerciseIds: ['zone2-cardio', 'leg-press', 'barbell-squat', 'romanian-deadlift']
+  },
   {
     id: 'push-day',
-    title: 'Push Power (Chest / Shoulders / Triceps)',
+    category: 'Strength',
+    subtitle: 'Hypertrophy Forge',
+    title: 'Push Power (Chest & Delts)',
+    intervals: 18,
+    durationMinutes: 45,
+    powerSurgeMinutes: 30,
+    targetBpm: 135,
+    targetKcal: 410,
+    level: 'Intermediate',
     exerciseIds: ['bench-press', 'incline-db-press', 'overhead-press', 'lateral-raise', 'tricep-pushdown']
   },
   {
     id: 'pull-day',
-    title: 'Pull Hypertrophy (Back / Rear Delts / Biceps)',
+    category: 'Strength',
+    subtitle: 'Posterior Density',
+    title: 'Pull Mastery (Back & Lats)',
+    intervals: 16,
+    durationMinutes: 40,
+    powerSurgeMinutes: 28,
+    targetBpm: 130,
+    targetKcal: 390,
+    level: 'Intermediate',
     exerciseIds: ['barbell-deadlift', 'lat-pulldown', 'seated-cable-row', 'face-pulls', 'incline-db-curl']
   },
   {
-    id: 'legs-day',
-    title: 'Legs & Core Conditioning',
-    exerciseIds: ['barbell-squat', 'romanian-deadlift', 'leg-press', 'leg-curl', 'hanging-leg-raise']
+    id: 'starter-foundation',
+    category: 'Starter',
+    subtitle: 'Core Foundation',
+    title: 'Full Body Primer 20m',
+    intervals: 12,
+    durationMinutes: 20,
+    powerSurgeMinutes: 15,
+    targetBpm: 125,
+    targetKcal: 210,
+    level: 'Beginner',
+    exerciseIds: ['barbell-squat', 'bench-press', 'lat-pulldown', 'hanging-leg-raise']
   },
   {
-    id: 'full-body',
-    title: 'Full Body Athletic Conditioning',
-    exerciseIds: ['barbell-squat', 'bench-press', 'lat-pulldown', 'overhead-press', 'zone2-cardio']
+    id: 'legs-day',
+    category: 'Strength',
+    subtitle: 'Lower Kinetic Chain',
+    title: 'Legs & Core Conditioning',
+    intervals: 22,
+    durationMinutes: 50,
+    powerSurgeMinutes: 40,
+    targetBpm: 145,
+    targetKcal: 560,
+    level: 'Advanced',
+    exerciseIds: ['barbell-squat', 'romanian-deadlift', 'leg-press', 'leg-curl', 'hanging-leg-raise']
   }
 ];
 

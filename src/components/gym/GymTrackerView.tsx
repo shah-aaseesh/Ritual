@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Dumbbell, 
-  Play, 
   Plus, 
   Trash2, 
   Check, 
-  Timer, 
   History, 
-  Sparkles
+  ArrowUpRight, 
+  Flame, 
+  Activity, 
+  SlidersHorizontal
 } from 'lucide-react';
 import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession } from '../../types';
-import { PRESET_EXERCISES, PRESET_ROUTINE_TEMPLATES, DEMO_WORKOUT_SESSIONS, ExerciseDefinition } from '../../data/gymData';
+import { 
+  PRESET_EXERCISES, 
+  PRESET_ROUTINE_TEMPLATES, 
+  DEMO_WORKOUT_SESSIONS, 
+  ExerciseDefinition,
+  WorkoutTemplate 
+} from '../../data/gymData';
 import { useApp } from '../../context/AppContext';
 import { BodyMapHeatmap } from './BodyMapHeatmap';
 import { GamificationHub } from './GamificationHub';
@@ -20,14 +27,22 @@ export const GymTrackerView: React.FC = () => {
 
   // Active workout state
   const [isWorkoutActive, setIsWorkoutActive] = useState<boolean>(false);
-  const [activeWorkoutTitle, setActiveWorkoutTitle] = useState<string>('Push Power Session');
+  const [activeWorkoutTitle, setActiveWorkoutTitle] = useState<string>('30 min HIIT Cycle');
+  const [activeWorkoutSubtitle, setActiveWorkoutSubtitle] = useState<string>('Fat Melt');
   const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [activeExercises, setActiveExercises] = useState<ExerciseLog[]>([]);
+  const [activeTemplate, setActiveTemplate] = useState<WorkoutTemplate | null>(PRESET_ROUTINE_TEMPLATES[0]);
 
   // Rest Timer State
   const [restSecondsRemaining, setRestSecondsRemaining] = useState<number>(0);
   const [isRestTimerRunning, setIsRestTimerRunning] = useState<boolean>(false);
+  const [activeInterval, setActiveInterval] = useState<number>(1);
+  const totalIntervals = activeTemplate?.intervals || 20;
+
+  // Filter for Challenge Cards
+  const [challengeFilter, setChallengeFilter] = useState<'All' | 'Starter' | 'Sweat Mode' | 'Strength' | 'Body Map'>('All');
 
   // Exercise picker modal
   const [showAddExerciseModal, setShowAddExerciseModal] = useState<boolean>(false);
@@ -48,13 +63,13 @@ export const GymTrackerView: React.FC = () => {
   // Elapsed workout timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isWorkoutActive && workoutStartTime) {
+    if (isWorkoutActive && workoutStartTime && !isPaused) {
       interval = setInterval(() => {
         setElapsedSeconds(Math.floor((Date.now() - workoutStartTime) / 1000));
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isWorkoutActive, workoutStartTime]);
+  }, [isWorkoutActive, workoutStartTime, isPaused]);
 
   // Rest timer countdown
   useEffect(() => {
@@ -64,7 +79,7 @@ export const GymTrackerView: React.FC = () => {
         setRestSecondsRemaining(prev => {
           if (prev <= 1) {
             setIsRestTimerRunning(false);
-            showToast('⏰ Rest timer complete! Ready for next set.', 'info');
+            showToast('⏰ Rest timer complete! Ready for next interval/set.', 'info');
             return 0;
           }
           return prev - 1;
@@ -87,8 +102,8 @@ export const GymTrackerView: React.FC = () => {
 
   // Start workout from a preset template
   const startRoutine = (templateId: string) => {
-    const template = PRESET_ROUTINE_TEMPLATES.find(t => t.id === templateId);
-    if (!template) return;
+    const template = PRESET_ROUTINE_TEMPLATES.find(t => t.id === templateId) || PRESET_ROUTINE_TEMPLATES[0];
+    setActiveTemplate(template);
 
     const initialExercises: ExerciseLog[] = template.exerciseIds.map((exId, idx) => {
       const def = PRESET_EXERCISES.find(e => e.id === exId) || PRESET_EXERCISES[0];
@@ -110,11 +125,14 @@ export const GymTrackerView: React.FC = () => {
     });
 
     setActiveWorkoutTitle(template.title);
+    setActiveWorkoutSubtitle(template.subtitle);
     setActiveExercises(initialExercises);
     setWorkoutStartTime(Date.now());
     setElapsedSeconds(0);
+    setIsPaused(false);
+    setActiveInterval(1);
     setIsWorkoutActive(true);
-    showToast(`🏋️ Started "${template.title}" workout!`, 'success');
+    showToast(`⚡ Started challenge: ${template.subtitle} (${template.title})`, 'success');
   };
 
   // Add exercise to active workout
@@ -146,7 +164,8 @@ export const GymTrackerView: React.FC = () => {
           if (s.id !== setId) return s;
           const nextCompleted = !s.isCompleted;
           if (nextCompleted) {
-            startRestTimer(90); // default 90s rest timer on complete
+            startRestTimer(90);
+            setActiveInterval(prevI => Math.min(prevI + 1, totalIntervals));
           }
           return { ...s, isCompleted: nextCompleted };
         })
@@ -184,7 +203,7 @@ export const GymTrackerView: React.FC = () => {
     }));
   };
 
-  // Finish workout & calculate PRs and volume
+  // Finish workout
   const finishWorkout = () => {
     const totalVolume = activeExercises.reduce((acc, ex) => {
       return acc + ex.sets.reduce((sAcc, s) => s.isCompleted ? sAcc + (s.weightKg * s.reps) : sAcc, 0);
@@ -196,7 +215,7 @@ export const GymTrackerView: React.FC = () => {
 
     const session: WorkoutSession = {
       id: `session-${Date.now()}`,
-      title: activeWorkoutTitle,
+      title: `${activeWorkoutSubtitle} - ${activeWorkoutTitle}`,
       date: new Date().toISOString().split('T')[0],
       startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       durationMinutes: Math.max(1, Math.round(elapsedSeconds / 60)),
@@ -208,8 +227,13 @@ export const GymTrackerView: React.FC = () => {
     setWorkoutHistory(prev => [session, ...prev]);
     setIsWorkoutActive(false);
     setIsRestTimerRunning(false);
-    showToast(`🎉 Workout complete! ${totalVolume.toLocaleString()} kg total volume lifted!`, 'success');
+    showToast(`🏁 Challenge Complete! ${totalVolume.toLocaleString()} kg lifted & ${Math.round(elapsedSeconds * 0.12)} kcal burned!`, 'success');
   };
+
+  const filteredChallenges = PRESET_ROUTINE_TEMPLATES.filter(t => {
+    if (challengeFilter === 'All' || challengeFilter === 'Body Map') return true;
+    return t.category === challengeFilter;
+  });
 
   const filteredExercises = PRESET_EXERCISES.filter(ex => {
     const matchesGroup = selectedMuscleFilter === 'All' || ex.muscleGroup === selectedMuscleFilter;
@@ -217,430 +241,484 @@ export const GymTrackerView: React.FC = () => {
     return matchesGroup && matchesSearch;
   });
 
-  const [gymSubTab, setGymSubTab] = useState<'all' | 'bodymap' | 'workouts' | 'quests'>('all');
-
-  // Handle start workout from muscle group in Body Map
-  const handleStartMuscleWorkout = (muscleGroup: MuscleGroup) => {
-    const exercisesForMuscle = PRESET_EXERCISES.filter(e => e.muscleGroup === muscleGroup);
-    if (exercisesForMuscle.length === 0) return;
-
-    const initialExercises: ExerciseLog[] = exercisesForMuscle.slice(0, 4).map((def, idx) => ({
-      id: `log-${Date.now()}-${idx}`,
-      exerciseId: def.id,
-      exerciseName: def.name,
-      muscleGroup: def.muscleGroup,
-      sets: Array.from({ length: def.defaultSets }).map((_, sIdx) => ({
-        id: `set-${idx}-${sIdx}`,
-        setNumber: sIdx + 1,
-        weightKg: def.defaultWeightKg,
-        reps: def.defaultReps,
-        isCompleted: false
-      }))
-    }));
-
-    setActiveWorkoutTitle(`${muscleGroup} Hypertrophy Session`);
-    setActiveExercises(initialExercises);
-    setWorkoutStartTime(Date.now());
-    setElapsedSeconds(0);
-    setIsWorkoutActive(true);
-    setGymSubTab('all');
-    showToast(`🏋️ Started ${muscleGroup} targeted workout!`, 'success');
-  };
+  // Calculate dynamic live metrics
+  const currentBpm = 135 + Math.floor((elapsedSeconds % 30) / 4);
+  const currentKcal = Math.round(elapsedSeconds * 0.133);
+  const remainingSeconds = Math.max(0, (activeTemplate ? activeTemplate.durationMinutes * 60 : 1800) - elapsedSeconds);
+  const timerDisplay = isRestTimerRunning ? formatTimer(restSecondsRemaining) : formatTimer(remainingSeconds);
+  const progressRatio = activeTemplate 
+    ? Math.min(1, elapsedSeconds / (activeTemplate.durationMinutes * 60)) 
+    : 0.25;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-24 text-white">
       {/* ========================================================================= */}
-      {/* 🏋️ GYM SUITE HERO HEADER                                                  */}
+      {/* 🚀 PICK A CHALLENGE & ATHLETIC HERO HUB                                  */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black uppercase tracking-wider font-mono">
-              HEALTH SUITE • GYM & BODY MAP
-            </span>
-            <span className="text-xs font-bold text-charcoal-400">Hevy-Grade Strength Tracker</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
-            Workout & Biomechanical Map
-          </h1>
-          <p className="text-xs sm:text-sm text-charcoal-600">
-            Interactive anatomical body map, set logging, rest timers, and RPG level progression.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!isWorkoutActive && (
-            <button
-              type="button"
-              onClick={() => startRoutine('push-day')}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-forest-950 to-forest-900 text-cream-50 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-card hover:scale-[1.02] active:scale-95 transition"
-            >
-              <Play className="w-4 h-4 fill-current text-mint-300" />
-              <span>Start Quick Workout</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Gym Sub-Navigation Switcher */}
-      <div className="inline-flex p-1.5 bg-cream-200/80 rounded-2xl border border-cream-300 text-xs shadow-xs gap-1">
-        <button
-          type="button"
-          onClick={() => setGymSubTab('all')}
-          className={`px-3.5 py-2 rounded-xl font-black transition ${
-            gymSubTab === 'all'
-              ? 'bg-forest-900 text-cream-50 shadow-sm'
-              : 'text-charcoal-700 hover:text-forest-950'
-          }`}
-        >
-          ⚡ Full Suite View
-        </button>
-        <button
-          type="button"
-          onClick={() => setGymSubTab('bodymap')}
-          className={`px-3.5 py-2 rounded-xl font-black transition ${
-            gymSubTab === 'bodymap'
-              ? 'bg-forest-900 text-cream-50 shadow-sm'
-              : 'text-charcoal-700 hover:text-forest-950'
-          }`}
-        >
-          🗺️ Anatomical Body Map
-        </button>
-        <button
-          type="button"
-          onClick={() => setGymSubTab('workouts')}
-          className={`px-3.5 py-2 rounded-xl font-black transition ${
-            gymSubTab === 'workouts'
-              ? 'bg-forest-900 text-cream-50 shadow-sm'
-              : 'text-charcoal-700 hover:text-forest-950'
-          }`}
-        >
-          🏋️ Workout Splits & Logs
-        </button>
-        <button
-          type="button"
-          onClick={() => setGymSubTab('quests')}
-          className={`px-3.5 py-2 rounded-xl font-black transition ${
-            gymSubTab === 'quests'
-              ? 'bg-forest-900 text-cream-50 shadow-sm'
-              : 'text-charcoal-700 hover:text-forest-950'
-          }`}
-        >
-          🏆 Level & Daily Quests
-        </button>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 🗺️ INTERACTIVE ANATOMICAL BODY MAP                                       */}
-      {/* ========================================================================= */}
-      {(gymSubTab === 'all' || gymSubTab === 'bodymap') && (
-        <BodyMapHeatmap
-          onSelectExercise={(ex) => handleAddExercise(ex)}
-          onStartMuscleWorkout={(muscle) => handleStartMuscleWorkout(muscle)}
-        />
-      )}
-
-      {/* ========================================================================= */}
-      {/* 🏆 GAMIFIED RPG LEVEL & QUESTS HUD                                        */}
-      {/* ========================================================================= */}
-      {(gymSubTab === 'all' || gymSubTab === 'quests') && (
-        <GamificationHub />
-      )}
-
-      {/* ========================================================================= */}
-      {/* 🔥 ACTIVE LIVE WORKOUT SESSION (IF ACTIVE)                                */}
-      {/* ========================================================================= */}
-      {isWorkoutActive && (
-        <div className="rounded-3xl bg-forest-950 text-cream-50 p-5 sm:p-6 border border-emerald-500/30 shadow-2xl space-y-5 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer-sweep pointer-events-none" />
-
-          {/* Top Session HUD */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 relative z-10">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                </span>
-                <span className="text-[10px] font-black uppercase text-mint-300 tracking-widest font-mono">
-                  LIVE SESSION IN PROGRESS
-                </span>
-              </div>
-              <input
-                type="text"
-                value={activeWorkoutTitle}
-                onChange={(e) => setActiveWorkoutTitle(e.target.value)}
-                className="text-lg sm:text-xl font-black bg-transparent border-b border-transparent hover:border-white/30 focus:border-emerald-400 focus:outline-none text-white w-full"
-              />
+      <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+        {/* Top Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FF3B30] animate-ping" />
+              <span className="text-[11px] font-black uppercase text-[#FF3B30] tracking-widest font-mono">
+                ATHLETIC PERFORMANCE SUITE
+              </span>
             </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1">
+              Pick a Challenge
+            </h1>
+          </div>
 
-            {/* Time & Action Controls */}
-            <div className="flex items-center gap-3">
-              <div className="px-3.5 py-1.5 rounded-xl bg-black/40 border border-white/10 text-center font-mono">
-                <span className="text-[9px] text-cream-400 block uppercase font-bold">Elapsed</span>
-                <span className="text-sm font-black text-emerald-400">{formatTimer(elapsedSeconds)}</span>
-              </div>
+          {/* Quick Start / Biomechanical Setup Button */}
+          <button
+            type="button"
+            onClick={() => startRoutine(PRESET_ROUTINE_TEMPLATES[0].id)}
+            className="self-start sm:self-center px-4 py-2.5 rounded-full bg-[#181822] hover:bg-[#22222E] border border-white/15 text-xs font-bold flex items-center gap-2 text-zinc-200 hover:text-white transition shadow-soft"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-[#FF3B30]" />
+            <span>Ready Setup</span>
+          </button>
+        </div>
 
+        {/* Segmented Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {(['All', 'Starter', 'Sweat Mode', 'Strength', 'Body Map'] as const).map((tab) => {
+            const isActive = challengeFilter === tab;
+            return (
               <button
+                key={tab}
                 type="button"
-                onClick={finishWorkout}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-mint-400 text-forest-950 font-black text-xs shadow-soft hover:brightness-110 active:scale-95 transition"
+                onClick={() => setChallengeFilter(tab)}
+                className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+                  isActive
+                    ? 'bg-white text-black font-extrabold shadow-lg scale-[1.02]'
+                    : 'bg-[#181822] text-zinc-400 hover:text-white hover:bg-[#22222E] border border-white/5'
+                }`}
               >
-                Finish Session 🏁
+                {tab === 'Body Map' ? '🗺️ Anatomical Body Map' : tab}
               </button>
-            </div>
+            );
+          })}
+        </div>
+
+        {/* If Body Map tab is selected, show Interactive Muscle Map */}
+        {challengeFilter === 'Body Map' ? (
+          <div className="space-y-6 pt-2">
+            <BodyMapHeatmap
+              onSelectExercise={(ex) => handleAddExercise(ex)}
+              onStartMuscleWorkout={(muscle) => {
+                const exercisesForMuscle = PRESET_EXERCISES.filter(e => e.muscleGroup === muscle);
+                if (exercisesForMuscle.length > 0) {
+                  startRoutine('push-day');
+                }
+              }}
+            />
+            <GamificationHub />
           </div>
+        ) : (
+          /* Challenge Cards Grid (Inspired by the Reference Screenshot) */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredChallenges.map((challenge, idx) => (
+              <div
+                key={challenge.id}
+                className="group relative bg-[#13131A] hover:bg-[#181822] rounded-[2rem] p-6 border border-white/10 hover:border-[#FF3B30]/40 transition-all duration-300 shadow-card flex flex-col justify-between overflow-hidden min-h-[260px]"
+              >
+                {/* Subtle Crimson Glow in Background on Hover */}
+                <div className="absolute -top-12 -right-12 w-36 h-36 bg-[#FF3B30]/10 rounded-full blur-3xl group-hover:bg-[#FF3B30]/20 transition-all pointer-events-none" />
 
-          {/* Rest Timer Floating Bar */}
-          {restSecondsRemaining > 0 && (
-            <div className="p-3 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-between text-xs animate-pulse">
-              <div className="flex items-center gap-2">
-                <Timer className="w-4 h-4 text-emerald-400" />
-                <span className="font-bold text-cream-200">Rest Timer:</span>
-                <span className="text-base font-black font-mono text-emerald-400">
-                  {formatTimer(restSecondsRemaining)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => startRestTimer(restSecondsRemaining + 30)}
-                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-bold"
-                >
-                  +30s
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRestSecondsRemaining(0)}
-                  className="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[10px] font-bold"
-                >
-                  Skip
-                </button>
-              </div>
-            </div>
-          )}
+                {/* Top Details */}
+                <div className="relative z-10 space-y-1">
+                  <span className="text-xs font-semibold text-zinc-400 block tracking-wide">
+                    {challenge.subtitle}
+                  </span>
+                  <h3 className="text-2xl font-black text-white tracking-tight">
+                    {challenge.title}
+                  </h3>
 
-          {/* Active Exercises List */}
-          <div className="space-y-4">
-            {activeExercises.map((ex, exIdx) => (
-              <div key={ex.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono">
-                      #{exIdx + 1}
-                    </span>
-                    <h3 className="text-sm sm:text-base font-black text-white">{ex.exerciseName}</h3>
-                    <span className="text-[10px] font-bold text-cream-400 uppercase bg-white/5 px-2 py-0.5 rounded-full">
-                      {ex.muscleGroup}
-                    </span>
+                  <div className="pt-3 space-y-1 text-xs text-zinc-400 font-medium">
+                    <p className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B30]" />
+                      <span>{challenge.intervals} Intervals</span>
+                    </p>
+                    <p className="text-zinc-200 font-bold text-sm">
+                      {challenge.durationMinutes} min
+                    </p>
+                    {challenge.powerSurgeMinutes && (
+                      <p className="text-zinc-400">
+                        Power Surge <strong className="text-zinc-200">{challenge.powerSurgeMinutes} min</strong>
+                      </p>
+                    )}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveExercises(prev => prev.filter(item => item.id !== ex.id))}
-                    className="p-1 rounded-lg text-cream-400 hover:text-rose-400 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
-                {/* Sets Table */}
-                <div className="space-y-1.5">
-                  <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-cream-400 uppercase px-2">
-                    <div className="col-span-2 text-center">Set</div>
-                    <div className="col-span-4 text-center">Weight (kg)</div>
-                    <div className="col-span-4 text-center">Reps</div>
-                    <div className="col-span-2 text-center">Done</div>
-                  </div>
-
-                  {ex.sets.map((set) => (
-                    <div
-                      key={set.id}
-                      className={`grid grid-cols-12 gap-2 items-center p-2 rounded-xl text-xs transition ${
-                        set.isCompleted ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-black/20'
-                      }`}
-                    >
-                      <div className="col-span-2 text-center font-black font-mono text-cream-300">
-                        {set.setNumber}
-                      </div>
-
-                      <div className="col-span-4">
-                        <input
-                          type="number"
-                          value={set.weightKg}
-                          onChange={(e) => updateSet(ex.id, set.id, 'weightKg', parseFloat(e.target.value) || 0)}
-                          className="w-full text-center bg-black/40 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                        />
-                      </div>
-
-                      <div className="col-span-4">
-                        <input
-                          type="number"
-                          value={set.reps}
-                          onChange={(e) => updateSet(ex.id, set.id, 'reps', parseInt(e.target.value) || 0)}
-                          className="w-full text-center bg-black/40 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                        />
-                      </div>
-
-                      <div className="col-span-2 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={() => toggleSetComplete(ex.id, set.id)}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition ${
-                            set.isCompleted
-                              ? 'bg-emerald-500 text-forest-950 scale-105'
-                              : 'bg-white/10 text-cream-400 hover:bg-white/20'
-                          }`}
-                        >
-                          <Check className="w-4 h-4 stroke-[3]" />
-                        </button>
-                      </div>
+                {/* Bottom Action Pill & Athlete Graphic */}
+                <div className="relative z-10 pt-6 flex items-end justify-between">
+                  {/* Circular Launch Button with Angled Arrow */}
+                  <button
+                    type="button"
+                    onClick={() => startRoutine(challenge.id)}
+                    className="flex items-center gap-2 p-1 pl-3.5 pr-1.5 rounded-full bg-[#20202B] hover:bg-[#282836] border border-white/10 group-hover:border-[#FF3B30]/40 transition-all"
+                  >
+                    <span className="text-[11px] font-extrabold text-zinc-200 group-hover:text-white">
+                      Start Mode
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#FF3B30] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                      <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                     </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-1">
-                  <button
-                    type="button"
-                    onClick={() => addSetToExercise(ex.id)}
-                    className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Set</span>
                   </button>
 
-                  <div className="flex items-center gap-1.5 text-[10px] text-cream-400 font-mono">
-                    <span>Rest Timer:</span>
-                    <button
-                      type="button"
-                      onClick={() => startRestTimer(60)}
-                      className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
-                    >
-                      60s
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startRestTimer(90)}
-                      className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
-                    >
-                      90s
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startRestTimer(120)}
-                      className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
-                    >
-                      120s
-                    </button>
+                  {/* High-End Vector Athlete/Bike Cutout Icon */}
+                  <div className="w-20 h-20 opacity-40 group-hover:opacity-85 transition-all text-[#FF3B30] flex items-center justify-center">
+                    {idx % 3 === 0 ? (
+                      <Activity className="w-16 h-16 stroke-[1.2]" />
+                    ) : idx % 3 === 1 ? (
+                      <Flame className="w-16 h-16 stroke-[1.2]" />
+                    ) : (
+                      <Dumbbell className="w-16 h-16 stroke-[1.2]" />
+                    )}
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
 
-            <button
-              type="button"
-              onClick={() => setShowAddExerciseModal(true)}
-              className="w-full py-3 rounded-2xl border-2 border-dashed border-white/20 hover:border-emerald-400/60 text-cream-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition"
-            >
-              <Plus className="w-4 h-4 text-emerald-400" />
-              <span>Add Exercise from Movement Library</span>
-            </button>
+      {/* ========================================================================= */}
+      {/* 🔴 LIVE WORKOUT SESSION HUD & RADIAL GAUGE (Screen 3 Reference Design)      */}
+      {/* ========================================================================= */}
+      {isWorkoutActive && (
+        <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-[#FF3B30]/40 shadow-2xl space-y-6 relative overflow-hidden">
+          {/* Top Session Status Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-[#FF3B30] animate-pulse" />
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#FF3B30] tracking-widest font-mono">
+                  LIVE WORKOUT INTERVALS
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white">
+                  {activeWorkoutSubtitle} • {activeWorkoutTitle}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-mono font-bold text-zinc-300">
+                Interval {activeInterval} of {totalIntervals}
+              </span>
+              <button
+                type="button"
+                onClick={finishWorkout}
+                className="px-4 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 font-extrabold text-xs transition active:scale-95"
+              >
+                End Session
+              </button>
+            </div>
+          </div>
+
+          {/* Metric Displays (Heart Rate & Calories Burned) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                Heart Rate
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  {currentBpm}
+                </span>
+                <span className="text-xs font-bold text-[#FF3B30]">bpm</span>
+              </div>
+            </div>
+
+            <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                Active Burn
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  {currentKcal}
+                </span>
+                <span className="text-xs font-bold text-amber-400">kcal</span>
+              </div>
+            </div>
+
+            <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                Total Elapsed
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  {formatTimer(elapsedSeconds)}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-[#14141C] p-4 rounded-2xl border border-white/5 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                Total Exercises
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  {activeExercises.length}
+                </span>
+                <span className="text-xs text-zinc-400 font-bold">movements</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Large Circular Radial Ring Gauge (Screen 3 UI) */}
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="relative w-64 h-64 flex items-center justify-center">
+              {/* Radial SVG Gauge */}
+              <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 200 200">
+                {/* Background Dotted Track */}
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="76"
+                  stroke="#262633"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray="4 6"
+                />
+                {/* Glowing Crimson Foreground Arc */}
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="76"
+                  stroke="#FF3B30"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 76}
+                  strokeDashoffset={2 * Math.PI * 76 * (1 - (isRestTimerRunning ? restSecondsRemaining / 90 : progressRatio))}
+                  className="transition-all duration-500 ease-out"
+                />
+              </svg>
+
+              {/* Digital Timer Readout Inside Radial Dial */}
+              <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="text-4xl sm:text-5xl font-black text-white tracking-tight font-mono">
+                  {timerDisplay}
+                </span>
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                  {isRestTimerRunning ? 'Rest Interval' : 'Remaining'}
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom Frosted Pill Control Bar (|← , 00/Pause , →|) */}
+            <div className="flex items-center gap-3 p-2 bg-[#181822]/90 backdrop-blur-md rounded-full border border-white/10 shadow-2xl">
+              <button
+                type="button"
+                onClick={() => setActiveInterval(prev => Math.max(1, prev - 1))}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95"
+                title="Previous Interval"
+              >
+                <span className="font-mono font-black text-sm">|←</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPaused(prev => !prev)}
+                className="px-6 h-12 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center gap-2 font-mono font-black text-sm transition active:scale-95 shadow-lg"
+              >
+                <span>{isPaused ? '▶ RESUME' : '00 PAUSE'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  startRestTimer(60);
+                  setActiveInterval(prev => Math.min(totalIntervals, prev + 1));
+                }}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95"
+                title="Next Interval"
+              >
+                <span className="font-mono font-black text-sm">→|</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Set & Exercise Logger */}
+          <div className="space-y-3 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider font-mono">
+                Active Workout Set Logger
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddExerciseModal(true)}
+                className="px-3 py-1.5 rounded-full bg-[#181822] hover:bg-[#22222E] border border-white/15 text-xs font-bold text-zinc-300 hover:text-white flex items-center gap-1.5 transition"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#FF3B30]" />
+                <span>Add Movement</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {activeExercises.map((ex, exIdx) => (
+                <div key={ex.id} className="p-4 rounded-2xl bg-[#14141C] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black px-2 py-0.5 rounded-md bg-[#FF3B30]/20 text-[#FF3B30] font-mono">
+                        #{exIdx + 1}
+                      </span>
+                      <h4 className="text-sm font-black text-white">{ex.exerciseName}</h4>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase bg-white/5 px-2 py-0.5 rounded-full">
+                        {ex.muscleGroup}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveExercises(prev => prev.filter(item => item.id !== ex.id))}
+                      className="p-1 rounded-lg text-zinc-400 hover:text-[#FF3B30] transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Sets Table */}
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-zinc-400 uppercase px-2">
+                      <div className="col-span-2 text-center">Set</div>
+                      <div className="col-span-4 text-center">Weight (kg)</div>
+                      <div className="col-span-4 text-center">Reps</div>
+                      <div className="col-span-2 text-center">Complete</div>
+                    </div>
+
+                    {ex.sets.map((set) => (
+                      <div
+                        key={set.id}
+                        className={`grid grid-cols-12 gap-2 items-center p-2 rounded-xl text-xs transition ${
+                          set.isCompleted ? 'bg-[#FF3B30]/20 border border-[#FF3B30]/40' : 'bg-black/30'
+                        }`}
+                      >
+                        <div className="col-span-2 text-center font-black font-mono text-zinc-300">
+                          {set.setNumber}
+                        </div>
+
+                        <div className="col-span-4">
+                          <input
+                            type="number"
+                            value={set.weightKg}
+                            onChange={(e) => updateSet(ex.id, set.id, 'weightKg', parseFloat(e.target.value) || 0)}
+                            className="w-full text-center bg-black/50 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                          />
+                        </div>
+
+                        <div className="col-span-4">
+                          <input
+                            type="number"
+                            value={set.reps}
+                            onChange={(e) => updateSet(ex.id, set.id, 'reps', parseInt(e.target.value) || 0)}
+                            className="w-full text-center bg-black/50 border border-white/10 rounded-lg py-1 font-mono font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
+                          />
+                        </div>
+
+                        <div className="col-span-2 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleSetComplete(ex.id, set.id)}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition ${
+                              set.isCompleted
+                                ? 'bg-[#FF3B30] text-white scale-105'
+                                : 'bg-white/10 text-zinc-400 hover:bg-white/20'
+                            }`}
+                          >
+                            <Check className="w-4 h-4 stroke-[3]" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => addSetToExercise(ex.id)}
+                      className="text-xs font-bold text-[#FF3B30] hover:text-[#FF6961] flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Set</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-mono">
+                      <span>Rest Timer:</span>
+                      <button
+                        type="button"
+                        onClick={() => startRestTimer(60)}
+                        className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
+                      >
+                        60s
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startRestTimer(90)}
+                        className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 font-bold"
+                      >
+                        90s
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 📋 PRESET WORKOUT ROUTINES                                                */}
-      {/* ========================================================================= */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-black text-forest-950 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Workout Routine Templates</span>
-          </h2>
-          <span className="text-xs text-charcoal-500 font-bold">4 Verified Splits</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {PRESET_ROUTINE_TEMPLATES.map((routine) => (
-            <div
-              key={routine.id}
-              className="p-4 rounded-3xl bg-white border border-cream-200 hover:border-forest-800 shadow-soft transition-all flex flex-col justify-between space-y-3 group"
-            >
-              <div className="space-y-1.5">
-                <div className="w-8 h-8 rounded-xl bg-forest-900 text-mint-300 flex items-center justify-center">
-                  <Dumbbell className="w-4 h-4" />
-                </div>
-                <h3 className="text-sm font-black text-forest-950 leading-snug">{routine.title}</h3>
-                <p className="text-[11px] text-charcoal-500">
-                  {routine.exerciseIds.length} compound & isolation movements
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => startRoutine(routine.id)}
-                className="w-full py-2 rounded-xl bg-cream-100 hover:bg-forest-900 hover:text-cream-50 text-forest-950 text-xs font-black flex items-center justify-center gap-1.5 transition"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Start Routine</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
       {/* 📊 RECENT WORKOUT HISTORY & PRs                                           */}
       {/* ========================================================================= */}
-      <div className="space-y-3">
+      <div className="bg-[#0C0C10] rounded-[2.5rem] p-6 sm:p-8 border border-white/10 shadow-card space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-black text-forest-950 flex items-center gap-2">
-            <History className="w-4 h-4 text-forest-900" />
-            <span>Workout History & Volume Logs</span>
+          <h2 className="text-lg font-black text-white flex items-center gap-2">
+            <History className="w-5 h-5 text-[#FF3B30]" />
+            <span>Athletic Session History</span>
           </h2>
-          <span className="text-xs text-charcoal-500 font-mono font-bold">
-            {workoutHistory.length} Sessions Logged
+          <span className="text-xs text-zinc-400 font-mono font-bold">
+            {workoutHistory.length} Recorded
           </span>
         </div>
 
         {workoutHistory.length === 0 ? (
-          <div className="p-8 rounded-3xl bg-white border border-cream-200 text-center text-xs text-charcoal-400">
-            No completed workouts yet. Start a session above to track progressive overload!
+          <div className="p-8 rounded-2xl bg-[#14141C] border border-white/5 text-center text-xs text-zinc-400">
+            No completed workouts yet. Launch a challenge above!
           </div>
         ) : (
           <div className="space-y-3">
             {workoutHistory.map((session) => (
               <div
                 key={session.id}
-                className="p-4 sm:p-5 rounded-3xl bg-white border border-cream-200 shadow-soft space-y-3"
+                className="p-4 sm:p-5 rounded-2xl bg-[#14141C] border border-white/5 hover:border-white/15 transition space-y-3"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cream-100 pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                        {session.date} • {session.startTime}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-black text-forest-950 mt-1">{session.title}</h3>
+                    <span className="text-[10px] font-black uppercase text-[#FF3B30] bg-[#FF3B30]/10 px-2.5 py-0.5 rounded-full border border-[#FF3B30]/20">
+                      {session.date} • {session.startTime}
+                    </span>
+                    <h3 className="text-base font-black text-white mt-1">{session.title}</h3>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs font-mono">
-                    <div className="px-3 py-1 rounded-xl bg-cream-100 text-forest-950 font-bold">
+                    <div className="px-3 py-1 rounded-xl bg-white/5 text-zinc-200 font-bold">
                       ⏱️ {session.durationMinutes} mins
                     </div>
-                    <div className="px-3 py-1 rounded-xl bg-forest-900 text-mint-300 font-black">
-                      ⚡ {session.totalVolumeKg.toLocaleString()} kg Total Volume
+                    <div className="px-3 py-1 rounded-xl bg-[#FF3B30]/20 text-[#FF3B30] font-black">
+                      ⚡ {session.totalVolumeKg.toLocaleString()} kg Lifted
                     </div>
                   </div>
                 </div>
 
-                {/* Exercises in Session */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {session.exercises.map((ex) => (
-                    <div key={ex.id} className="p-2.5 rounded-xl bg-cream-50 border border-cream-200 text-xs space-y-1">
-                      <span className="font-black text-forest-950 block">{ex.exerciseName}</span>
-                      <div className="flex items-center gap-1.5 text-[11px] text-charcoal-600 font-mono">
+                    <div key={ex.id} className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-1">
+                      <span className="font-black text-zinc-200 block">{ex.exerciseName}</span>
+                      <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-mono">
                         <span>{ex.sets.filter(s => s.isCompleted).length} sets</span>
                         <span>•</span>
                         <span>Max {Math.max(...ex.sets.map(s => s.weightKg), 0)} kg</span>
@@ -648,12 +726,6 @@ export const GymTrackerView: React.FC = () => {
                     </div>
                   ))}
                 </div>
-
-                {session.notes && (
-                  <p className="text-xs text-charcoal-600 italic bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/60">
-                    "{session.notes}"
-                  </p>
-                )}
               </div>
             ))}
           </div>
@@ -664,33 +736,33 @@ export const GymTrackerView: React.FC = () => {
       {/* 🔎 ADD EXERCISE MODAL                                                     */}
       {/* ========================================================================= */}
       {showAddExerciseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-cream-300 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-cream-200 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#121218] rounded-[2rem] max-w-lg w-full p-6 shadow-2xl border border-white/10 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
-                <h3 className="text-lg font-black text-forest-950">Exercise Movement Library</h3>
-                <p className="text-xs text-charcoal-500">Select an exercise to add to your live workout</p>
+                <h3 className="text-lg font-black text-white">Movement Library</h3>
+                <p className="text-xs text-zinc-400">Select an exercise to add to your live workout</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddExerciseModal(false)}
-                className="p-1 rounded-full text-charcoal-400 hover:text-forest-900"
+                className="p-1 rounded-full text-zinc-400 hover:text-white"
               >
                 ✕
               </button>
             </div>
 
             {/* Muscle Filter Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
               {(['All', 'Chest', 'Back', 'Quads', 'Hamstrings', 'Shoulders', 'Biceps', 'Triceps', 'Core', 'Cardio'] as const).map((group) => (
                 <button
                   key={group}
                   type="button"
                   onClick={() => setSelectedMuscleFilter(group)}
-                  className={`px-3 py-1 rounded-xl font-bold whitespace-nowrap transition ${
+                  className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition ${
                     selectedMuscleFilter === group
-                      ? 'bg-forest-900 text-cream-50'
-                      : 'bg-cream-100 text-charcoal-700 hover:bg-cream-200'
+                      ? 'bg-white text-black'
+                      : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {group}
@@ -701,10 +773,10 @@ export const GymTrackerView: React.FC = () => {
             {/* Search */}
             <input
               type="text"
-              placeholder="Search exercise name (e.g. Bench Press, Squat)..."
+              placeholder="Search exercise (e.g. Bench Press, Squat)..."
               value={exerciseSearch}
               onChange={(e) => setExerciseSearch(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-cream-50 border border-cream-300 text-xs font-bold text-forest-950 focus:outline-none focus:ring-1 focus:ring-forest-900"
+              className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF3B30]"
             />
 
             {/* Exercise List */}
@@ -713,18 +785,18 @@ export const GymTrackerView: React.FC = () => {
                 <div
                   key={def.id}
                   onClick={() => handleAddExercise(def)}
-                  className="p-3 rounded-2xl bg-cream-50 hover:bg-emerald-50 border border-cream-200 hover:border-emerald-300 transition cursor-pointer flex items-center justify-between"
+                  className="p-3 rounded-xl bg-[#181822] hover:bg-[#20202C] border border-white/5 hover:border-[#FF3B30]/40 transition cursor-pointer flex items-center justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-forest-950">{def.name}</span>
-                      <span className="text-[9px] font-bold text-charcoal-500 px-2 py-0.5 bg-white rounded-full border border-cream-200">
+                      <span className="text-xs font-black text-white">{def.name}</span>
+                      <span className="text-[9px] font-bold text-zinc-400 px-2 py-0.5 bg-white/5 rounded-full">
                         {def.category}
                       </span>
                     </div>
-                    <p className="text-[11px] text-charcoal-500 mt-0.5">{def.instructions}</p>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">{def.instructions}</p>
                   </div>
-                  <Plus className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <Plus className="w-4 h-4 text-[#FF3B30] shrink-0" />
                 </div>
               ))}
             </div>
