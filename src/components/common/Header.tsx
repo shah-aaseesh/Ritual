@@ -125,33 +125,54 @@ export const Header: React.FC = () => {
 
           {/* Right Action: Goal Chip & Profile Settings */}
           <div className="flex items-center gap-2">
-            {/* Screenshot & Strava Share Button */}
+            {/* Screenshot & Share Button */}
             <button
               type="button"
               onClick={() => {
                 const completedCount = routineSteps.filter(s => s.isCompletedToday).length;
-                const totalSteps = routineSteps.length;
-                const rate = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
+                const totalSteps = routineSteps.length || 6;
+                const rate = routineSteps.length > 0 ? Math.round((completedCount / routineSteps.length) * 100) : 0;
                 const streak = progressHistory.filter(p => p.completionRate >= 0.75).length + (rate >= 75 ? 1 : 0);
+
+                const weightKg = profile.weightKg || 70;
+                const totalInches = (profile.heightFeet || 5) * 12 + (profile.heightInches || 9);
+                const heightCm = Math.round(totalInches * 2.54);
+                const age = profile.age || 24;
+                const isMale = profile.gender !== 'female';
+                const bmr = isMale 
+                  ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5 
+                  : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+                const maintenanceKcal = profile.maintenanceCalories || Math.round(bmr * 1.4);
+                const proteinTarget = Math.round(weightKg * 2.0);
 
                 const data: ShareCardData = {
                   type: activePillar === 'health' ? 'workout' : 'protocol',
-                  title: activePillar === 'health' ? 'Daily Workout & Training Stack' : 'Daily Wellness Protocol',
-                  subtitle: `Tracked on Ritual • ${profile.name || 'Athlete'}`,
+                  title: activePillar === 'health' ? 'Daily Training & Bio-Stack' : 'Daily Bio-Protocol Active',
+                  subtitle: `${profile.name || 'Alex Patel'} • ${isMale ? 'Male' : 'Female'}, ${age} yrs • Target: ${maintenanceKcal} kcal`,
                   date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                  primaryStat: {
-                    label: activePillar === 'health' ? 'PERFORMANCE SCORE' : 'DAILY ADHERENCE',
+                  primaryStat: rate > 0 ? {
+                    label: 'DAILY PROTOCOL ADHERENCE',
                     value: `${rate}%`,
-                    unit: 'LOCKED'
+                    unit: rate === 100 ? 'COMPLETED' : 'ACHIEVED'
+                  } : {
+                    label: 'METABOLIC ENERGY TARGET',
+                    value: maintenanceKcal,
+                    unit: 'KCAL / DAY'
                   },
                   secondaryStats: [
-                    { label: 'STREAK', value: `${streak} Days`, highlight: true },
-                    { label: 'HABITS DONE', value: `${completedCount}/${totalSteps}` },
-                    { label: 'HEALTH PILLAR', value: activePillar.toUpperCase() }
+                    { label: 'PROTEIN TARGET', value: `${proteinTarget}g`, highlight: true },
+                    { label: 'ACTIVE STREAK', value: `${streak} Days` },
+                    { label: 'HABITS CHECKED', value: `${completedCount}/${totalSteps}` }
                   ],
-                  highlightItems: ['Habit Consistency', 'Clinical Formulations', 'Biomarker Tracking'],
-                  badgeText: '⚡ RITUAL // PERFORMANCE LAB',
-                  tagline: 'Evidence-Based Longevity & Fitness'
+                  highlightItems: [
+                    `Energy: ${maintenanceKcal} kcal`,
+                    `Protein: ${proteinTarget}g`,
+                    `Weight: ${weightKg}kg`,
+                    'Habit Consistency'
+                  ],
+                  badgeText: rate === 100 ? '🌟 PERFECT 100% PROTOCOL' : '⚡ RITUAL ATHLETE',
+                  tagline: 'Evidence-Based Longevity & Fitness',
+                  completionRate: rate > 0 ? rate : 100
                 };
                 setShareModalData(data);
               }}
