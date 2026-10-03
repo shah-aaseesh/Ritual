@@ -2,27 +2,27 @@
   "name": "Ritual — Clinical Habit & Formula Intelligence",
   "short_name": "Ritual",
   "description": "Evidence-first wellness assistant. Understand packaging claims, organize products, build sustainable routines, and track consistency.",
-  "start_url": "/",
-  "id": "/",
+  "start_url": "./",
+  "id": "./",
   "display": "standalone",
   "background_color": "#FAF7F2",
   "theme_color": "#1B3828",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon.svg",
+      "src": "./icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

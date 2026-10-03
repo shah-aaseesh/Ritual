@@ -161,6 +161,9 @@ export const GymTrackerView: React.FC = () => {
 
   const isMuscleSelected = (muscle: MuscleGroup) => selectedMuscles.includes(muscle);
 
+  // Selected Exercise Checkbox Selection for custom routine launch
+  const [selectedMovementIds, setSelectedMovementIds] = useState<string[]>([]);
+
   // Filtered Exercises for the Generator List
   const matchingGeneratorExercises = useMemo(() => {
     return PRESET_EXERCISES.filter(ex => {
@@ -171,18 +174,37 @@ export const GymTrackerView: React.FC = () => {
     });
   }, [selectedMuscles, selectedEquipment, exerciseSearchQuery]);
 
+  // Keep selectedMovementIds synced or initialized when matching exercises change
+  const toggleMovementSelection = (id: string) => {
+    setSelectedMovementIds(prev => 
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllMovements = () => {
+    setSelectedMovementIds(matchingGeneratorExercises.map(e => e.id));
+  };
+
+  const clearSelectedMovements = () => {
+    setSelectedMovementIds([]);
+  };
+
   // ============================================================================
   // WORKOUT LAUNCHERS
   // ============================================================================
 
-  // 1. Start Workout from all currently filtered / selected movements
-  const startGeneratedWorkout = () => {
-    if (matchingGeneratorExercises.length === 0) {
-      showToast('Please select at least 1 muscle group with matching exercises!', 'warning');
+  // 1. Start Workout with Only Selected / Checked Movements
+  const startSelectedWorkout = () => {
+    const exercisesToLaunch = matchingGeneratorExercises.filter(ex => 
+      selectedMovementIds.length === 0 ? true : selectedMovementIds.includes(ex.id)
+    );
+
+    if (exercisesToLaunch.length === 0) {
+      showToast('Please check at least 1 exercise or select one directly!', 'warning');
       return;
     }
 
-    const initialExercises: ExerciseLog[] = matchingGeneratorExercises.slice(0, 5).map((def, idx) => {
+    const initialExercises: ExerciseLog[] = exercisesToLaunch.map((def, idx) => {
       const sets: WorkoutSet[] = Array.from({ length: def.defaultSets }).map((_, sIdx) => ({
         id: `set-${Date.now()}-${idx}-${sIdx}`,
         setNumber: sIdx + 1,
@@ -200,7 +222,7 @@ export const GymTrackerView: React.FC = () => {
       };
     });
 
-    const title = selectedMuscles.length > 0 ? `${selectedMuscles.join(' & ')} Workout` : 'Targeted Workout';
+    const title = selectedMuscles.length > 0 ? `${selectedMuscles.join(' & ')} Workout` : `${exercisesToLaunch[0]?.name || 'Custom'} Workout`;
     setActiveWorkoutTitle(title);
     setActiveExercises(initialExercises);
     setWorkoutStartTime(Date.now());
@@ -208,10 +230,36 @@ export const GymTrackerView: React.FC = () => {
     setIsPaused(false);
     setIsWorkoutActive(true);
     setActiveTab('live');
-    showToast(`⚡ Started workout with ${initialExercises.length} movements!`, 'success');
+    showToast(`⚡ Started workout with ${initialExercises.length} chosen exercise${initialExercises.length > 1 ? 's' : ''}!`, 'success');
   };
 
-  // 2. Start Empty / Blank Workout
+  // 2. Start Solo Workout (1-Tap with Just 1 Exercise)
+  const startSoloWorkout = (def: ExerciseDefinition) => {
+    const initialExercises: ExerciseLog[] = [{
+      id: `log-${Date.now()}`,
+      exerciseId: def.id,
+      exerciseName: def.name,
+      muscleGroup: def.muscleGroup,
+      sets: Array.from({ length: def.defaultSets || 3 }).map((_, sIdx) => ({
+        id: `set-${Date.now()}-${sIdx}`,
+        setNumber: sIdx + 1,
+        weightKg: def.defaultWeightKg,
+        reps: def.defaultReps,
+        isCompleted: false
+      }))
+    }];
+
+    setActiveWorkoutTitle(`${def.name} Session`);
+    setActiveExercises(initialExercises);
+    setWorkoutStartTime(Date.now());
+    setElapsedSeconds(0);
+    setIsPaused(false);
+    setIsWorkoutActive(true);
+    setActiveTab('live');
+    showToast(`⚡ Started solo workout with ${def.name}!`, 'success');
+  };
+
+  // 3. Start Empty / Blank Workout
   const startEmptyWorkout = () => {
     setActiveWorkoutTitle('Quick Empty Workout');
     setActiveExercises([]);
@@ -757,26 +805,57 @@ export const GymTrackerView: React.FC = () => {
                   className="w-full p-3 rounded-2xl bg-cream-50 border border-mint-200 text-xs font-bold text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-mint-500"
                 />
 
-                {/* Generator Action Banner */}
+                {/* Generator Action Banner with Granular Control */}
                 <div className="p-4 rounded-2xl bg-mint-50 border border-mint-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-black text-forest-950 block">
-                      {matchingGeneratorExercises.length} Movements Matched
-                    </span>
-                    <span className="text-[11px] text-charcoal-600 font-mono">
-                      {selectedMuscles.join(' • ') || 'All Muscles'} ({selectedEquipment})
-                    </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-forest-950 block">
+                        {matchingGeneratorExercises.length} Movements Matched
+                      </span>
+                      {selectedMovementIds.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-mono font-bold">
+                          {selectedMovementIds.length} Selected
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={selectAllMovements}
+                        className="text-[11px] font-bold text-forest-800 hover:underline"
+                      >
+                        Select All
+                      </button>
+                      {selectedMovementIds.length > 0 && (
+                        <>
+                          <span className="text-charcoal-400 text-xs">•</span>
+                          <button
+                            type="button"
+                            onClick={clearSelectedMovements}
+                            className="text-[11px] font-bold text-rose-600 hover:underline"
+                          >
+                            Clear Selection
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={startGeneratedWorkout}
-                    disabled={matchingGeneratorExercises.length === 0}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 disabled:opacity-50 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center justify-center gap-1.5"
-                  >
-                    <Sparkles className="w-4 h-4 text-mint-300" />
-                    <span>Start Routine ({Math.min(matchingGeneratorExercises.length, 5)}) ›</span>
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={startSelectedWorkout}
+                      disabled={matchingGeneratorExercises.length === 0}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 disabled:opacity-50 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className="w-4 h-4 text-mint-300" />
+                      <span>
+                        {selectedMovementIds.length > 0 
+                          ? `Start Selected (${selectedMovementIds.length}) Movements ›` 
+                          : `Start Matching (${Math.min(matchingGeneratorExercises.length, 4)}) ›`}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -792,7 +871,7 @@ export const GymTrackerView: React.FC = () => {
                   Targeted Movements ({matchingGeneratorExercises.length})
                 </h3>
                 <p className="text-xs text-charcoal-600">
-                  Tap + Add to Workout or launch the routine directly.
+                  Choose individual exercises to start solo, check multiple to batch, or add to session.
                 </p>
               </div>
 
@@ -804,11 +883,14 @@ export const GymTrackerView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {matchingGeneratorExercises.map((def) => {
                 const isOpen = !!expandedCues[def.id];
+                const isChecked = selectedMovementIds.includes(def.id);
 
                 return (
                   <div
                     key={def.id}
-                    className="p-5 rounded-[2rem] bg-white border border-mint-200/80 hover:border-mint-400 transition shadow-soft hover:shadow-card flex flex-col justify-between space-y-3 group"
+                    className={`p-5 rounded-[2rem] bg-white border transition shadow-soft hover:shadow-card flex flex-col justify-between space-y-3 group relative ${
+                      isChecked ? 'border-forest-800 ring-2 ring-forest-800/20' : 'border-mint-200/80 hover:border-mint-400'
+                    }`}
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -821,14 +903,28 @@ export const GymTrackerView: React.FC = () => {
                           </span>
                         </div>
 
-                        <span className="text-xs font-mono font-bold text-forest-900">
-                          {def.defaultSets} sets × {def.defaultReps} reps
-                        </span>
+                        {/* Checkbox selector */}
+                        <button
+                          type="button"
+                          onClick={() => toggleMovementSelection(def.id)}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition flex items-center gap-1 border ${
+                            isChecked 
+                              ? 'bg-forest-900 text-white border-forest-900 shadow-2xs' 
+                              : 'bg-cream-50 text-charcoal-600 hover:text-forest-900 border-mint-200'
+                          }`}
+                        >
+                          <span>{isChecked ? '✓ Selected' : '+ Select'}</span>
+                        </button>
                       </div>
 
-                      <h4 className="text-base sm:text-lg font-black text-forest-950 group-hover:text-forest-800 transition">
-                        {def.name}
-                      </h4>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <h4 className="text-base sm:text-lg font-black text-forest-950 group-hover:text-forest-800 transition">
+                          {def.name}
+                        </h4>
+                        <span className="text-xs font-mono font-bold text-forest-900 shrink-0 ml-2">
+                          {def.defaultSets} × {def.defaultReps} reps
+                        </span>
+                      </div>
 
                       <p className="text-xs text-charcoal-600 leading-relaxed">
                         {def.instructions}
@@ -860,17 +956,32 @@ export const GymTrackerView: React.FC = () => {
 
                     <div className="pt-3 border-t border-mint-100 flex items-center justify-between gap-2">
                       <span className="text-[11px] text-charcoal-500 font-mono">
-                        Base load: {def.defaultWeightKg} kg
+                        Base: {def.defaultWeightKg} kg
                       </span>
 
-                      <button
-                        type="button"
-                        onClick={() => addExerciseToActiveWorkout(def)}
-                        className="px-4 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1.5"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-mint-300 stroke-[3]" />
-                        <span>Add to Workout</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        {/* 1-Tap Solo Launch */}
+                        <button
+                          type="button"
+                          onClick={() => startSoloWorkout(def)}
+                          className="px-3 py-1.5 rounded-xl bg-mint-100 hover:bg-mint-200 border border-mint-300 text-forest-950 font-black text-xs transition active:scale-95 flex items-center gap-1"
+                          title="Start live workout with only this exercise"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Start Solo</span>
+                        </button>
+
+                        {/* Add to session */}
+                        <button
+                          type="button"
+                          onClick={() => addExerciseToActiveWorkout(def)}
+                          className="px-3.5 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1"
+                          title="Add movement to session"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-mint-300 stroke-[3]" />
+                          <span>+ Add</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
