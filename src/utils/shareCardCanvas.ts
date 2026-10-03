@@ -41,9 +41,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#0C0E13',
         bgEnd: '#161922',
-        cardBg: 'rgba(24, 27, 36, 0.88)',
-        cardBgSecondary: 'rgba(18, 20, 28, 0.78)',
-        cardBorder: 'rgba(252, 82, 0, 0.38)',
+        cardBg: 'rgba(24, 27, 36, 0.9)',
+        cardBgSecondary: 'rgba(18, 20, 28, 0.8)',
+        cardBorder: 'rgba(252, 82, 0, 0.4)',
         accent: '#FC5200', // Athletic Ember Orange
         accentGlow: 'rgba(252, 82, 0, 0.45)',
         secondaryAccent: '#FFA000',
@@ -59,9 +59,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#05070D',
         bgEnd: '#0D1320',
-        cardBg: 'rgba(14, 20, 34, 0.88)',
-        cardBgSecondary: 'rgba(9, 15, 26, 0.78)',
-        cardBorder: 'rgba(204, 255, 0, 0.38)',
+        cardBg: 'rgba(14, 20, 34, 0.9)',
+        cardBgSecondary: 'rgba(9, 15, 26, 0.8)',
+        cardBorder: 'rgba(204, 255, 0, 0.4)',
         accent: '#CCFF00', // Radioactive Neon Lime
         accentGlow: 'rgba(204, 255, 0, 0.4)',
         secondaryAccent: '#00F0FF',
@@ -77,9 +77,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#12081E',
         bgEnd: '#200D2D',
-        cardBg: 'rgba(32, 16, 46, 0.88)',
-        cardBgSecondary: 'rgba(22, 11, 33, 0.78)',
-        cardBorder: 'rgba(255, 94, 98, 0.38)',
+        cardBg: 'rgba(32, 16, 46, 0.9)',
+        cardBgSecondary: 'rgba(22, 11, 33, 0.8)',
+        cardBorder: 'rgba(255, 94, 98, 0.4)',
         accent: '#FF5E62',
         accentGlow: 'rgba(255, 94, 98, 0.45)',
         secondaryAccent: '#FF9966',
@@ -95,9 +95,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#08080A',
         bgEnd: '#121215',
-        cardBg: 'rgba(22, 22, 25, 0.88)',
-        cardBgSecondary: 'rgba(16, 16, 18, 0.78)',
-        cardBorder: 'rgba(255, 255, 255, 0.25)',
+        cardBg: 'rgba(22, 22, 25, 0.9)',
+        cardBgSecondary: 'rgba(16, 16, 18, 0.8)',
+        cardBorder: 'rgba(255, 255, 255, 0.28)',
         accent: '#FFFFFF',
         accentGlow: 'rgba(255, 255, 255, 0.25)',
         secondaryAccent: '#A1A1AA',
@@ -113,9 +113,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#0A0A0B',
         bgEnd: '#171512',
-        cardBg: 'rgba(26, 22, 18, 0.88)',
-        cardBgSecondary: 'rgba(18, 15, 12, 0.78)',
-        cardBorder: 'rgba(245, 158, 11, 0.38)',
+        cardBg: 'rgba(26, 22, 18, 0.9)',
+        cardBgSecondary: 'rgba(18, 15, 12, 0.8)',
+        cardBorder: 'rgba(245, 158, 11, 0.4)',
         accent: '#F59E0B', // Metallic Gold
         accentGlow: 'rgba(245, 158, 11, 0.4)',
         secondaryAccent: '#FDE68A',
@@ -132,9 +132,9 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
       return {
         bgStart: '#03120C',
         bgEnd: '#081F17',
-        cardBg: 'rgba(10, 32, 24, 0.88)',
-        cardBgSecondary: 'rgba(6, 21, 16, 0.78)',
-        cardBorder: 'rgba(52, 211, 153, 0.38)',
+        cardBg: 'rgba(10, 32, 24, 0.9)',
+        cardBgSecondary: 'rgba(6, 21, 16, 0.8)',
+        cardBorder: 'rgba(52, 211, 153, 0.4)',
         accent: '#10B981', // Mosaic Emerald
         accentGlow: 'rgba(16, 185, 129, 0.45)',
         secondaryAccent: '#6EE7B7',
@@ -149,7 +149,7 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
   }
 }
 
-// Fixed Rounded Rectangle function
+// Pixel-perfect Rounded Rectangle
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -187,7 +187,7 @@ function drawRadialProgressRing(
   // 1. Background Track
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
   ctx.lineWidth = 12;
   ctx.lineCap = 'round';
   ctx.stroke();
@@ -208,13 +208,13 @@ function drawRadialProgressRing(
   ctx.shadowBlur = 0;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '900 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText(`${clampedPercent}%`, cx, cy - 2);
 
   ctx.font = '800 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-  ctx.fillText('SCORE', cx, cy + 20);
+  ctx.fillText('SCORE', cx, cy + 19);
 
   ctx.restore();
 }
@@ -404,7 +404,6 @@ export function renderShareCardToCanvas(
       data.photoOpacity ?? 0.95
     );
   } else {
-    // Rich dark base mesh gradient
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
     bgGrad.addColorStop(0, config.bgStart);
     bgGrad.addColorStop(1, config.bgEnd);
@@ -418,10 +417,10 @@ export function renderShareCardToCanvas(
   // 3. Dynamic Ambient Radial Glow behind the hero section
   const radialGlow = ctx.createRadialGradient(
     width / 2,
-    height * 0.42,
+    height * 0.4,
     40,
     width / 2,
-    height * 0.42,
+    height * 0.4,
     width * 0.6
   );
   radialGlow.addColorStop(0, config.accentGlow);
@@ -429,30 +428,32 @@ export function renderShareCardToCanvas(
   ctx.fillStyle = radialGlow;
   ctx.fillRect(0, 0, width, height);
 
-  // Layout Measurements & Vertical Proportional Distribution
+  // Layout Measurements & Structured Top-Down Box Coordinates
   const padX = 72;
   const contentW = width - padX * 2;
   const isStory = aspectRatio === 'story';
   const isSquare = aspectRatio === 'square';
 
-  // Responsive cursor positioning and section sizing
-  let cursorY = isStory ? 180 : isSquare ? 80 : 110;
-  const vGap = isStory ? 38 : isSquare ? 16 : 24;
+  // Responsive cursor positioning
+  let cursorY = isStory ? 160 : isSquare ? 70 : 95;
 
-  // 4. Top Header: Brand Logo Mark + Verified Athlete Profile
+  // 4. TOP HEADER BAR: Brand Logo + Athlete Profile
   ctx.save();
+  ctx.textBaseline = 'middle';
 
   // Left Brand Badge
+  const headerCenterY = cursorY + 20;
   ctx.fillStyle = config.accent;
   ctx.shadowColor = config.accentGlow;
   ctx.shadowBlur = 12;
   ctx.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('⚡ RITUAL', padX, cursorY + 4);
+  ctx.textAlign = 'left';
+  ctx.fillText('⚡ RITUAL', padX, headerCenterY);
   ctx.shadowBlur = 0;
 
   const brandW = ctx.measureText('⚡ RITUAL').width;
   const labPillX = padX + brandW + 16;
-  const labPillY = cursorY - 18;
+  const labPillY = headerCenterY - 14;
   drawRoundedRect(ctx, labPillX, labPillY, 140, 28, 14);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fill();
@@ -463,18 +464,17 @@ export function renderShareCardToCanvas(
   ctx.font = '800 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.textSecondary;
   ctx.textAlign = 'center';
-  ctx.fillText('ATHLETIC LAB', labPillX + 70, labPillY + 18);
+  ctx.fillText('ATHLETIC LAB', labPillX + 70, headerCenterY);
 
-  // Right Athlete Profile Info
+  // Right Athlete Profile
   const athleteName = (data.userName || 'Alex Patel').trim();
   const initial = (athleteName.charAt(0) || 'A').toUpperCase();
-  const avatarSize = 46;
+  const avatarSize = 44;
   const avatarX = width - padX - avatarSize;
-  const avatarY = cursorY - 24;
 
   // Avatar Circle with Neon Ring
   ctx.beginPath();
-  ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.arc(avatarX + avatarSize / 2, headerCenterY, avatarSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
   ctx.fill();
   ctx.strokeStyle = config.accent;
@@ -485,24 +485,25 @@ export function renderShareCardToCanvas(
   ctx.font = '900 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
-  ctx.fillText(initial, avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 7);
+  ctx.fillText(initial, avatarX + avatarSize / 2, headerCenterY);
 
   // Athlete Name & Date
   ctx.textAlign = 'right';
-  ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '800 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(athleteName.toUpperCase(), avatarX - 16, cursorY - 4);
+  ctx.fillText(athleteName.toUpperCase(), avatarX - 16, headerCenterY - 10);
 
-  ctx.font = '600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.textMuted;
   const dateDisplay = data.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  ctx.fillText(dateDisplay, avatarX - 16, cursorY + 18);
+  ctx.fillText(dateDisplay, avatarX - 16, headerCenterY + 12);
 
   ctx.restore();
 
-  cursorY += isStory ? 80 : 60;
+  // Advance cursor past header
+  cursorY += isStory ? 70 : 54;
 
-  // 5. Activity Category Pill
+  // 5. ACTIVITY CATEGORY PILL (Clean, isolated box)
   ctx.save();
   const fallbackBadge = data.type === 'workout' 
     ? '⚡ WORKOUT COMPLETED' 
@@ -516,7 +517,7 @@ export function renderShareCardToCanvas(
     ? data.badgeText 
     : fallbackBadge).toUpperCase();
 
-  ctx.font = '900 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '900 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const badgeW = ctx.measureText(badgeText).width + 36;
   const badgeH = 34;
 
@@ -529,14 +530,18 @@ export function renderShareCardToCanvas(
 
   ctx.fillStyle = config.badgeText;
   ctx.textAlign = 'left';
-  ctx.fillText(badgeText, padX + 18, cursorY + 22);
+  ctx.textBaseline = 'middle';
+  ctx.fillText(badgeText, padX + 18, cursorY + badgeH / 2);
   ctx.restore();
 
-  cursorY += isStory ? 65 : 52;
+  // Advance cursor past badge with healthy margin
+  cursorY += badgeH + (isStory ? 20 : 14);
 
-  // 6. Big Display Title & Subtitle
+  // 6. BIG DISPLAY TITLE & SUBTITLE
   ctx.save();
-  ctx.font = isStory ? '900 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textBaseline = 'top';
+  const titleFontSize = isStory ? 48 : isSquare ? 38 : 44;
+  ctx.font = `900 ${titleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = '#FFFFFF';
   
   const maxTitleW = contentW;
@@ -553,28 +558,32 @@ export function renderShareCardToCanvas(
   }
 
   ctx.fillText(titleLine1, padX, cursorY);
+  cursorY += titleFontSize + 4;
+
   if (titleLine2) {
-    cursorY += isStory ? 56 : 50;
     ctx.fillText(titleLine2, padX, cursorY);
+    cursorY += titleFontSize + 4;
   }
 
   // Subtitle
   if (data.subtitle) {
-    cursorY += isStory ? 38 : 32;
-    ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    cursorY += 6;
+    ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textSecondary;
     ctx.fillText(`•  ${data.subtitle}`, padX, cursorY);
+    cursorY += 26;
   }
   ctx.restore();
 
-  cursorY += isStory ? 55 : 42;
+  // Advance cursor to Hero Card
+  cursorY += isStory ? 30 : 20;
 
-  // 7. Hero Primary Stat Card (High-Tech Glassmorphism HUD)
-  const heroCardH = isStory ? 270 : isSquare ? 180 : 215;
+  // 7. HERO PRIMARY STAT CARD (High-Tech Glassmorphism HUD)
+  const heroCardH = isStory ? 250 : isSquare ? 170 : 200;
   ctx.save();
 
   // Draw Card Container
-  drawRoundedRect(ctx, padX, cursorY, contentW, heroCardH, 28);
+  drawRoundedRect(ctx, padX, cursorY, contentW, heroCardH, 26);
   ctx.fillStyle = config.cardBg;
   ctx.fill();
   ctx.strokeStyle = config.cardBorder;
@@ -597,67 +606,72 @@ export function renderShareCardToCanvas(
   const isPercentMetric = primaryValStr.includes('%') || data.completionRate !== undefined;
   const numPercent = data.completionRate ?? (parseInt(primaryValStr) || 0);
 
-  // Hero Label
-  ctx.font = '900 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Hero Label (Top Left of card)
+  ctx.textBaseline = 'top';
+  ctx.font = '900 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.accent;
-  ctx.fillText((data.primaryStat.label || 'PERFORMANCE METRIC').toUpperCase(), padX + 34, cursorY + 52);
+  ctx.textAlign = 'left';
+  ctx.fillText((data.primaryStat.label || 'PERFORMANCE METRIC').toUpperCase(), padX + 34, cursorY + 28);
 
-  // Personal Record / Tagline pill at top right of card
+  // Tag Pill on Top Right (ONLY if NO progress ring, or placed cleanly away from ring)
   const topBadgeText = data.personalRecord 
     ? `⚡ ${data.personalRecord}` 
     : data.tagline 
     ? data.tagline 
     : 'Evidence-Based Protocol';
 
-  ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const tagW = ctx.measureText(topBadgeText).width + 28;
-  const tagX = padX + contentW - tagW - 24;
-  drawRoundedRect(ctx, tagX, cursorY + 32, tagW, 28, 14);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = config.secondaryAccent;
-  ctx.textAlign = 'center';
-  ctx.fillText(topBadgeText, tagX + tagW / 2, cursorY + 50);
+  if (!isPercentMetric || isSquare) {
+    ctx.font = '700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const tagW = ctx.measureText(topBadgeText).width + 24;
+    const tagX = padX + contentW - tagW - 24;
+    drawRoundedRect(ctx, tagX, cursorY + 22, tagW, 28, 14);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = config.secondaryAccent;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(topBadgeText, tagX + tagW / 2, cursorY + 36);
+  }
 
-  // Hero Value + Unit
+  // Hero Value + Unit (Bottom Left of card)
   ctx.textAlign = 'left';
-  ctx.font = isStory ? '900 96px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 86px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textBaseline = 'top';
+  const valFontSize = isStory ? 86 : isSquare ? 64 : 76;
+  ctx.font = `900 ${valFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = '#FFFFFF';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-  ctx.shadowBlur = 10;
-  const valY = cursorY + (isStory ? 175 : 150);
+  const valY = cursorY + (isStory ? 105 : isSquare ? 80 : 92);
   ctx.fillText(primaryValStr, padX + 34, valY);
-  ctx.shadowBlur = 0;
 
   if (data.primaryStat.unit) {
     const valWidth = ctx.measureText(primaryValStr).width;
-    ctx.font = '800 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
-    ctx.fillText(data.primaryStat.unit, padX + 34 + valWidth + 16, valY);
+    ctx.fillText(data.primaryStat.unit, padX + 34 + valWidth + 14, valY + (valFontSize - 30));
   }
 
-  // If percentage metric and enough space on right, draw high-tech progress ring
-  if (isPercentMetric && contentW > 600 && !isSquare) {
-    const ringRadius = isStory ? 54 : 46;
-    const ringCX = padX + contentW - 110;
-    const ringCY = cursorY + heroCardH / 2 + 10;
+  // If percentage metric and not square, draw isolated high-tech progress ring on the right
+  if (isPercentMetric && !isSquare) {
+    const ringRadius = isStory ? 56 : 48;
+    const ringCX = padX + contentW - ringRadius - 36;
+    const ringCY = cursorY + heroCardH / 2;
     drawRadialProgressRing(ctx, ringCX, ringCY, ringRadius, numPercent, config.accent, config.accentGlow);
   }
 
   ctx.restore();
 
-  cursorY += heroCardH + vGap;
+  // Advance cursor past hero card
+  cursorY += heroCardH + (isStory ? 28 : 18);
 
-  // 8. Secondary Stats Grid (3 balanced HUD columns)
+  // 8. SECONDARY STATS GRID (3 balanced HUD columns)
   const stats = data.secondaryStats || [];
   if (stats.length > 0) {
     const colCount = Math.min(stats.length, 3);
-    const colGap = 18;
+    const colGap = 16;
     const colW = (contentW - colGap * (colCount - 1)) / colCount;
-    const colH = isStory ? 165 : isSquare ? 110 : 130;
+    const colH = isStory ? 150 : isSquare ? 100 : 120;
 
     ctx.save();
     for (let i = 0; i < colCount; i++) {
@@ -665,7 +679,7 @@ export function renderShareCardToCanvas(
       const colX = padX + i * (colW + colGap);
 
       // Glass Card
-      drawRoundedRect(ctx, colX, cursorY, colW, colH, 22);
+      drawRoundedRect(ctx, colX, cursorY, colW, colH, 20);
       ctx.fillStyle = config.cardBg;
       ctx.fill();
       ctx.strokeStyle = stat.highlight ? config.cardBorder : 'rgba(255, 255, 255, 0.12)';
@@ -684,57 +698,60 @@ export function renderShareCardToCanvas(
 
       // Label
       ctx.textAlign = 'left';
-      ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.font = '800 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = stat.highlight ? config.accent : config.textMuted;
-      ctx.fillText(stat.label.toUpperCase(), colX + 22, cursorY + (isStory ? 44 : 38));
+      ctx.fillText(stat.label.toUpperCase(), colX + 20, cursorY + 24);
 
       // Big Value
-      ctx.font = isStory ? '900 44px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const statFont = isStory ? '900 40px' : isSquare ? '900 30px' : '900 34px';
+      ctx.font = `${statFont} -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
       ctx.fillStyle = '#FFFFFF';
       const statValStr = typeof stat.value === 'number' ? stat.value.toLocaleString() : String(stat.value);
-      const statValY = cursorY + (isStory ? 112 : 92);
-      ctx.fillText(statValStr, colX + 22, statValY);
+      const statValY = cursorY + (isStory ? 68 : isSquare ? 50 : 58);
+      ctx.fillText(statValStr, colX + 20, statValY);
 
       if (stat.unit) {
         const sValW = ctx.measureText(statValStr).width;
-        ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = config.textMuted;
-        ctx.fillText(stat.unit, colX + 22 + sValW + 8, statValY);
+        ctx.fillText(stat.unit, colX + 20 + sValW + 6, statValY + 14);
       }
     }
     ctx.restore();
 
-    cursorY += colH + vGap;
+    cursorY += colH + (isStory ? 28 : 18);
   }
 
-  // 9. Session Intensity Visualizer or Weekly Consistency Bars
+  // 9. TELEMETRY / MOMENTUM BARS (Only if space allows)
   if (isStory || (!isSquare && cursorY < height - 340)) {
     ctx.save();
-    const visCardH = isStory ? 210 : 135;
-    drawRoundedRect(ctx, padX, cursorY, contentW, visCardH, 24);
+    const visCardH = isStory ? 180 : 125;
+    drawRoundedRect(ctx, padX, cursorY, contentW, visCardH, 22);
     ctx.fillStyle = config.cardBgSecondary;
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Visualizer Header
-    ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    // Header inside Visualizer
+    ctx.textBaseline = 'top';
+    ctx.font = '800 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
     ctx.textAlign = 'left';
-    ctx.fillText('PERFORMANCE TELEMETRY & ADHERENCE', padX + 24, cursorY + 36);
+    ctx.fillText('PERFORMANCE TELEMETRY & ADHERENCE', padX + 24, cursorY + 22);
 
     ctx.textAlign = 'right';
-    ctx.font = '700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.accent;
-    ctx.fillText('⚡ LIVE BIOMETRIC SYNC', padX + contentW - 24, cursorY + 36);
+    ctx.fillText('⚡ LIVE BIOMETRIC SYNC', padX + contentW - 24, cursorY + 22);
 
-    // Draw 14 momentum bars
+    // 14 Momentum Bars
     const barCount = 14;
     const barZoneW = contentW - 48;
     const barW = (barZoneW - (barCount - 1) * 10) / barCount;
-    const barBaseY = cursorY + visCardH - 24;
-    const barMaxH = visCardH - (isStory ? 80 : 60);
+    const barBaseY = cursorY + visCardH - 20;
+    const barMaxH = visCardH - 65;
 
     const wavePatterns = [0.45, 0.7, 0.55, 0.85, 0.6, 0.95, 0.75, 0.8, 1.0, 0.65, 0.9, 0.85, 0.7, 0.95];
 
@@ -744,9 +761,8 @@ export function renderShareCardToCanvas(
       const bh = Math.max(12, intensity * barMaxH);
       const by = barBaseY - bh;
 
-      drawRoundedRect(ctx, bx, by, barW, bh, 5);
+      drawRoundedRect(ctx, bx, by, barW, bh, 4);
       if (b >= barCount - 3) {
-        // Active session highlight
         ctx.fillStyle = config.accent;
         ctx.shadowColor = config.accentGlow;
         ctx.shadowBlur = 8;
@@ -759,26 +775,28 @@ export function renderShareCardToCanvas(
     }
 
     ctx.restore();
-    cursorY += visCardH + vGap;
+    cursorY += visCardH + (isStory ? 26 : 18);
   }
 
-  // 10. Protocol / Workout Highlights Chips
+  // 10. PROTOCOL & FOCUS PILLS
   const itemsToDisplay = showHighlights 
     ? (data.targetMuscles || data.highlightItems || []) 
     : [];
 
-  if (itemsToDisplay.length > 0 && cursorY < height - (isStory ? 280 : 180)) {
+  if (itemsToDisplay.length > 0 && cursorY < height - (isStory ? 260 : 160)) {
     ctx.save();
-    ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.font = '800 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
     ctx.textAlign = 'left';
     const sectionLabel = data.targetMuscles ? 'TARGETED MUSCLE GROUPS' : 'PROTOCOL PILLARS & FOCUS';
     ctx.fillText(sectionLabel, padX, cursorY);
-    cursorY += 24;
+    cursorY += 22;
 
     let pillX = padX;
-    const pillH = isStory ? 46 : 40;
-    ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const pillH = isStory ? 44 : 38;
+    ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textBaseline = 'middle';
 
     for (const item of itemsToDisplay.slice(0, 5)) {
       const itemStr = String(item);
@@ -802,45 +820,44 @@ export function renderShareCardToCanvas(
 
       // Text
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(itemStr, pillX + 28, cursorY + (isStory ? 28 : 25));
+      ctx.fillText(itemStr, pillX + 28, cursorY + pillH / 2);
 
       pillX += pillW + 12;
     }
     ctx.restore();
 
-    cursorY += pillH + vGap;
+    cursorY += pillH + (isStory ? 24 : 16);
   }
 
-  // 11. Athlete Custom Note / Quote
-  if (showNote && data.userCaption && cursorY < height - (isStory ? 200 : 130)) {
+  // 11. ATHLETE CUSTOM QUOTE / CAPTION
+  if (showNote && data.userCaption && cursorY < height - (isStory ? 180 : 120)) {
     ctx.save();
-    const noteH = isStory ? 90 : 72;
-    drawRoundedRect(ctx, padX, cursorY, contentW, noteH, 20);
+    const noteH = isStory ? 80 : 64;
+    drawRoundedRect(ctx, padX, cursorY, contentW, noteH, 18);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.font = 'italic 600 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'italic 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textSecondary;
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     const quote = `“${data.userCaption}”`;
-    ctx.fillText(quote, padX + 26, cursorY + (isStory ? 52 : 44));
+    ctx.fillText(quote, padX + 24, cursorY + noteH / 2);
     ctx.restore();
-
-    cursorY += noteH + 16;
   }
 
-  // 12. Ultra-Sleek Modern Footer Bar
+  // 12. BOTTOM FOOTER BAR (Pinned strictly at bottom with safe clearance)
   if (showWatermark) {
-    const footerY = height - (isStory ? 140 : 75);
+    const footerY = height - (isStory ? 120 : 70);
 
     ctx.save();
-    // Divider line with subtle center glow
+    // Divider line
     ctx.beginPath();
-    ctx.moveTo(padX, footerY - 26);
-    ctx.lineTo(width - padX, footerY - 26);
+    ctx.moveTo(padX, footerY - 24);
+    ctx.lineTo(width - padX, footerY - 24);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -848,7 +865,7 @@ export function renderShareCardToCanvas(
     // Center accent diamond
     ctx.beginPath();
     const midX = width / 2;
-    const midY = footerY - 26;
+    const midY = footerY - 24;
     ctx.moveTo(midX, midY - 4);
     ctx.lineTo(midX + 4, midY);
     ctx.lineTo(midX, midY + 4);
@@ -858,24 +875,25 @@ export function renderShareCardToCanvas(
     ctx.fill();
 
     // Bottom Left Brand
+    ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     ctx.font = '900 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.accent;
-    ctx.fillText('⚡ RITUAL ATHLETIC LAB', padX, footerY + 6);
+    ctx.fillText('⚡ RITUAL ATHLETIC LAB', padX, footerY);
 
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
-    ctx.fillText('Evidence-Based Fitness & Longevity Protocol', padX, footerY + 28);
+    ctx.fillText('Evidence-Based Fitness & Longevity Protocol', padX, footerY + 22);
 
     // Bottom Right Verified Stamp
     ctx.textAlign = 'right';
     ctx.font = '900 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('RITUAL.FIT', width - padX, footerY + 6);
+    ctx.fillText('RITUAL.FIT', width - padX, footerY);
 
     ctx.font = '700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.secondaryAccent;
-    ctx.fillText('✓ VERIFIED ATHLETE LOG', width - padX, footerY + 28);
+    ctx.fillText('✓ VERIFIED ATHLETE LOG', width - padX, footerY + 22);
 
     ctx.restore();
   }
