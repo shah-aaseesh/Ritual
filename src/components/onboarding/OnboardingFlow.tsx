@@ -7,17 +7,30 @@ import {
   Flame,
   User,
   Mail,
+  Lock,
   Scale,
   Ruler,
-  Calendar
+  Calendar,
+  Loader2,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
+import { signUpUser, signInUser, syncProfileToSupabase, fetchProfileFromSupabase } from '../../services/supabase';
 
 export const OnboardingFlow: React.FC = () => {
-  const { completeOnboarding, aiSettings, updateAISettings, setActiveTab } = useApp();
+  const { completeOnboarding, aiSettings, updateAISettings, setActiveTab, showToast } = useApp();
 
-  // User Profile Baselines
+  // Auth Mode: Create Account vs Sign In
+  const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signup');
+
+  // Account Credentials
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // User Profile Baselines
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState<number>(24);
   const [heightFeet, setHeightFeet] = useState<number>(5);
@@ -78,37 +91,123 @@ export const OnboardingFlow: React.FC = () => {
     };
   }, [gender, age, heightFeet, heightInches, weightKg]);
 
-  const handleFinishOnboarding = () => {
-    try {
-      localStorage.setItem('ritual_macro_targets', JSON.stringify({
-        calories: metrics.maintenanceCalories,
-        proteinG: metrics.proteinG,
-        carbsG: metrics.carbsG,
-        fatG: metrics.fatG,
-        waterMl: 3000
-      }));
-    } catch (e) {}
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
 
-    completeOnboarding({
-      name: name.trim() || 'Alex Patel',
-      email: email.trim() || `${(name.trim() || 'alex').toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-      age,
-      heightFeet,
-      heightInches,
-      weightKg,
-      gender,
-      bmi: metrics.bmi,
-      bmiCategory: metrics.bmiCategory,
-      bmr: metrics.bmr,
-      maintenanceCalories: metrics.maintenanceCalories,
-      primaryGoal: 'hair_health',
-      healthGoal: 'hypertrophy_strength',
-      trainingExperience: 'intermediate',
-      dailyTime: '5_min',
-      alreadyOwnsProducts: true,
-      isOnboarded: true
-    });
-    setActiveTab('home');
+    const cleanEmail = email.trim();
+    const cleanName = name.trim() || cleanEmail.split('@')[0] || 'Alex Patel';
+
+    if (!cleanEmail) {
+      setAuthError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setAuthError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    if (authMode === 'signup') {
+      const authRes = await signUpUser(cleanEmail, password, cleanName);
+      if (authRes.error && !authRes.error.toLowerCase().includes('already registered')) {
+        setIsLoading(false);
+        setAuthError(authRes.error);
+        return;
+      }
+
+      // Store auth session locally
+      localStorage.setItem('ritual_auth_user', JSON.stringify({ email: cleanEmail, name: cleanName }));
+      
+      const userProfile = {
+        name: cleanName,
+        email: cleanEmail,
+        age,
+        heightFeet,
+        heightInches,
+        weightKg,
+        gender,
+        bmi: metrics.bmi,
+        bmiCategory: metrics.bmiCategory,
+        bmr: metrics.bmr,
+        maintenanceCalories: metrics.maintenanceCalories,
+        primaryGoal: 'hair_health' as const,
+        healthGoal: 'hypertrophy_strength' as const,
+        trainingExperience: 'intermediate' as const,
+        dailyTime: '5_min' as const,
+        alreadyOwnsProducts: true,
+        isOnboarded: true,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('ritual_macro_targets', JSON.stringify({
+          calories: metrics.maintenanceCalories,
+          proteinG: metrics.proteinG,
+          carbsG: metrics.carbsG,
+          fatG: metrics.fatG,
+          waterMl: 3000
+        }));
+      } catch (e) {}
+
+      await syncProfileToSupabase(userProfile);
+      completeOnboarding(userProfile);
+      setIsLoading(false);
+      showToast(`Account created for ${cleanName}! Welcome to Ritual.`, 'success');
+      setActiveTab('home');
+
+    } else {
+      // Sign In Mode
+      const authRes = await signInUser(cleanEmail, password);
+      if (authRes.error) {
+        setIsLoading(false);
+        setAuthError(authRes.error);
+        return;
+      }
+
+      const remote = await fetchProfileFromSupabase();
+      const resolvedName = remote?.name || cleanName;
+
+      localStorage.setItem('ritual_auth_user', JSON.stringify({ email: cleanEmail, name: resolvedName }));
+
+      const userProfile = {
+        name: resolvedName,
+        email: cleanEmail,
+        age: remote?.age || age,
+        heightFeet: remote?.heightFeet || heightFeet,
+        heightInches: remote?.heightInches || heightInches,
+        weightKg: remote?.weightKg || weightKg,
+        gender: remote?.gender || gender,
+        bmi: remote?.bmi || metrics.bmi,
+        bmiCategory: remote?.bmiCategory || metrics.bmiCategory,
+        bmr: remote?.bmr || metrics.bmr,
+        maintenanceCalories: remote?.maintenanceCalories || metrics.maintenanceCalories,
+        primaryGoal: remote?.primaryGoal || ('hair_health' as const),
+        healthGoal: remote?.healthGoal || ('hypertrophy_strength' as const),
+        trainingExperience: remote?.trainingExperience || ('intermediate' as const),
+        dailyTime: remote?.dailyTime || ('5_min' as const),
+        alreadyOwnsProducts: true,
+        isOnboarded: true,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('ritual_macro_targets', JSON.stringify({
+          calories: userProfile.maintenanceCalories,
+          proteinG: Math.round(userProfile.weightKg * 2.0),
+          carbsG: metrics.carbsG,
+          fatG: metrics.fatG,
+          waterMl: 3000
+        }));
+      } catch (e) {}
+
+      completeOnboarding(userProfile);
+      setIsLoading(false);
+      showToast(`Welcome back, ${resolvedName}!`, 'success');
+      setActiveTab('home');
+    }
   };
 
   return (
@@ -142,54 +241,122 @@ export const OnboardingFlow: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="space-y-5 pt-6 animate-in fade-in duration-200">
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
-              Personal Details & Body Stats
-            </h2>
-            <p className="text-xs text-charcoal-600">
-              We calibrate your exact daily energy needs, protein targets, and routine protocols from your body metrics.
-            </p>
+        {/* Main Form Container */}
+        <form onSubmit={handleSubmit} className="space-y-5 pt-6 animate-in fade-in duration-200">
+          
+          {/* Title and Mode Switcher */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
+                {authMode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+              </h2>
+              <p className="text-xs text-charcoal-600 mt-0.5">
+                {authMode === 'signup' 
+                  ? 'Set up cloud sync and calibrate your precision health protocol.' 
+                  : 'Sign in to access your cloud routine, workouts, and biomarkers.'}
+              </p>
+            </div>
+
+            {/* Auth Mode Toggle Pill */}
+            <div className="flex items-center p-1 bg-cream-100/80 rounded-2xl border border-mint-200 shrink-0 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signup'); setAuthError(null); }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition ${
+                  authMode === 'signup'
+                    ? 'bg-forest-900 text-white shadow-xs'
+                    : 'text-charcoal-600 hover:text-forest-900 font-bold'
+                }`}
+              >
+                Sign Up
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signin'); setAuthError(null); }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition ${
+                  authMode === 'signin'
+                    ? 'bg-forest-900 text-white shadow-xs'
+                    : 'text-charcoal-600 hover:text-forest-900 font-bold'
+                }`}
+              >
+                Sign In
+              </button>
+            </div>
           </div>
 
-          {/* Main Details Card */}
-          <div className="p-5 sm:p-7 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-5">
-            
-            {/* Row 1: Name & Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
-                  <User className="w-3.5 h-3.5 text-forest-700" />
-                  <span>Your Name</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex Patel"
-                  className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-bold"
-                  autoFocus
-                />
-              </div>
+          {/* Auth Error Banner */}
+          {authError && (
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{authError}</span>
+            </div>
+          )}
 
-              <div className="space-y-1.5">
+          {/* SECTION 1: Credentials Card */}
+          <div className="p-5 sm:p-7 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-4">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-forest-700 block">
+              1. ACCOUNT CREDENTIALS (SUPABASE SYNC)
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {authMode === 'signup' && (
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <User className="w-3.5 h-3.5 text-forest-700" />
+                    <span>Your Full Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    required={authMode === 'signup'}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex Patel"
+                    className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-bold"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              <div className={`space-y-1.5 ${authMode === 'signin' ? 'sm:col-span-1' : ''}`}>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
                   <Mail className="w-3.5 h-3.5 text-forest-700" />
                   <span>Email Address</span>
                 </label>
                 <input
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="alex@gmail.com"
                   className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-medium font-mono"
                 />
               </div>
-            </div>
 
-            {/* Row 2: Biological Sex & Age */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <div className={`space-y-1.5 ${authMode === 'signin' ? 'sm:col-span-1' : 'sm:col-span-2'}`}>
+                <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                  <Lock className="w-3.5 h-3.5 text-forest-700" />
+                  <span>Password (min. 6 characters)</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: Biometrics Card (Always active for calibrated targets) */}
+          <div className="p-5 sm:p-7 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-forest-700 block">
+              2. BODY METRICS & METABOLIC CALIBRATION
+            </span>
+
+            {/* Row: Biological Sex & Age */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
                   <Activity className="w-3.5 h-3.5 text-forest-700" />
@@ -256,7 +423,7 @@ export const OnboardingFlow: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 3: Height (Feet & Inches) */}
+            {/* Height (Feet & Inches) */}
             <div className="space-y-2 pt-2 border-t border-mint-100">
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
@@ -298,7 +465,7 @@ export const OnboardingFlow: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 4: Weight (kg / lbs) */}
+            {/* Weight (kg / lbs) */}
             <div className="space-y-2 pt-2 border-t border-mint-100">
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
@@ -351,12 +518,12 @@ export const OnboardingFlow: React.FC = () => {
               </div>
             </div>
 
-            {/* Live Calibrated Metabolic Target Dashboard */}
+            {/* Live Calibrated Target Dashboard */}
             <div className="p-4 rounded-2xl bg-forest-950 text-white border border-forest-800 space-y-3 shadow-soft">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-mint-300/90 font-bold flex items-center gap-1.5">
                   <Flame className="w-3.5 h-3.5 text-[#FC5200]" />
-                  <span>Live Calibrated Targets</span>
+                  <span>Calibrated Baselines</span>
                 </span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${metrics.bmiColor}`}>
                   BMI {metrics.bmi} • {metrics.bmiCategory}
@@ -369,7 +536,7 @@ export const OnboardingFlow: React.FC = () => {
                   <span className="text-xs sm:text-sm font-black text-mint-300 font-mono">{metrics.maintenanceCalories} kcal</span>
                 </div>
                 <div className="p-2 rounded-xl bg-forest-900/60 border border-forest-800">
-                  <span className="text-[9px] text-cream-200/70 block uppercase font-mono">Protein Goal</span>
+                  <span className="text-[9px] text-cream-200/70 block uppercase font-mono">Protein Target</span>
                   <span className="text-xs sm:text-sm font-black text-white font-mono">{metrics.proteinG}g / day</span>
                 </div>
                 <div className="p-2 rounded-xl bg-forest-900/60 border border-forest-800">
@@ -380,19 +547,33 @@ export const OnboardingFlow: React.FC = () => {
             </div>
 
           </div>
-        </div>
-      </div>
 
-      {/* Direct Launch Action Button */}
-      <div className="pt-6 border-t border-mint-200/80 mt-6 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={handleFinishOnboarding}
-          className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm shadow-lg shadow-forest-950/20 transition flex items-center justify-center gap-2 active:scale-95"
-        >
-          <Sparkles className="w-4 h-4 text-mint-300" />
-          <span>Save Baselines & Launch App ›</span>
-        </button>
+          {/* Submit Action Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 rounded-2xl bg-forest-900 hover:bg-forest-800 disabled:opacity-60 text-white font-black text-sm shadow-lg shadow-forest-950/20 transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{authMode === 'signup' ? 'Creating Account & Syncing Cloud...' : 'Signing In...'}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-mint-300" />
+                  <span>{authMode === 'signup' ? 'Create Account & Launch Ritual ›' : 'Sign In & Launch Ritual ›'}</span>
+                </>
+              )}
+            </button>
+            <div className="mt-2 text-center flex items-center justify-center gap-1.5 text-[11px] text-charcoal-500 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-forest-700" />
+              <span>Protected by Supabase Cloud Encryption</span>
+            </div>
+          </div>
+
+        </form>
       </div>
 
       {/* Optional OpenRouter AI Vision Modal */}
