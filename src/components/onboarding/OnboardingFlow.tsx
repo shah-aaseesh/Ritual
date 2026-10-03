@@ -244,8 +244,21 @@ export const OnboardingFlow: React.FC = () => {
           </div>
         </div>
 
+        {/* Hero Branding & Logo Badge */}
+        <div className="pt-4 pb-1 text-center flex flex-col items-center">
+          <div className="relative mb-2.5">
+            <div className="absolute -inset-2 bg-mint-400/20 rounded-3xl blur-md animate-pulse" />
+            <div className="relative w-14 h-14 rounded-2xl bg-forest-900 border border-mint-300/40 p-2.5 shadow-soft flex items-center justify-center">
+              <img src="/icons/icon.svg" alt="Ritual Logo" className="w-full h-full object-contain" />
+            </div>
+          </div>
+          <span className="px-3 py-0.5 rounded-full bg-mint-100 border border-mint-200 text-[10px] font-mono font-bold text-forest-800 uppercase tracking-widest">
+            Evidence-Based Health & Longevity OS
+          </span>
+        </div>
+
         {/* Main Form Container */}
-        <form onSubmit={handleSubmit} className="space-y-5 pt-6 animate-in fade-in duration-200">
+        <form onSubmit={handleSubmit} className="space-y-5 pt-3 animate-in fade-in duration-200">
           
           {/* Title and Mode Switcher */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

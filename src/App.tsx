@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+import { SplashScreen } from './components/common/SplashScreen';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { ToastContainer } from './components/common/Toast';
@@ -16,6 +17,11 @@ import { ProgressView } from './components/progress/ProgressView';
 
 const MainLayout: React.FC = () => {
   const { profile, activeTab } = useApp();
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} minDurationMs={1500} />;
+  }
 
   if (!profile.isOnboarded) {
     return (
