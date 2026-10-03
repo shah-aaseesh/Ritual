@@ -15,18 +15,27 @@ export const InstallPrompt: React.FC = () => {
   const [showInstallModal, setShowInstallModal] = useState(false);
 
   useEffect(() => {
-    // Check if already in standalone mode
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
-      setIsInstalled(true);
-      return;
-    }
+    try {
+      // Check if already in standalone mode
+      if (
+        (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)')?.matches) ||
+        (typeof window !== 'undefined' && (window.navigator as any)?.standalone === true)
+      ) {
+        setIsInstalled(true);
+        return;
+      }
 
-    // Detect platform
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIosDevice = /iphone|ipad|ipod/.test(userAgent) && !(window as any).MSStream;
-    const isAndroidDevice = /android/.test(userAgent);
-    setIsIOS(isIosDevice);
-    setIsAndroid(isAndroidDevice);
+      // Detect platform
+      if (typeof window !== 'undefined' && window.navigator?.userAgent) {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isIosDevice = /iphone|ipad|ipod/.test(userAgent) && !(window as any).MSStream;
+        const isAndroidDevice = /android/.test(userAgent);
+        setIsIOS(isIosDevice);
+        setIsAndroid(isAndroidDevice);
+      }
+    } catch (err) {
+      console.warn('PWA detection error:', err);
+    }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();

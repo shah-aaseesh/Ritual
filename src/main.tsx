@@ -15,9 +15,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // Register PWA Service Worker for offline capability & installability
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator && (import.meta as any).env?.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('Service worker registration failed:', err);
-    });
+    try {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('Service worker registration notice:', err);
+      });
+    } catch (e) {
+      // Ignore if not supported in iframe/webview
+    }
   });
 }
 
