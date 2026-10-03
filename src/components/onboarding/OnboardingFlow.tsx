@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
-  Bot, 
   Sparkles, 
   Activity,
   Flame,
@@ -20,7 +19,7 @@ import {
 import { signUpUser, signInUser, syncProfileToSupabase, fetchProfileFromSupabase } from '../../services/supabase';
 
 export const OnboardingFlow: React.FC = () => {
-  const { completeOnboarding, aiSettings, updateAISettings, setActiveTab, showToast } = useApp();
+  const { completeOnboarding, setActiveTab, showToast } = useApp();
 
   // Auth Mode: Create Account vs Sign In
   const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signup');
@@ -39,11 +38,6 @@ export const OnboardingFlow: React.FC = () => {
   const [heightFeet, setHeightFeet] = useState<number>(5);
   const [heightInches, setHeightInches] = useState<number>(9);
   const [weightKg, setWeightKg] = useState<number>(70);
-
-  // AI Modal State
-  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
-  const [tempApiKey, setTempApiKey] = useState<string>(aiSettings.openRouterApiKey || '');
-  const [tempModel, setTempModel] = useState<string>(aiSettings.selectedModel || 'google/gemini-3.1-flash-lite');
 
   // Dynamic Metabolic & BMI Calculation Engine
   const metrics = useMemo(() => {
@@ -230,17 +224,6 @@ export const OnboardingFlow: React.FC = () => {
                 Evidence-Based Health Protocol
               </span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowApiKeyModal(true)}
-              className="p-2 rounded-full bg-cream-50 hover:bg-mint-100 border border-mint-200 text-charcoal-600 hover:text-forest-900 transition"
-              title="AI Settings"
-            >
-              <Bot className="w-4 h-4 text-forest-800" />
-            </button>
           </div>
         </div>
 
@@ -600,70 +583,6 @@ export const OnboardingFlow: React.FC = () => {
 
         </form>
       </div>
-
-      {/* Optional OpenRouter AI Vision Modal */}
-      {showApiKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[2rem] max-w-md w-full p-6 shadow-modal border border-mint-200 space-y-4 text-charcoal-900">
-            <div className="flex items-center justify-between border-b border-mint-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-forest-800" />
-                <h3 className="text-base font-black text-forest-950">AI Vision & Synthesis Settings</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowApiKeyModal(false)}
-                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">
-                  OpenRouter API Key (Optional)
-                </label>
-                <input
-                  type="password"
-                  value={tempApiKey}
-                  onChange={(e) => setTempApiKey(e.target.value)}
-                  placeholder="sk-or-v1-..."
-                  className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-xs font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono uppercase text-charcoal-500 mb-1">
-                  Preferred Model
-                </label>
-                <input
-                  type="text"
-                  value={tempModel}
-                  onChange={(e) => setTempModel(e.target.value)}
-                  placeholder="google/gemini-3.1-flash-lite"
-                  className="w-full p-2.5 rounded-xl bg-cream-50 border border-mint-200 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                updateAISettings({
-                  openRouterApiKey: tempApiKey,
-                  selectedModel: tempModel,
-                  enabled: !!tempApiKey
-                });
-                setShowApiKeyModal(false);
-              }}
-              className="w-full py-2.5 rounded-xl bg-forest-900 text-white font-bold text-xs"
-            >
-              Save AI Configuration
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
