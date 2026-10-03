@@ -65,7 +65,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
   const handleProcessImage = async (imageInput: File | string) => {
     setIsAnalyzing(true);
-    setProgressState({ percent: 20, status: 'Initializing Gemini Flash Vision pipeline...' });
+    setProgressState({ percent: 20, status: 'Initializing Smart Vision pipeline...' });
 
     try {
       if (typeof imageInput === 'string') {
@@ -76,7 +76,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
         setProgressState({ percent: 40, status: 'Processing camera photo pixels...' });
       }
 
-      setProgressState({ percent: 75, status: 'Gemini 3.1 Flash-Lite extracting macros...' });
+      setProgressState({ percent: 75, status: 'Smart Vision AI extracting macros...' });
 
       const result = await analyzeFoodImageWithGemini(
         imageInput,
@@ -106,7 +106,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
     if (!analysisResult) return;
 
     const scaledFood: FoodItem = {
-      id: `gemini-food-${Date.now()}`,
+      id: `ai-food-${Date.now()}`,
       name: analysisResult.dishName,
       servingSize: analysisResult.servingSize,
       calories: Math.round(analysisResult.totalCalories * portionMultiplier),
@@ -140,7 +140,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h3 className="text-base font-black text-forest-950">Gemini AI Meal Camera</h3>
+                <h3 className="text-base font-black text-forest-950">Smart AI Meal Camera</h3>
                 <span className="px-2 py-0.2 rounded-full bg-mint-100 text-forest-800 text-[10px] font-mono font-bold border border-mint-200">
                   ⚡ &lt;1s Vision
                 </span>
@@ -282,7 +282,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
 
               <div className="space-y-1">
                 <h4 className="text-base font-black text-forest-950">
-                  Gemini Flash Vision Processing
+                  Smart Vision Processing
                 </h4>
                 <p className="text-xs text-charcoal-600 font-mono">
                   {progressState.status || 'Extracting food volume and macronutrients...'}
@@ -316,7 +316,7 @@ export const FoodCameraModal: React.FC<FoodCameraModalProps> = ({
                       {analysisResult.confidence.toUpperCase()} CONFIDENCE
                     </span>
                     <span className="text-[10px] text-charcoal-500 font-mono">
-                      {(analysisResult.durationMs / 1000).toFixed(1)}s • {analysisResult.modelUsed}
+                      {(analysisResult.durationMs / 1000).toFixed(1)}s • Clinical Vision AI
                     </span>
                   </div>
                   <h4 className="text-base font-black text-forest-950 truncate mt-1">

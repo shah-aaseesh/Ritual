@@ -129,7 +129,7 @@ export const HomeDashboardView: React.FC = () => {
               </div>
               <span className="px-3 py-1 rounded-full bg-mint-100 border border-mint-200 text-[10px] font-mono font-bold text-mint-700 flex items-center gap-1">
                 <Camera className="w-3 h-3" />
-                <span>Gemini Flash Vision</span>
+                <span>Smart Vision AI</span>
               </span>
             </div>
 
@@ -227,7 +227,7 @@ export const HomeDashboardView: React.FC = () => {
                 Document Store & AI Analyzer
               </h2>
               <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-                Securely store blood test PDFs, lipid panels & prescriptions. Gemini AI analyzes biomarkers into actionable advice.
+                Securely store blood test PDFs, lipid panels & prescriptions. Clinical AI analyzes biomarkers into actionable advice.
               </p>
             </div>
           </div>

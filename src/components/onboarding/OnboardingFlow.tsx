@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
-  Leaf, 
   ArrowRight, 
   Bot, 
   ChevronRight, 
@@ -160,9 +159,11 @@ export const OnboardingFlow: React.FC = () => {
       <div>
         <div className="flex items-center justify-between pb-5 border-b border-mint-200/80">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-forest-900 flex items-center justify-center text-white shadow-soft">
-              <Leaf className="w-4 h-4 text-mint-300" />
-            </div>
+            <img 
+              src="/icons/icon.svg" 
+              alt="Ritual Logo" 
+              className="w-9 h-9 rounded-2xl object-cover shadow-soft border border-mint-200"
+            />
             <div>
               <span className="text-base font-black tracking-tight text-forest-950">RITUAL</span>
               <span className="text-[10px] text-charcoal-500 font-semibold block -mt-0.5 tracking-wider uppercase font-mono">

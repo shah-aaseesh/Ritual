@@ -102,14 +102,14 @@ export const DocumentStoreAIView: React.FC = () => {
               MODULE 4 • CLINICAL STORAGE & INTELLIGENCE
             </span>
             <span className="px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 text-[10px] font-mono font-bold border border-mint-200">
-              Gemini Vision & Doc AI
+              Clinical Lab AI
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
             Medical Document Store & AI Analyzer
           </h1>
           <p className="text-xs text-charcoal-600 mt-1 leading-relaxed">
-            Store blood reports, lipid panels, and scans. Gemini AI decodes complex biomarkers into clear health directives.
+            Store blood reports, lipid panels, and scans. Clinical AI decodes complex biomarkers into clear health directives.
           </p>
         </div>
 
@@ -230,7 +230,7 @@ export const DocumentStoreAIView: React.FC = () => {
                 <div className="p-5 rounded-2xl bg-mint-50/80 border border-mint-200 space-y-3">
                   <div className="flex items-center gap-2 text-forest-900 text-xs font-mono font-bold">
                     <Sparkles className="w-4 h-4 text-mint-600" />
-                    <span>Gemini AI Biomarker Synthesis</span>
+                    <span>Clinical Biomarker Synthesis</span>
                   </div>
                   <p className="text-xs sm:text-sm text-charcoal-800 leading-relaxed font-medium">
                     {selectedDoc.aiAnalysis.summary}
@@ -426,7 +426,7 @@ export const DocumentStoreAIView: React.FC = () => {
                   Click to Browse or Drag & Drop PDF / Image
                 </p>
                 <p className="text-[11px] text-charcoal-500">
-                  Gemini AI will automatically extract & interpret all biomarkers
+                  Clinical AI will automatically extract & interpret all biomarkers
                 </p>
               </div>
             </div>
@@ -441,7 +441,7 @@ export const DocumentStoreAIView: React.FC = () => {
                 {isUploading ? (
                   <>
                     <Sparkles className="w-4 h-4 animate-spin text-mint-300" />
-                    <span>Gemini AI Analyzing Biomarkers...</span>
+                    <span>Clinical AI Analyzing Biomarkers...</span>
                   </>
                 ) : (
                   <span>Upload & Analyze with AI</span>

@@ -326,7 +326,7 @@ export const TodayView: React.FC = () => {
                   Snap Meal Photos & Track Calories
                 </h3>
                 <p className="text-xs text-charcoal-600 mt-1">
-                  Gemini Flash multimodal vision automatically estimates calories, protein, carbs & fat.
+                  Smart Multimodal AI vision automatically estimates calories, protein, carbs & fat.
                 </p>
               </div>
             </div>

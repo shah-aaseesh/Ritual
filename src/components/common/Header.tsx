@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { WellnessGoal, HealthGoal, DailyTimeCommitment } from '../../types';
-import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Leaf } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Download } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar } = useApp();
@@ -51,18 +51,15 @@ export const Header: React.FC = () => {
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-2.5 text-left group focus:outline-none"
           >
-            <div className="w-9 h-9 rounded-2xl bg-forest-900 flex items-center justify-center text-white shadow-sm border border-mint-200 group-hover:scale-105 group-hover:bg-forest-800 transition">
-              <Leaf className="w-4 h-4 text-mint-300" />
-            </div>
+            <img 
+              src="/icons/icon.svg" 
+              alt="Ritual Logo" 
+              className="w-8 h-8 rounded-xl object-contain shadow-soft group-hover:scale-105 transition-transform" 
+            />
             <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight text-forest-950 font-sans">
-                  Ritual
-                </h1>
-                <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-mint-100 text-forest-800 border border-mint-200">
-                  Clinical AI
-                </span>
-              </div>
+              <h1 className="text-lg font-black tracking-tight text-forest-950 font-sans">
+                Ritual
+              </h1>
             </div>
           </button>
 
@@ -95,7 +92,20 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Right Action: Goal Chip & Profile Settings */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            {/* Install PWA App Button */}
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open-install-prompt'));
+              }}
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 border border-mint-300 text-xs font-black text-forest-950 transition active:scale-95 shadow-xs"
+              title="Install Ritual App on Phone"
+            >
+              <Download className="w-3.5 h-3.5 text-forest-900 stroke-[2.5]" />
+              <span className="text-[11px] sm:text-xs font-black text-forest-950">Install</span>
+            </button>
+
             <button
               onClick={() => {
                 setTempName(profile.name);

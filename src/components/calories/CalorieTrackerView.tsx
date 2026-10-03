@@ -449,7 +449,7 @@ export const CalorieTrackerView: React.FC = () => {
                   <h4 className="text-xs font-black text-forest-950 group-hover:text-forest-800 transition">Snap Meal Photo</h4>
                   <span className="px-1.5 py-0.2 rounded bg-mint-100 text-forest-800 text-[9px] font-mono font-bold">&lt;1s</span>
                 </div>
-                <p className="text-[10px] text-charcoal-500">Instant Gemini Vision Macros</p>
+                <p className="text-[10px] text-charcoal-500">Instant Smart Vision Macros</p>
               </div>
             </div>
 
@@ -567,7 +567,7 @@ export const CalorieTrackerView: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-forest-950">No items logged for {activeMealCategory}</h4>
-                  <p className="text-xs text-charcoal-500 font-mono mt-0.5">Take a plate photo with Gemini AI Vision or search verified whole foods.</p>
+                  <p className="text-xs text-charcoal-500 font-mono mt-0.5">Take a plate photo with Smart Vision AI or search verified whole foods.</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                   <button
