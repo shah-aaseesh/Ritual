@@ -21,7 +21,8 @@ import {
   fetchProfileFromSupabase, 
   syncRoutineStepsToSupabase, 
   saveProgressEntryToSupabase,
-  signOutUser
+  signOutUser,
+  supabase
 } from '../services/supabase';
 
 export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'progress';
@@ -200,13 +201,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [showRoutineRescue, setShowRoutineRescue] = useState<boolean>(false);
 
-  // Fetch profile from Supabase on initial load if available
+  // Fetch profile from Supabase on initial load only if an active session exists
   useEffect(() => {
-    fetchProfileFromSupabase().then((remoteProfile) => {
-      if (remoteProfile && remoteProfile.isOnboarded) {
-        setProfile(prev => ({ ...prev, ...remoteProfile }));
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        fetchProfileFromSupabase().then((remoteProfile) => {
+          if (remoteProfile && remoteProfile.isOnboarded) {
+            setProfile(prev => ({ ...prev, ...remoteProfile }));
+          }
+        });
+      } else {
+        // If not authenticated, ensure profile is not onboarded
+        setProfile(INITIAL_PROFILE);
+        localStorage.removeItem(STORAGE_KEYS.PROFILE);
+        localStorage.removeItem('ritual_auth_user');
       }
     });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setProfile(INITIAL_PROFILE);
+        localStorage.removeItem(STORAGE_KEYS.PROFILE);
+        localStorage.removeItem('ritual_auth_user');
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        fetchProfileFromSupabase().then((remoteProfile) => {
+          if (remoteProfile && remoteProfile.isOnboarded) {
+            setProfile(prev => ({ ...prev, ...remoteProfile }));
+          }
+        });
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Supabase + LocalStorage Cloud & Offline Sync

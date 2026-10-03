@@ -11,12 +11,16 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
  */
 export async function syncProfileToSupabase(profile: UserProfile): Promise<boolean> {
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    const userId = user?.id || 'default_user';
+
     const { error } = await supabase
       .from('profiles')
       .upsert({
-        id: 'default_user',
+        id: userId,
         name: profile.name,
-        email: profile.email,
+        email: profile.email || user?.email,
         age: profile.age,
         gender: profile.gender,
         height_feet: profile.heightFeet,
@@ -43,21 +47,30 @@ export async function syncProfileToSupabase(profile: UserProfile): Promise<boole
 }
 
 /**
- * Fetch user profile from Supabase
+ * Fetch user profile from Supabase only if an authenticated session exists
  */
 export async function fetchProfileFromSupabase(): Promise<Partial<UserProfile> | null> {
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) {
+      return null;
+    }
+
+    const userId = user.id;
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', 'default_user')
-      .single();
+      .or(`id.eq.${userId},id.eq.default_user`)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (error || !data) return null;
 
     return {
-      name: data.name,
-      email: data.email,
+      name: data.name || user.user_metadata?.full_name || user.email?.split('@')[0],
+      email: data.email || user.email,
       age: data.age,
       gender: data.gender,
       heightFeet: data.height_feet,
