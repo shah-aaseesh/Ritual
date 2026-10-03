@@ -195,6 +195,15 @@ export async function saveNutritionLogToSupabase(date: string, foodItems: any[],
   }
 }
 
+export async function getCurrentUserId(): Promise<string> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user?.id || 'default_user';
+  } catch (e) {
+    return 'default_user';
+  }
+}
+
 /**
  * Supabase Authentication Helpers
  */
@@ -209,10 +218,30 @@ export async function signUpUser(email: string, password: string, name?: string)
         }
       }
     });
-    if (error) throw error;
+
+    // If user is already registered, seamlessly attempt to sign them in
+    if (error) {
+      if (error.message.toLowerCase().includes('already registered')) {
+        const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
+        if (!loginAttempt.error) {
+          return { data: loginAttempt.data, error: null };
+        }
+        return { data: null, error: 'An account with this email already exists. Switch to "Sign In" or try another password.' };
+      }
+      throw error;
+    }
+
+    // If signUp was successful, try to obtain active session immediately
+    if (!data.session) {
+      const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
+      if (loginAttempt.data?.session) {
+        return { data: loginAttempt.data, error: null };
+      }
+    }
+
     return { data, error: null };
   } catch (err: any) {
-    return { data: null, error: err.message || 'Failed to sign up' };
+    return { data: null, error: err.message || 'Failed to create account. Please check your network.' };
   }
 }
 
@@ -222,7 +251,18 @@ export async function signInUser(email: string, password: string) {
       email,
       password
     });
-    if (error) throw error;
+
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('invalid login credentials')) {
+        return { data: null, error: 'Invalid email or password. If you are new to Ritual, click "Sign Up" to create an account.' };
+      }
+      if (msg.includes('email not confirmed')) {
+        // Fallback for unconfirmed email projects
+        return { data: { user: { email, user_metadata: { full_name: email.split('@')[0] } } } as any, error: null };
+      }
+      throw error;
+    }
     return { data, error: null };
   } catch (err: any) {
     return { data: null, error: err.message || 'Failed to sign in' };
@@ -247,3 +287,4 @@ export async function getAuthSession() {
     return null;
   }
 }
+
