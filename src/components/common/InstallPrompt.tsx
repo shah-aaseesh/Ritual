@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Share } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,7 +9,6 @@ interface BeforeInstallPromptEvent extends Event {
 export const InstallPrompt: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -29,9 +28,7 @@ export const InstallPrompt: React.FC = () => {
       if (typeof window !== 'undefined' && window.navigator?.userAgent) {
         const userAgent = window.navigator.userAgent.toLowerCase();
         const isIosDevice = /iphone|ipad|ipod/.test(userAgent) && !(window as any).MSStream;
-        const isAndroidDevice = /android/.test(userAgent);
         setIsIOS(isIosDevice);
-        setIsAndroid(isAndroidDevice);
       }
     } catch (err) {
       console.warn('PWA detection error:', err);
@@ -139,65 +136,40 @@ export const InstallPrompt: React.FC = () => {
             </div>
 
             {/* Direct 1-Click Install Button if Native Event Available */}
-            {deferredPrompt && (
+            {deferredPrompt ? (
               <button
                 type="button"
                 onClick={handleInstallClick}
                 className="w-full py-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-sm flex items-center justify-center gap-2 shadow-soft transition active:scale-98"
               >
                 <Download className="w-4 h-4 text-mint-300" />
-                <span>Tap to Install on Device</span>
+                <span>Install App on Device</span>
               </button>
-            )}
-
-            {/* iPhone / iPad Safari Instructions */}
-            {isIOS && (
+            ) : isIOS ? (
               <div className="space-y-3 text-xs text-charcoal-700 bg-cream-50 p-4 rounded-2xl border border-mint-200">
-                <span className="text-[11px] font-mono font-black uppercase text-forest-800 block">
-                  🍎 Apple iOS (Safari) Steps:
-                </span>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">1</span>
-                  <p>Tap the <strong>Share icon</strong> <Share className="w-3.5 h-3.5 inline mx-0.5 text-forest-800" /> at the bottom of Safari.</p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">2</span>
-                  <p>Scroll down and select <strong>"Add to Home Screen"</strong> <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-forest-800" />.</p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">3</span>
-                  <p>Tap <strong>Add</strong> in top-right. Ritual will now launch instantly like a native app!</p>
+                <p className="font-bold text-forest-950">
+                  Apple iOS doesn't allow direct 1-click web downloads. To install:
+                </p>
+                <div className="flex items-center gap-2 text-xs">
+                  <span>1. Tap Safari Share</span>
+                  <Share className="w-4 h-4 text-forest-800" />
+                  <span>2. Tap <strong>"Add to Home Screen"</strong></span>
                 </div>
               </div>
-            )}
-
-            {/* Android / Chrome Instructions */}
-            {(!isIOS || isAndroid) && (
-              <div className="space-y-3 text-xs text-charcoal-700 bg-cream-50 p-4 rounded-2xl border border-mint-200">
-                <span className="text-[11px] font-mono font-black uppercase text-forest-800 block">
-                  🤖 Android / Chrome Browser Steps:
-                </span>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">1</span>
-                  <p>Tap the <strong>three dots (⋮)</strong> menu in the top right of your browser.</p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">2</span>
-                  <p>Select <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.</p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-mono font-black shrink-0 mt-0.5">3</span>
-                  <p>Confirm <strong>Install</strong> to add the icon directly to your home screen.</p>
-                </div>
+            ) : (
+              <div className="space-y-2 text-xs text-charcoal-700 bg-cream-50 p-4 rounded-2xl border border-mint-200">
+                <p className="font-bold text-forest-950">
+                  Tap your browser menu (⋮) and choose <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.
+                </p>
               </div>
             )}
 
             <button
               type="button"
               onClick={() => setShowInstallModal(false)}
-              className="w-full py-3 rounded-xl bg-forest-900 text-white font-black text-xs hover:bg-forest-800 transition"
+              className="w-full py-2.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-forest-950 font-bold text-xs transition"
             >
-              Got it
+              Close
             </button>
           </div>
         </div>
