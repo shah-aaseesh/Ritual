@@ -145,6 +145,7 @@ export const Header: React.FC = () => {
               <span className="text-[11px] sm:text-xs font-black text-forest-950">Install</span>
             </button>
 
+            {/* Profile & Settings Trigger */}
             <button
               onClick={() => {
                 setTempName(profile.name);
@@ -153,21 +154,17 @@ export const Header: React.FC = () => {
                 setTempTime(profile.dailyTime);
                 setShowSettings(true);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-mint-50 border border-mint-200/80 text-xs font-bold text-charcoal-800 transition shadow-soft"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white hover:bg-mint-50 border border-mint-200/80 text-xs font-bold text-charcoal-800 transition shadow-soft"
               aria-label="Profile Settings"
+              title="Profile & Settings"
             >
-              {activePillar === 'health' ? (
-                <>
-                  <span>{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.icon}</span>
-                  <span className="font-bold text-forest-900">{healthGoalLabels[profile.healthGoal || 'hypertrophy_strength']?.label}</span>
-                </>
-              ) : (
-                <>
-                  <span>{goalLabels[profile.primaryGoal]?.icon}</span>
-                  <span className="font-bold text-forest-900">{goalLabels[profile.primaryGoal]?.label}</span>
-                </>
-              )}
-              <Settings className="w-3.5 h-3.5 text-charcoal-400 ml-1" />
+              <div className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-black">
+                {(profile.name || 'A').charAt(0).toUpperCase()}
+              </div>
+              <span className="font-bold text-forest-900 max-w-[90px] truncate">
+                {profile.name || 'Profile'}
+              </span>
+              <Settings className="w-3.5 h-3.5 text-charcoal-400" />
             </button>
           </div>
         </div>
