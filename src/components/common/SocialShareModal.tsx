@@ -13,6 +13,7 @@ import {
   Image as ImageIcon,
   MessageCircle,
   Twitter,
+  Instagram,
   Sliders,
   Camera,
   Upload,
@@ -26,6 +27,7 @@ import {
   downloadCanvasAsPng, 
   copyCanvasToClipboard, 
   shareCanvasViaWebShare,
+  exportCanvasToBlob,
   loadImageElement,
   captureScreenSnapshot
 } from '../../utils/shareCardCanvas';
@@ -346,6 +348,51 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
     setIsExporting(false);
   };
 
+  const handleInstagramStory = async () => {
+    if (!canvasRef.current) return;
+    setIsExporting(true);
+
+    try {
+      // 1. If not already 9:16 story ratio, switch to it and wait briefly for canvas to render
+      if (aspectRatio !== 'story') {
+        setAspectRatio('story');
+        showToast('📱 Switched to 9:16 Instagram Story format!', 'info');
+        await new Promise((res) => setTimeout(res, 250));
+      }
+
+      const blob = await exportCanvasToBlob(canvasRef.current);
+      const file = new File([blob], 'ritual-instagram-story.png', { type: 'image/png' });
+
+      // 2. On iOS/Android, Web Share with image file directly presents Instagram Stories in share sheet
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: cardData.title,
+          text: `Tracked with Ritual App ⚡ #RitualAthlete`,
+          files: [file]
+        });
+        showToast('📸 Shared to Instagram Stories!', 'success');
+        setIsExporting(false);
+        return;
+      }
+
+      // 3. Fallback: Save 1080x1920 Story PNG, copy to clipboard, and open Instagram
+      downloadCanvasAsPng(canvasRef.current, `ritual-story-${Date.now()}.png`);
+      await copyCanvasToClipboard(canvasRef.current);
+      showToast('📸 9:16 Story downloaded & copied! Opening Instagram...', 'success');
+      
+      setTimeout(() => {
+        window.open('https://www.instagram.com', '_blank');
+      }, 700);
+    } catch (err) {
+      if ((err as any)?.name !== 'AbortError') {
+        downloadCanvasAsPng(canvasRef.current, 'ritual-instagram-story.png');
+        showToast('📸 Story image saved to Downloads!', 'info');
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleTwitterShare = () => {
     const text = encodeURIComponent(
       `Just finished ${cardData.title}! 💥\n${cardData.primaryStat.label}: ${cardData.primaryStat.value} ${cardData.primaryStat.unit || ''}\n\nTracked with @RitualApp #RitualPerformance #Fitness #Consistency`
@@ -615,15 +662,21 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setAspectRatio('story')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition flex flex-col items-center gap-1 border ${
+                  onClick={() => {
+                    setAspectRatio('story');
+                    showToast('📸 9:16 Instagram Story format selected', 'info');
+                  }}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition flex flex-col items-center gap-1 border relative overflow-hidden ${
                     aspectRatio === 'story'
-                      ? 'bg-[#FC5200] text-white border-[#FC5200] shadow-lg shadow-[#FC5200]/25'
+                      ? 'bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white border-white/50 shadow-lg shadow-[#DD2A7B]/30'
                       : 'bg-white/5 hover:bg-white/10 text-zinc-300 border-white/10'
                   }`}
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>9:16 Story</span>
+                  <div className="flex items-center gap-1">
+                    <Instagram className="w-3.5 h-3.5 text-pink-300" />
+                    <span>9:16 Story</span>
+                  </div>
+                  <span className="text-[10px] text-pink-200 font-mono">Instagram</span>
                 </button>
 
                 <button
@@ -747,6 +800,17 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
+              onClick={handleInstagramStory}
+              disabled={isExporting}
+              title="Share to Instagram Story"
+              className="p-2.5 rounded-xl bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90 text-white shadow-md shadow-[#DD2A7B]/20 transition text-xs font-bold flex items-center gap-1.5 active:scale-95"
+            >
+              <Instagram className="w-4 h-4" />
+              <span className="hidden sm:inline">IG Story</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleWhatsAppShare}
               title="Share to WhatsApp"
               className="p-2.5 rounded-xl bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 transition text-xs font-bold flex items-center gap-1.5"
@@ -776,26 +840,36 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             </button>
           </div>
 
-          {/* Primary Actions: Download / Save to Photos & Native Share */}
+          {/* Primary Actions: Instagram Story, Download & Native Share */}
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleInstagramStory}
+              disabled={isExporting}
+              className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-[#DD2A7B]/25 transition flex items-center gap-1.5 active:scale-95"
+            >
+              <Instagram className="w-4 h-4" />
+              <span>Post to Story</span>
+            </button>
+
             <button
               type="button"
               onClick={handleDownload}
               disabled={isExporting}
-              className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-1.5 active:scale-95"
+              className="px-3 sm:px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-1.5 active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>{isMobile ? 'Save to Photos' : 'Download PNG'}</span>
+              <span>{isMobile ? 'Save' : 'PNG'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleNativeShare}
               disabled={isExporting}
-              className="px-4 sm:px-5 py-2.5 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#FC5200]/30 transition flex items-center gap-1.5 active:scale-95"
+              className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#FC5200]/30 transition flex items-center gap-1.5 active:scale-95"
             >
               <Share2 className="w-4 h-4" />
-              <span>Share Card</span>
+              <span>Share</span>
             </button>
           </div>
 
