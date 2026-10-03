@@ -177,17 +177,12 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
       {/* Formal Header & Perspective Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
-              PHYSIOLOGICAL RECOVERY INDEX
-            </span>
-            <span className="text-xs text-charcoal-500 font-semibold font-mono">
-              Kinetic Muscle Mapping
-            </span>
-          </div>
           <h3 className="text-xl sm:text-2xl font-black text-forest-950 tracking-tight">
-            Anatomical Muscle Readiness
+            Muscle Recovery & Readiness
           </h3>
+          <p className="text-xs text-charcoal-600">
+            Live recovery heatmap based on your recent training logs
+          </p>
         </div>
 
         {/* View Switcher: Front vs Back View */}
@@ -202,7 +197,7 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
             }`}
           >
             <Rotate3d className="w-3.5 h-3.5" />
-            <span>Anterior View</span>
+            <span>Front</span>
           </button>
           <button
             type="button"
@@ -214,7 +209,7 @@ export const BodyMapHeatmap: React.FC<BodyMapHeatmapProps> = ({
             }`}
           >
             <Rotate3d className="w-3.5 h-3.5" />
-            <span>Posterior View</span>
+            <span>Back</span>
           </button>
         </div>
       </div>

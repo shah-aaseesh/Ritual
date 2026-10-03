@@ -33,7 +33,7 @@ export const HumanBodyModel: React.FC<HumanBodyModelProps> = ({
   const renderFrontBody = () => (
     <div className="flex flex-col items-center">
       <span className="text-[11px] font-mono font-black uppercase tracking-wider text-forest-800 mb-1">
-        Anterior (Front)
+        Front
       </span>
       <svg
         className="w-48 sm:w-56 h-[340px] sm:h-[380px] drop-shadow-sm select-none transition-all cursor-pointer"
@@ -234,7 +234,7 @@ export const HumanBodyModel: React.FC<HumanBodyModelProps> = ({
   const renderBackBody = () => (
     <div className="flex flex-col items-center">
       <span className="text-[11px] font-mono font-black uppercase tracking-wider text-forest-800 mb-1">
-        Posterior (Back)
+        Back
       </span>
       <svg
         className="w-48 sm:w-56 h-[340px] sm:h-[380px] drop-shadow-sm select-none transition-all cursor-pointer"

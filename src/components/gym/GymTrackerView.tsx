@@ -620,59 +620,54 @@ export const GymTrackerView: React.FC = () => {
           <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
-                    INTERACTIVE ANATOMICAL MODEL
-                  </span>
-                  <span className="text-xs text-charcoal-500 font-mono">
-                    Select muscles on the body to generate targeted movements
-                  </span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
-                  Target Muscle & Equipment Builder
+                <h2 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight">
+                  Muscle Target & Exercise Builder
                 </h2>
+                <p className="text-xs sm:text-sm text-charcoal-600 mt-1">
+                  Tap any muscle on the body map to filter targeted movements and equipment.
+                </p>
               </div>
 
-              {/* View Angle Switcher (Anterior Front vs Posterior Back vs Both) */}
+              {/* View Angle Switcher (Front vs Back vs Both) */}
               <div className="inline-flex p-1.5 bg-cream-50 rounded-2xl border border-mint-200 text-xs shrink-0">
                 <button
                   type="button"
                   onClick={() => setBodyPerspective('both')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
                     bodyPerspective === 'both'
                       ? 'bg-forest-900 text-white shadow-soft'
                       : 'text-charcoal-600 hover:text-forest-900'
                   }`}
                 >
                   <Rotate3d className="w-3.5 h-3.5" />
-                  <span>Full Body (Both)</span>
+                  <span>Both</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBodyPerspective('front')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
                     bodyPerspective === 'front'
                       ? 'bg-forest-900 text-white shadow-soft'
                       : 'text-charcoal-600 hover:text-forest-900'
                   }`}
                 >
-                  <span>Anterior (Front)</span>
+                  <span>Front</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBodyPerspective('back')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl font-black flex items-center gap-1.5 transition active:scale-95 ${
                     bodyPerspective === 'back'
                       ? 'bg-forest-900 text-white shadow-soft'
                       : 'text-charcoal-600 hover:text-forest-900'
                   }`}
                 >
-                  <span>Posterior (Back)</span>
+                  <span>Back</span>
                 </button>
               </div>
             </div>
 
-            {/* Split View: Left Anatomical Model | Right Muscle Chips & Selected Summary */}
+            {/* Split View: Left Body Map | Right Muscle Chips & Selected Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
               {/* Left: Interactive Human Body Anatomical Model Component */}

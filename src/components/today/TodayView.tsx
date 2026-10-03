@@ -379,13 +379,13 @@ export const TodayView: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] font-mono font-bold text-forest-700 uppercase tracking-wider block">
-                  Athletic Performance
+                  Strength & Performance
                 </span>
                 <h3 className="text-base sm:text-lg font-black text-forest-950 mt-0.5">
-                  Gym Tracker & 3D Body Map
+                  Workout Tracker & Body Map
                 </h3>
                 <p className="text-xs text-charcoal-600 mt-1">
-                  Log sets, reps, and RPE with built-in rest timers & muscle recovery heatmaps.
+                  Log sets, reps, and RPE with built-in rest timers and muscle recovery heatmaps.
                 </p>
               </div>
             </div>
@@ -403,24 +403,24 @@ export const TodayView: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] font-mono font-bold text-forest-700 uppercase tracking-wider block">
-                  Instant &lt;1s Vision AI
+                  Instant Vision AI
                 </span>
                 <h3 className="text-base sm:text-lg font-black text-forest-950 mt-0.5">
                   Snap Meal Photos & Track Calories
                 </h3>
                 <p className="text-xs text-charcoal-600 mt-1">
-                  Smart Multimodal AI vision automatically estimates calories, protein, carbs & fat.
+                  Smart AI vision automatically estimates calories, protein, carbs & fat.
                 </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-charcoal-400 group-hover:text-forest-900 transition shrink-0" />
           </div>
 
-          {/* Biomechanical Readiness Pill */}
+          {/* Muscle Recovery Status Pill */}
           <div className="p-4 rounded-2xl bg-white border border-mint-200/80 shadow-soft flex items-center justify-between text-xs font-mono">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-mint-500 animate-pulse" />
-              <span className="text-charcoal-800 font-bold">Biomechanical Readiness: 88% Primed</span>
+              <span className="text-charcoal-800 font-bold">Muscle Recovery: 88% Ready</span>
             </div>
             <button
               onClick={() => setActiveTab('gym')}
