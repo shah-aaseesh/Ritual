@@ -17,7 +17,8 @@ import {
   Camera,
   Upload,
   Monitor,
-  Trash2
+  Trash2,
+  HelpCircle
 } from 'lucide-react';
 import { ShareCardData, ShareTheme, ShareAspectRatio, PhotoFilter } from '../../types/share';
 import { 
@@ -87,7 +88,10 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   const { showToast, profile } = useApp();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const [selectedTheme, setSelectedTheme] = useState<ShareTheme>('strava_orange');
   const [aspectRatio, setAspectRatio] = useState<ShareAspectRatio>('post');
@@ -99,6 +103,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   const [showNote, setShowNote] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
 
   // Background Screenshot / Photo State
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(initialData.backgroundImage || null);
@@ -196,11 +201,17 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
         loadedImage: loadedBgImage
       }
     );
+
+    // Update preview data URL for mobile tap-and-hold saving
+    try {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      setPreviewDataUrl(dataUrl);
+    } catch (e) {}
   }, [isOpen, selectedTheme, aspectRatio, userCaption, showWatermark, showHighlights, showNote, cardData, loadedBgImage, photoFilter, photoOpacity]);
 
   if (!isOpen) return null;
 
-  // Photo Upload Handler
+  // Photo Upload Handler (Works for screenshots and gallery photos on all phones)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -209,24 +220,41 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setBackgroundImageUrl(base64);
-      showToast('📸 Photo attached as Strava backdrop!', 'success');
+      showToast('📸 Screenshot / Photo loaded as Strava backdrop!', 'success');
     };
     reader.readAsDataURL(file);
+    // Reset value so user can pick the same file again if desired
+    e.target.value = '';
   };
 
-  // Screen Snapshot Capture
+  // Screen Snapshot Capture (with mobile fallback)
   const handleScreenSnapshot = async () => {
-    showToast('🖥️ Select the screen/window to snapshot...', 'info');
+    if (isMobile) {
+      // Mobile browsers do not support getDisplayMedia window picker. Direct user to phone screenshot gallery!
+      showToast('📱 On phone: Tap "Phone Gallery / Screenshots" to pick your phone screenshot!', 'info');
+      fileInputRef.current?.click();
+      return;
+    }
+
+    showToast('🖥️ Select screen/window to snapshot...', 'info');
     const screenshotDataUrl = await captureScreenSnapshot();
     if (screenshotDataUrl) {
       setBackgroundImageUrl(screenshotDataUrl);
       showToast('📸 Screen snapshot captured!', 'success');
+    } else {
+      fileInputRef.current?.click();
     }
   };
 
   // Live Camera Controls
   const startCamera = async () => {
     try {
+      if (isMobile && cameraInputRef.current) {
+        // Native mobile camera capture
+        cameraInputRef.current.click();
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
@@ -237,7 +265,11 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
         videoRef.current.play();
       }
     } catch (err) {
-      showToast('Camera access denied or unavailable', 'warning');
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      } else {
+        showToast('Camera access denied or unavailable', 'warning');
+      }
     }
   };
 
@@ -266,9 +298,21 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   };
 
   // Actions
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!canvasRef.current) return;
     setIsExporting(true);
+
+    if (isMobile && typeof navigator.share === 'function') {
+      // On mobile, native share provides "Save Image to Camera Roll"
+      const shareText = `${cardData.title} • ${cardData.primaryStat.label}: ${cardData.primaryStat.value} ${cardData.primaryStat.unit || ''} | Tracked on Ritual ⚡`;
+      const shared = await shareCanvasViaWebShare(canvasRef.current, cardData.title, shareText);
+      if (shared) {
+        showToast('📸 Image saved / shared!', 'success');
+        setIsExporting(false);
+        return;
+      }
+    }
+
     const sanitizedTitle = (cardData.title || 'activity').toLowerCase().replace(/\s+/g, '-');
     downloadCanvasAsPng(canvasRef.current, `ritual-${sanitizedTitle}-${aspectRatio}.png`);
     showToast('📸 Card downloaded in high-resolution (1080p)!', 'success');
@@ -296,6 +340,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
     const shared = await shareCanvasViaWebShare(canvasRef.current, cardData.title, shareText);
     if (shared) {
       showToast('🚀 Activity shared successfully!', 'success');
+    } else {
+      handleDownload();
     }
     setIsExporting(false);
   };
@@ -317,26 +363,26 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   const quickQuotes = QUICK_CAPTIONS[cardData.type] || QUICK_CAPTIONS.workout;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-[#121316] text-white rounded-3xl shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl bg-[#121316] text-white rounded-3xl shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[96vh]">
         
         {/* Modal Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#181A20]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#181A20]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FC5200]/20 border border-[#FC5200]/40 flex items-center justify-center text-[#FC5200]">
+            <div className="w-9 h-9 rounded-xl bg-[#FC5200]/20 border border-[#FC5200]/40 flex items-center justify-center text-[#FC5200] shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+                <h2 className="text-sm sm:text-lg font-black tracking-tight text-white flex items-center gap-1.5">
                   Social Media Share Card
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FC5200] text-white">
-                  Strava & Photo HUD
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[#FC5200] text-white">
+                  Strava & Photos
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
-                Overlay workout metrics on custom screenshots, camera selfies, or aesthetic gradients
+              <p className="text-[11px] sm:text-xs text-zinc-400 line-clamp-1">
+                Overlay workout stats on screenshots, selfies, or gradients
               </p>
             </div>
           </div>
@@ -351,22 +397,22 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
         </div>
 
         {/* Modal Body: 2 Columns on Desktop */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           
           {/* Column 1: Live Card Graphic Preview (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center bg-black/50 rounded-2xl p-4 border border-white/5 relative group">
-            <div className="w-full flex items-center justify-between mb-3 px-1 text-xs text-zinc-400 font-mono">
-              <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
+          <div className="lg:col-span-5 flex flex-col items-center justify-center bg-black/50 rounded-2xl p-3 sm:p-4 border border-white/5 relative group">
+            <div className="w-full flex items-center justify-between mb-2.5 px-1 text-xs text-zinc-400 font-mono">
+              <span className="flex items-center gap-1.5 text-zinc-300 font-bold text-[11px]">
                 <ImageIcon className="w-3.5 h-3.5 text-[#FC5200]" />
                 Live 1080p Canvas
               </span>
               <div className="flex items-center gap-1.5">
                 {loadedBgImage && (
-                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[10px] uppercase font-bold">
+                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] uppercase font-bold">
                     📸 Photo Backdrop
                   </span>
                 )}
-                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-zinc-300">
+                <span className="bg-white/10 px-2 py-0.5 rounded text-[9px] uppercase font-bold text-zinc-300">
                   {aspectRatio === 'story' ? '9:16 Story' : aspectRatio === 'square' ? '1:1 Square' : '4:5 Feed Post'}
                 </span>
               </div>
@@ -401,28 +447,47 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
                 </div>
               </div>
             ) : (
-              /* Render Canvas */
+              /* Render Canvas with Touch-Friendly Image Overlay */
               <div className={`relative flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-white/20 transition-all duration-300 ${
-                aspectRatio === 'story' ? 'max-w-[270px] aspect-[9/16]' : aspectRatio === 'square' ? 'max-w-[340px] aspect-square' : 'max-w-[320px] aspect-[4/5]'
+                aspectRatio === 'story' ? 'max-w-[270px] aspect-[9/16]' : aspectRatio === 'square' ? 'max-w-[340px] aspect-square' : 'max-w-[310px] aspect-[4/5]'
               }`}>
                 <canvas
                   ref={canvasRef}
                   className="w-full h-full object-contain rounded-xl block"
                 />
+
+                {/* Touch overlay on mobile for long-press to save */}
+                {previewDataUrl && isMobile && (
+                  <img
+                    src={previewDataUrl}
+                    alt="Social Card Preview (Tap and hold to save)"
+                    className="absolute inset-0 w-full h-full object-contain opacity-0 pointer-events-auto"
+                    title="Tap & Hold to Save Image to Photos"
+                  />
+                )}
               </div>
             )}
 
-            {/* Paste Hint */}
-            <p className="text-[11px] text-zinc-500 text-center mt-3">
-              💡 Tip: Press <strong className="text-zinc-300">Ctrl + V</strong> to paste any copied screenshot directly as background!
-            </p>
+            {/* Helper Tips */}
+            <div className="text-[11px] text-zinc-400 text-center mt-2.5 space-y-1">
+              {isMobile ? (
+                <p className="flex items-center justify-center gap-1 text-emerald-400 font-medium">
+                  <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Tap <strong>"Share Card"</strong> or tap & hold preview to save to Photos!</span>
+                </p>
+              ) : (
+                <p className="text-zinc-500">
+                  💡 Press <strong className="text-zinc-300">Ctrl + V</strong> to paste any copied screenshot directly as background!
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Column 2: Customization Controls (7 cols) */}
-          <div className="lg:col-span-7 space-y-5">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-5">
             
             {/* 1. Screenshot & Photo Backdrop Toolbar */}
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
                   <Camera className="w-3.5 h-3.5 text-[#FC5200]" />
@@ -432,7 +497,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setBackgroundImageUrl(null)}
-                    className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition"
+                    className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition font-bold"
                   >
                     <Trash2 className="w-3 h-3" />
                     <span>Remove Photo</span>
@@ -441,15 +506,15 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
               </div>
 
               {/* Photo Action Buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                {/* 1. Upload file */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {/* 1. Upload Screenshot / Gallery Photo */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95"
                 >
                   <Upload className="w-3.5 h-3.5 text-[#FC5200]" />
-                  <span>Upload Image</span>
+                  <span>{isMobile ? 'Phone Screenshots' : 'Upload Image'}</span>
                 </button>
                 <input
                   ref={fileInputRef}
@@ -468,21 +533,31 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
                   <Camera className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Camera Selfie</span>
                 </button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
 
                 {/* 3. Screen Capture */}
                 <button
                   type="button"
                   onClick={handleScreenSnapshot}
-                  className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95"
+                  className={`py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 ${
+                    isMobile ? 'col-span-2 sm:col-span-1' : ''
+                  }`}
                 >
                   <Monitor className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Screen Capture</span>
+                  <span>{isMobile ? 'Pick Photo Album' : 'Screen Capture'}</span>
                 </button>
               </div>
 
               {/* Photo Filter & Scrim Controls (if photo is active) */}
               {backgroundImageUrl && (
-                <div className="pt-2 border-t border-white/10 space-y-2.5 animate-in fade-in">
+                <div className="pt-2.5 border-t border-white/10 space-y-2.5 animate-in fade-in">
                   <div className="flex items-center justify-between text-[11px] text-zinc-400">
                     <span>Photo Filter Preset</span>
                     <span>Opacity: {Math.round(photoOpacity * 100)}%</span>
@@ -519,7 +594,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             </div>
 
             {/* 2. Format / Aspect Ratio */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5 text-[#FC5200]" />
                 Card Format / Aspect Ratio
@@ -567,7 +642,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             </div>
 
             {/* 3. Aesthetic Theme Palette */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 text-[#FC5200]" />
                 Accent Colorway & Badges
@@ -592,7 +667,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             </div>
 
             {/* 4. Athlete Note & Quick Quotes */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <MessageCircle className="w-3.5 h-3.5 text-[#FC5200]" />
                 Custom Caption / Athlete Note
@@ -621,7 +696,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             </div>
 
             {/* 5. Display Toggles */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Sliders className="w-3.5 h-3.5 text-[#FC5200]" />
                 Card Elements
@@ -666,10 +741,10 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
         </div>
 
         {/* Modal Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-[#181A20] flex flex-wrap items-center justify-between gap-3">
+        <div className="p-3.5 sm:p-5 border-t border-white/10 bg-[#181A20] flex flex-wrap items-center justify-between gap-2.5">
           
           {/* Secondary Quick Share links */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={handleWhatsAppShare}
@@ -697,27 +772,27 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
               className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 transition text-xs font-bold flex items-center gap-1.5"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied!' : 'Copy Image'}</span>
+              <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy'}</span>
             </button>
           </div>
 
-          {/* Primary Actions: Download & Native Share */}
-          <div className="flex items-center gap-2.5">
+          {/* Primary Actions: Download / Save to Photos & Native Share */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleDownload}
               disabled={isExporting}
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 active:scale-95"
+              className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-1.5 active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Download PNG</span>
+              <span>{isMobile ? 'Save to Photos' : 'Download PNG'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleNativeShare}
               disabled={isExporting}
-              className="px-5 py-2.5 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#FC5200]/30 transition flex items-center gap-2 active:scale-95"
+              className="px-4 sm:px-5 py-2.5 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#FC5200]/30 transition flex items-center gap-1.5 active:scale-95"
             >
               <Share2 className="w-4 h-4" />
               <span>Share Card</span>
