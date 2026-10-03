@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Check, 
   RotateCcw, 
   ExternalLink, 
   PenTool, 
   Zap, 
   Trophy, 
-  Info,
   X,
   FileText
 } from 'lucide-react';
@@ -377,108 +375,99 @@ export const IngredientDebunkPaper: React.FC<IngredientDebunkPaperProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* COMPACT INTERACTIVE INGREDIENT LIST                                       */}
         {/* ========================================================================= */}
-        <div className="space-y-2">
-          {visibleItems.length === 0 ? (
-            <div className="text-center py-8 text-charcoal-500 space-y-1">
-              <p className="text-xs italic font-mono">Zero proven active ingredients found in this formulation.</p>
-              <button
-                type="button"
-                onClick={() => setPurgeFluffMode(false)}
-                className="text-xs font-bold text-forest-900 underline"
-              >
-                View all packaging fillers
-              </button>
+        {/* CRISP 2-COLUMN STRUCTURED BREAKDOWN: ACTIVES VS EXCIPIENTS                */}
+        {/* ========================================================================= */}
+        <div className="space-y-4">
+          {/* Section 1: Proven Active Compounds */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-forest-950 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Active Therapeutic Compounds ({provenActivesCount})</span>
+              </span>
+              <span className="text-[10px] text-forest-700 font-bold bg-mint-100 px-2 py-0.5 rounded-md border border-mint-200">
+                Verified Bioactive
+              </span>
             </div>
-          ) : (
-            visibleItems.map((item, idx) => {
-              const isWritten = animationStep === 'complete' || idx < displayedCount;
-              if (!isWritten) return null;
 
-              const isMarked = animationStep === 'complete' || (animationStep === 'marking' && idx < markedCount);
-              const isProven = isMarked && item.isActive;
-              const isStruck = isMarked && item.isStruckThrough;
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedItem(item)}
-                  className={`group relative px-3.5 py-2.5 rounded-2xl transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
-                    isProven
-                      ? 'bg-mint-50/80 border border-mint-300 hover:bg-mint-100'
-                      : isStruck
-                      ? 'bg-cream-50/50 border border-mint-100/60 opacity-80 hover:opacity-100'
-                      : 'bg-cream-50/70 border border-mint-100'
-                  }`}
-                >
-                  {/* Left: Ingredient Name with Handwritten Circling or Strikethrough */}
-                  <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-                    <div className="relative inline-flex items-center py-0.5 px-1">
-                      {/* Green Hand-Drawn Oval Circle for Actives */}
-                      {isProven && (
-                        <svg
-                          className="absolute -inset-x-2 -inset-y-1 w-[calc(100%+16px)] h-[calc(100%+8px)] pointer-events-none z-0"
-                          viewBox="0 0 160 50"
-                          preserveAspectRatio="none"
-                        >
-                          <path
-                            d="M 12 25 C 10 10, 35 4, 80 4 C 135 4, 154 10, 154 25 C 154 38, 125 46, 75 46 C 25 46, 6 36, 6 22 C 6 15, 20 8, 45 6"
-                            fill="none"
-                            stroke="#317353"
-                            strokeWidth="2.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="animate-green-circle"
-                          />
-                        </svg>
-                      )}
-
-                      {/* Text */}
-                      <span
-                        className={`relative z-10 text-xs sm:text-sm font-bold tracking-tight font-sans ${
-                          isProven
-                            ? 'text-forest-950 font-black'
-                            : isStruck
-                            ? 'text-charcoal-400 line-through decoration-rose-500/70 font-medium'
-                            : 'text-charcoal-700 font-bold'
-                        }`}
-                      >
-                        {item.rawText}
+            {parsedItems.filter(i => i.isActive).length === 0 ? (
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs text-amber-900 font-medium">
+                No clinically verified active compounds detected in the scanned list.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {parsedItems.filter(i => i.isActive).map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedItem(item)}
+                    className="p-3.5 rounded-2xl bg-emerald-50/40 border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50/80 transition cursor-pointer flex flex-col justify-between space-y-2 group shadow-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-black text-forest-950 group-hover:text-emerald-900 transition">
+                          {item.cleanName}
+                        </span>
+                        {item.purpose && (
+                          <p className="text-[11px] text-charcoal-600 line-clamp-1">
+                            {item.purpose}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 text-[10px] font-black font-mono border border-emerald-300">
+                        Active
                       </span>
                     </div>
 
-                    {/* Quick Active Badge or Snappy Debunk Pill */}
-                    {isProven && (
-                      <span className="relative z-10 inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-forest-900 text-white shadow-soft">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                        <span>Active</span>
+                    <div className="flex items-center justify-between pt-1 border-t border-emerald-200/60 text-[10px] text-emerald-800 font-bold">
+                      <span>Clinical Evidence Backed</span>
+                      <span className="underline group-hover:text-forest-950 flex items-center gap-0.5">
+                        View Trial <ExternalLink className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: Inactive Base / Excipients / Fillers (Compact & Clean) */}
+          {parsedItems.filter(i => !i.isActive).length > 0 && !purgeFluffMode && (
+            <div className="space-y-2 pt-2 border-t border-mint-100">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-charcoal-600 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-charcoal-300"></span>
+                  <span>Formulation Base & Carriers ({fillersCount})</span>
+                </span>
+                <span className="text-[10px] text-charcoal-500 font-medium">Solvents, Binders & Vehicles</span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {parsedItems.filter(i => !i.isActive).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedItem(item)}
+                    className="px-2.5 py-1 rounded-xl bg-cream-50 hover:bg-cream-100 border border-mint-200 text-charcoal-700 text-xs font-medium flex items-center gap-1.5 transition active:scale-95"
+                  >
+                    <span>{item.cleanName}</span>
+                    {item.strikeTag && (
+                      <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 rounded">
+                        {item.strikeTag.split(' ')[0]}
                       </span>
                     )}
-
-                    {isStruck && item.strikeTag && (
-                      <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                        {item.strikeTag}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Right: Quick Action Pill */}
-                  <div className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-charcoal-400 group-hover:text-forest-900 transition">
-                    <span className="hidden sm:inline">Details</span>
-                    <Info className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-              );
-            })
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Minimalist Gamified Bottom Line Verdict */}
+        {/* Minimalist Bottom Line Verdict */}
         <div className="mt-4 pt-3 border-t border-dashed border-mint-200 flex items-center justify-between text-xs text-charcoal-600 gap-2">
           <div className="flex items-center gap-1.5 font-bold text-forest-950 shrink-0 font-mono">
             <Trophy className="w-4 h-4 text-amber-600" />
-            <span>Reality Verdict:</span>
+            <span>Audit Verdict:</span>
           </div>
           <span className="text-charcoal-600 font-medium text-right text-[11px] truncate">
             {analysis.summary.synthesisText}
