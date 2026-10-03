@@ -39,11 +39,11 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
   switch (theme) {
     case 'ember_flame':
       return {
-        bgStart: '#0E0F14',
-        bgEnd: '#1A1C24',
-        cardBg: 'rgba(26, 28, 38, 0.85)',
-        cardBgSecondary: 'rgba(20, 22, 30, 0.75)',
-        cardBorder: 'rgba(252, 82, 0, 0.35)',
+        bgStart: '#0C0E13',
+        bgEnd: '#161922',
+        cardBg: 'rgba(24, 27, 36, 0.88)',
+        cardBgSecondary: 'rgba(18, 20, 28, 0.78)',
+        cardBorder: 'rgba(252, 82, 0, 0.38)',
         accent: '#FC5200', // Athletic Ember Orange
         accentGlow: 'rgba(252, 82, 0, 0.45)',
         secondaryAccent: '#FFA000',
@@ -52,16 +52,16 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         textMuted: '#94A3B8',
         badgeBg: '#FC5200',
         badgeText: '#FFFFFF',
-        topographyColor: 'rgba(252, 82, 0, 0.14)',
-        gridColor: 'rgba(252, 82, 0, 0.05)'
+        topographyColor: 'rgba(252, 82, 0, 0.12)',
+        gridColor: 'rgba(252, 82, 0, 0.04)'
       };
     case 'cyber_neon':
       return {
-        bgStart: '#06080E',
-        bgEnd: '#0F1522',
-        cardBg: 'rgba(15, 22, 36, 0.88)',
-        cardBgSecondary: 'rgba(10, 16, 28, 0.75)',
-        cardBorder: 'rgba(204, 255, 0, 0.35)',
+        bgStart: '#05070D',
+        bgEnd: '#0D1320',
+        cardBg: 'rgba(14, 20, 34, 0.88)',
+        cardBgSecondary: 'rgba(9, 15, 26, 0.78)',
+        cardBorder: 'rgba(204, 255, 0, 0.38)',
         accent: '#CCFF00', // Radioactive Neon Lime
         accentGlow: 'rgba(204, 255, 0, 0.4)',
         secondaryAccent: '#00F0FF',
@@ -71,15 +71,15 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         badgeBg: '#CCFF00',
         badgeText: '#000000',
         topographyColor: 'rgba(0, 240, 255, 0.12)',
-        gridColor: 'rgba(204, 255, 0, 0.05)'
+        gridColor: 'rgba(204, 255, 0, 0.04)'
       };
     case 'sunset_mirage':
       return {
-        bgStart: '#140A22',
-        bgEnd: '#240F32',
-        cardBg: 'rgba(34, 18, 50, 0.85)',
-        cardBgSecondary: 'rgba(24, 12, 36, 0.75)',
-        cardBorder: 'rgba(255, 94, 98, 0.35)',
+        bgStart: '#12081E',
+        bgEnd: '#200D2D',
+        cardBg: 'rgba(32, 16, 46, 0.88)',
+        cardBgSecondary: 'rgba(22, 11, 33, 0.78)',
+        cardBorder: 'rgba(255, 94, 98, 0.38)',
         accent: '#FF5E62',
         accentGlow: 'rgba(255, 94, 98, 0.45)',
         secondaryAccent: '#FF9966',
@@ -88,15 +88,15 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         textMuted: '#D8B4FE',
         badgeBg: '#FF5E62',
         badgeText: '#FFFFFF',
-        topographyColor: 'rgba(255, 94, 98, 0.14)',
-        gridColor: 'rgba(255, 94, 98, 0.05)'
+        topographyColor: 'rgba(255, 94, 98, 0.12)',
+        gridColor: 'rgba(255, 94, 98, 0.04)'
       };
     case 'clean_mono':
       return {
-        bgStart: '#09090B',
-        bgEnd: '#141417',
-        cardBg: 'rgba(24, 24, 27, 0.85)',
-        cardBgSecondary: 'rgba(18, 18, 20, 0.75)',
+        bgStart: '#08080A',
+        bgEnd: '#121215',
+        cardBg: 'rgba(22, 22, 25, 0.88)',
+        cardBgSecondary: 'rgba(16, 16, 18, 0.78)',
         cardBorder: 'rgba(255, 255, 255, 0.25)',
         accent: '#FFFFFF',
         accentGlow: 'rgba(255, 255, 255, 0.25)',
@@ -106,16 +106,16 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         textMuted: '#71717A',
         badgeBg: '#FFFFFF',
         badgeText: '#000000',
-        topographyColor: 'rgba(255, 255, 255, 0.09)',
-        gridColor: 'rgba(255, 255, 255, 0.04)'
+        topographyColor: 'rgba(255, 255, 255, 0.08)',
+        gridColor: 'rgba(255, 255, 255, 0.03)'
       };
     case 'gold_champion':
       return {
-        bgStart: '#0B0B0C',
-        bgEnd: '#191714',
-        cardBg: 'rgba(28, 24, 20, 0.88)',
-        cardBgSecondary: 'rgba(20, 17, 14, 0.75)',
-        cardBorder: 'rgba(245, 158, 11, 0.35)',
+        bgStart: '#0A0A0B',
+        bgEnd: '#171512',
+        cardBg: 'rgba(26, 22, 18, 0.88)',
+        cardBgSecondary: 'rgba(18, 15, 12, 0.78)',
+        cardBorder: 'rgba(245, 158, 11, 0.38)',
         accent: '#F59E0B', // Metallic Gold
         accentGlow: 'rgba(245, 158, 11, 0.4)',
         secondaryAccent: '#FDE68A',
@@ -125,16 +125,16 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         badgeBg: '#F59E0B',
         badgeText: '#000000',
         topographyColor: 'rgba(245, 158, 11, 0.12)',
-        gridColor: 'rgba(245, 158, 11, 0.05)'
+        gridColor: 'rgba(245, 158, 11, 0.04)'
       };
     case 'mosaic_emerald':
     default:
       return {
-        bgStart: '#04140E',
-        bgEnd: '#09231A',
-        cardBg: 'rgba(11, 35, 26, 0.88)',
-        cardBgSecondary: 'rgba(7, 24, 18, 0.75)',
-        cardBorder: 'rgba(52, 211, 153, 0.35)',
+        bgStart: '#03120C',
+        bgEnd: '#081F17',
+        cardBg: 'rgba(10, 32, 24, 0.88)',
+        cardBgSecondary: 'rgba(6, 21, 16, 0.78)',
+        cardBorder: 'rgba(52, 211, 153, 0.38)',
         accent: '#10B981', // Mosaic Emerald
         accentGlow: 'rgba(16, 185, 129, 0.45)',
         secondaryAccent: '#6EE7B7',
@@ -143,13 +143,13 @@ export function getThemeConfig(theme: ShareTheme): ThemeConfig {
         textMuted: '#6EE7B7',
         badgeBg: '#10B981',
         badgeText: '#FFFFFF',
-        topographyColor: 'rgba(16, 185, 129, 0.14)',
-        gridColor: 'rgba(16, 185, 129, 0.05)'
+        topographyColor: 'rgba(16, 185, 129, 0.12)',
+        gridColor: 'rgba(16, 185, 129, 0.04)'
       };
   }
 }
 
-// Helper: Rounded Rectangle
+// Fixed Rounded Rectangle function
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -165,7 +165,7 @@ function drawRoundedRect(
   ctx.arcTo(x + w, y, x + w, y + h, r);
   ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y + w, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
 }
 
@@ -188,18 +188,18 @@ function drawRadialProgressRing(
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.lineWidth = 14;
+  ctx.lineWidth = 12;
   ctx.lineCap = 'round';
   ctx.stroke();
 
   // 2. Active Progress Glow & Arc
   if (clampedPercent > 0) {
     ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, startAngle, endAngle);
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 12;
     ctx.lineCap = 'round';
     ctx.stroke();
   }
@@ -208,13 +208,13 @@ function drawRadialProgressRing(
   ctx.shadowBlur = 0;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '900 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText(`${clampedPercent}%`, cx, cy - 2);
 
   ctx.font = '800 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  ctx.fillText('SCORE', cx, cy + 22);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.fillText('SCORE', cx, cy + 20);
 
   ctx.restore();
 }
@@ -229,10 +229,10 @@ function drawBackgroundHUD(
 ) {
   ctx.save();
 
-  // Draw subtle geometric grid lines
+  // Subtle geometric grid lines
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
-  const gridSize = 80;
+  const gridSize = 90;
   for (let x = gridSize; x < w; x += gridSize) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
@@ -246,9 +246,9 @@ function drawBackgroundHUD(
     ctx.stroke();
   }
 
-  // Draw fluid topography contours
+  // Fluid topography contours
   ctx.strokeStyle = topographyColor;
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2;
 
   for (let i = 0; i < 6; i++) {
     const startY = h * 0.15 + i * (h * 0.14);
@@ -268,13 +268,13 @@ function drawBackgroundHUD(
 
   // Corner HUD reticles (+)
   const drawReticle = (rx: number, ry: number) => {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(rx - 10, ry);
-    ctx.lineTo(rx + 10, ry);
-    ctx.moveTo(rx, ry - 10);
-    ctx.lineTo(rx, ry + 10);
+    ctx.moveTo(rx - 8, ry);
+    ctx.lineTo(rx + 8, ry);
+    ctx.moveTo(rx, ry - 8);
+    ctx.lineTo(rx, ry + 8);
     ctx.stroke();
   };
 
@@ -429,33 +429,31 @@ export function renderShareCardToCanvas(
   ctx.fillStyle = radialGlow;
   ctx.fillRect(0, 0, width, height);
 
-  // Layout Measurements & Vertical Scaling
+  // Layout Measurements & Vertical Proportional Distribution
   const padX = 72;
   const contentW = width - padX * 2;
   const isStory = aspectRatio === 'story';
   const isSquare = aspectRatio === 'square';
 
-  // Responsive cursor positioning
-  let cursorY = isStory ? 130 : isSquare ? 80 : 95;
-  const spacingMultiplier = isStory ? 1.35 : isSquare ? 0.85 : 1.0;
+  // Responsive cursor positioning and section sizing
+  let cursorY = isStory ? 180 : isSquare ? 80 : 110;
+  const vGap = isStory ? 38 : isSquare ? 16 : 24;
 
   // 4. Top Header: Brand Logo Mark + Verified Athlete Profile
   ctx.save();
 
   // Left Brand Badge
-  // Glowing Icon
   ctx.fillStyle = config.accent;
   ctx.shadowColor = config.accentGlow;
   ctx.shadowBlur = 12;
   ctx.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('⚡ RITUAL', padX, cursorY + 2);
+  ctx.fillText('⚡ RITUAL', padX, cursorY + 4);
   ctx.shadowBlur = 0;
 
   const brandW = ctx.measureText('⚡ RITUAL').width;
-  // Sub-badge pill
   const labPillX = padX + brandW + 16;
-  const labPillY = cursorY - 20;
-  drawRoundedRect(ctx, labPillX, labPillY, 150, 28, 14);
+  const labPillY = cursorY - 18;
+  drawRoundedRect(ctx, labPillX, labPillY, 140, 28, 14);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
@@ -465,12 +463,12 @@ export function renderShareCardToCanvas(
   ctx.font = '800 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.textSecondary;
   ctx.textAlign = 'center';
-  ctx.fillText('ATHLETIC LAB', labPillX + 75, labPillY + 18);
+  ctx.fillText('ATHLETIC LAB', labPillX + 70, labPillY + 18);
 
   // Right Athlete Profile Info
   const athleteName = (data.userName || 'Alex Patel').trim();
   const initial = (athleteName.charAt(0) || 'A').toUpperCase();
-  const avatarSize = 44;
+  const avatarSize = 46;
   const avatarX = width - padX - avatarSize;
   const avatarY = cursorY - 24;
 
@@ -480,7 +478,7 @@ export function renderShareCardToCanvas(
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
   ctx.fill();
   ctx.strokeStyle = config.accent;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
 
   // Initial
@@ -489,7 +487,7 @@ export function renderShareCardToCanvas(
   ctx.textAlign = 'center';
   ctx.fillText(initial, avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 7);
 
-  // Athlete Name & Date (left of avatar)
+  // Athlete Name & Date
   ctx.textAlign = 'right';
   ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
@@ -498,13 +496,13 @@ export function renderShareCardToCanvas(
   ctx.font = '600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.textMuted;
   const dateDisplay = data.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  ctx.fillText(dateDisplay, avatarX - 16, cursorY + 16);
+  ctx.fillText(dateDisplay, avatarX - 16, cursorY + 18);
 
   ctx.restore();
 
-  cursorY += Math.round(58 * spacingMultiplier);
+  cursorY += isStory ? 80 : 60;
 
-  // 5. Activity Category Pill (Clean, distinct)
+  // 5. Activity Category Pill
   ctx.save();
   const fallbackBadge = data.type === 'workout' 
     ? '⚡ WORKOUT COMPLETED' 
@@ -534,11 +532,11 @@ export function renderShareCardToCanvas(
   ctx.fillText(badgeText, padX + 18, cursorY + 22);
   ctx.restore();
 
-  cursorY += Math.round(50 * spacingMultiplier);
+  cursorY += isStory ? 65 : 52;
 
   // 6. Big Display Title & Subtitle
   ctx.save();
-  ctx.font = '900 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = isStory ? '900 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
   
   const maxTitleW = contentW;
@@ -556,23 +554,23 @@ export function renderShareCardToCanvas(
 
   ctx.fillText(titleLine1, padX, cursorY);
   if (titleLine2) {
-    cursorY += 50;
+    cursorY += isStory ? 56 : 50;
     ctx.fillText(titleLine2, padX, cursorY);
   }
 
   // Subtitle
   if (data.subtitle) {
-    cursorY += 32;
+    cursorY += isStory ? 38 : 32;
     ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textSecondary;
     ctx.fillText(`•  ${data.subtitle}`, padX, cursorY);
   }
   ctx.restore();
 
-  cursorY += Math.round(45 * spacingMultiplier);
+  cursorY += isStory ? 55 : 42;
 
   // 7. Hero Primary Stat Card (High-Tech Glassmorphism HUD)
-  const heroCardH = isStory ? 240 : isSquare ? 180 : 210;
+  const heroCardH = isStory ? 270 : isSquare ? 180 : 215;
   ctx.save();
 
   // Draw Card Container
@@ -602,7 +600,7 @@ export function renderShareCardToCanvas(
   // Hero Label
   ctx.font = '900 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = config.accent;
-  ctx.fillText((data.primaryStat.label || 'PERFORMANCE METRIC').toUpperCase(), padX + 34, cursorY + 50);
+  ctx.fillText((data.primaryStat.label || 'PERFORMANCE METRIC').toUpperCase(), padX + 34, cursorY + 52);
 
   // Personal Record / Tagline pill at top right of card
   const topBadgeText = data.personalRecord 
@@ -611,10 +609,10 @@ export function renderShareCardToCanvas(
     ? data.tagline 
     : 'Evidence-Based Protocol';
 
-  ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const tagW = ctx.measureText(topBadgeText).width + 28;
   const tagX = padX + contentW - tagW - 24;
-  drawRoundedRect(ctx, tagX, cursorY + 30, tagW, 30, 15);
+  drawRoundedRect(ctx, tagX, cursorY + 32, tagW, 28, 14);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
@@ -626,30 +624,32 @@ export function renderShareCardToCanvas(
 
   // Hero Value + Unit
   ctx.textAlign = 'left';
-  ctx.font = '900 86px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = isStory ? '900 96px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 86px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#FFFFFF';
   ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
   ctx.shadowBlur = 10;
-  ctx.fillText(primaryValStr, padX + 34, cursorY + 148);
+  const valY = cursorY + (isStory ? 175 : 150);
+  ctx.fillText(primaryValStr, padX + 34, valY);
   ctx.shadowBlur = 0;
 
   if (data.primaryStat.unit) {
     const valWidth = ctx.measureText(primaryValStr).width;
     ctx.font = '800 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
-    ctx.fillText(data.primaryStat.unit, padX + 34 + valWidth + 16, cursorY + 148);
+    ctx.fillText(data.primaryStat.unit, padX + 34 + valWidth + 16, valY);
   }
 
   // If percentage metric and enough space on right, draw high-tech progress ring
   if (isPercentMetric && contentW > 600 && !isSquare) {
-    const ringCX = padX + contentW - 100;
+    const ringRadius = isStory ? 54 : 46;
+    const ringCX = padX + contentW - 110;
     const ringCY = cursorY + heroCardH / 2 + 10;
-    drawRadialProgressRing(ctx, ringCX, ringCY, 48, numPercent, config.accent, config.accentGlow);
+    drawRadialProgressRing(ctx, ringCX, ringCY, ringRadius, numPercent, config.accent, config.accentGlow);
   }
 
   ctx.restore();
 
-  cursorY += heroCardH + Math.round(24 * spacingMultiplier);
+  cursorY += heroCardH + vGap;
 
   // 8. Secondary Stats Grid (3 balanced HUD columns)
   const stats = data.secondaryStats || [];
@@ -657,7 +657,7 @@ export function renderShareCardToCanvas(
     const colCount = Math.min(stats.length, 3);
     const colGap = 18;
     const colW = (contentW - colGap * (colCount - 1)) / colCount;
-    const colH = isStory ? 145 : isSquare ? 110 : 130;
+    const colH = isStory ? 165 : isSquare ? 110 : 130;
 
     ctx.save();
     for (let i = 0; i < colCount; i++) {
@@ -686,30 +686,31 @@ export function renderShareCardToCanvas(
       ctx.textAlign = 'left';
       ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = stat.highlight ? config.accent : config.textMuted;
-      ctx.fillText(stat.label.toUpperCase(), colX + 22, cursorY + 40);
+      ctx.fillText(stat.label.toUpperCase(), colX + 22, cursorY + (isStory ? 44 : 38));
 
       // Big Value
-      ctx.font = '900 40px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = isStory ? '900 44px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : '900 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#FFFFFF';
       const statValStr = typeof stat.value === 'number' ? stat.value.toLocaleString() : String(stat.value);
-      ctx.fillText(statValStr, colX + 22, cursorY + 92);
+      const statValY = cursorY + (isStory ? 112 : 92);
+      ctx.fillText(statValStr, colX + 22, statValY);
 
       if (stat.unit) {
         const sValW = ctx.measureText(statValStr).width;
         ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = config.textMuted;
-        ctx.fillText(stat.unit, colX + 22 + sValW + 8, cursorY + 92);
+        ctx.fillText(stat.unit, colX + 22 + sValW + 8, statValY);
       }
     }
     ctx.restore();
 
-    cursorY += colH + Math.round(24 * spacingMultiplier);
+    cursorY += colH + vGap;
   }
 
-  // 9. Session Intensity Visualizer or Weekly Consistency Bars (Fills middle visual space)
-  if (isStory || (!isSquare && cursorY < height - 360)) {
+  // 9. Session Intensity Visualizer or Weekly Consistency Bars
+  if (isStory || (!isSquare && cursorY < height - 340)) {
     ctx.save();
-    const visCardH = isStory ? 160 : 130;
+    const visCardH = isStory ? 210 : 135;
     drawRoundedRect(ctx, padX, cursorY, contentW, visCardH, 24);
     ctx.fillStyle = config.cardBgSecondary;
     ctx.fill();
@@ -721,21 +722,20 @@ export function renderShareCardToCanvas(
     ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
     ctx.textAlign = 'left';
-    ctx.fillText('PERFORMANCE TELEMETRY & ADHERENCE', padX + 24, cursorY + 34);
+    ctx.fillText('PERFORMANCE TELEMETRY & ADHERENCE', padX + 24, cursorY + 36);
 
     ctx.textAlign = 'right';
     ctx.font = '700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.accent;
-    ctx.fillText('⚡ LIVE BIOMETRIC SYNC', padX + contentW - 24, cursorY + 34);
+    ctx.fillText('⚡ LIVE BIOMETRIC SYNC', padX + contentW - 24, cursorY + 36);
 
-    // Draw 7-day momentum audio/intensity bars
+    // Draw 14 momentum bars
     const barCount = 14;
     const barZoneW = contentW - 48;
     const barW = (barZoneW - (barCount - 1) * 10) / barCount;
     const barBaseY = cursorY + visCardH - 24;
-    const barMaxH = visCardH - 65;
+    const barMaxH = visCardH - (isStory ? 80 : 60);
 
-    // Pattern for athletic wave
     const wavePatterns = [0.45, 0.7, 0.55, 0.85, 0.6, 0.95, 0.75, 0.8, 1.0, 0.65, 0.9, 0.85, 0.7, 0.95];
 
     for (let b = 0; b < barCount; b++) {
@@ -744,12 +744,12 @@ export function renderShareCardToCanvas(
       const bh = Math.max(12, intensity * barMaxH);
       const by = barBaseY - bh;
 
-      drawRoundedRect(ctx, bx, by, barW, bh, 4);
+      drawRoundedRect(ctx, bx, by, barW, bh, 5);
       if (b >= barCount - 3) {
-        // Highlight active session bars
+        // Active session highlight
         ctx.fillStyle = config.accent;
         ctx.shadowColor = config.accentGlow;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 8;
         ctx.fill();
         ctx.shadowBlur = 0;
       } else {
@@ -759,7 +759,7 @@ export function renderShareCardToCanvas(
     }
 
     ctx.restore();
-    cursorY += visCardH + Math.round(24 * spacingMultiplier);
+    cursorY += visCardH + vGap;
   }
 
   // 10. Protocol / Workout Highlights Chips
@@ -767,17 +767,17 @@ export function renderShareCardToCanvas(
     ? (data.targetMuscles || data.highlightItems || []) 
     : [];
 
-  if (itemsToDisplay.length > 0 && cursorY < height - (isStory ? 300 : 200)) {
+  if (itemsToDisplay.length > 0 && cursorY < height - (isStory ? 280 : 180)) {
     ctx.save();
     ctx.font = '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
     ctx.textAlign = 'left';
     const sectionLabel = data.targetMuscles ? 'TARGETED MUSCLE GROUPS' : 'PROTOCOL PILLARS & FOCUS';
     ctx.fillText(sectionLabel, padX, cursorY);
-    cursorY += 22;
+    cursorY += 24;
 
     let pillX = padX;
-    const pillH = 40;
+    const pillH = isStory ? 46 : 40;
     ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
     for (const item of itemsToDisplay.slice(0, 5)) {
@@ -787,7 +787,7 @@ export function renderShareCardToCanvas(
 
       if (pillX + pillW > width - padX) break;
 
-      drawRoundedRect(ctx, pillX, cursorY, pillW, pillH, 20);
+      drawRoundedRect(ctx, pillX, cursorY, pillW, pillH, pillH / 2);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
@@ -802,19 +802,19 @@ export function renderShareCardToCanvas(
 
       // Text
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(itemStr, pillX + 28, cursorY + 25);
+      ctx.fillText(itemStr, pillX + 28, cursorY + (isStory ? 28 : 25));
 
       pillX += pillW + 12;
     }
     ctx.restore();
 
-    cursorY += pillH + Math.round(24 * spacingMultiplier);
+    cursorY += pillH + vGap;
   }
 
   // 11. Athlete Custom Note / Quote
-  if (showNote && data.userCaption && cursorY < height - 160) {
+  if (showNote && data.userCaption && cursorY < height - (isStory ? 200 : 130)) {
     ctx.save();
-    const noteH = 74;
+    const noteH = isStory ? 90 : 72;
     drawRoundedRect(ctx, padX, cursorY, contentW, noteH, 20);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.fill();
@@ -826,7 +826,7 @@ export function renderShareCardToCanvas(
     ctx.fillStyle = config.textSecondary;
     ctx.textAlign = 'left';
     const quote = `“${data.userCaption}”`;
-    ctx.fillText(quote, padX + 26, cursorY + 44);
+    ctx.fillText(quote, padX + 26, cursorY + (isStory ? 52 : 44));
     ctx.restore();
 
     cursorY += noteH + 16;
@@ -834,7 +834,7 @@ export function renderShareCardToCanvas(
 
   // 12. Ultra-Sleek Modern Footer Bar
   if (showWatermark) {
-    const footerY = height - (isStory ? 130 : 75);
+    const footerY = height - (isStory ? 140 : 75);
 
     ctx.save();
     // Divider line with subtle center glow
