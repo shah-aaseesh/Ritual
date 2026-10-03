@@ -9,47 +9,38 @@ import { IngredientDebunkPaper } from '../common/IngredientDebunkPaper';
 import { BarcodeLookupResult } from '../../services/barcodeService';
 import { 
   Camera, 
-  Upload, 
   Sparkles, 
   ScanBarcode, 
   FileText, 
   ShieldCheck, 
   X, 
   AlertTriangle, 
-  Award, 
   BookmarkPlus,
   ThumbsDown,
   ThumbsUp,
-  BookOpen,
   ExternalLink
 } from 'lucide-react';
 
-type MythBusterTab = 'audit_paper' | 'claims_matrix' | 'science_pillars' | 'alternatives';
+type MythBusterTab = 'debunk' | 'claims' | 'alternatives';
 
 export const LabelLensView: React.FC = () => {
   const { profile, addShelfProduct, showToast, aiSettings } = useApp();
 
-  // Active Results Tab
-  const [activeTab, setActiveTab] = useState<MythBusterTab>('audit_paper');
+  // Active View Tab
+  const [activeTab, setActiveTab] = useState<MythBusterTab>('debunk');
 
-  // ============================================================================
-  // DUAL CAPTURE STATE: FRONT (CLAIMS) & BACK (INGREDIENTS)
-  // ============================================================================
+  // Product Info
   const [productName, setProductName] = useState<string>('Follicle Reactivate 3% Redensyl + Rosemary Scalp Serum');
   const [saveBrand, setSaveBrand] = useState<string>('Apex Derma Lab');
   
-  // Front Label State
+  // Front & Back Labels
   const [frontClaimText, setFrontClaimText] = useState<string>(SAMPLE_PRODUCTS[0].frontLabelText);
-  const [frontImageThumbnail, setFrontImageThumbnail] = useState<string | null>(null);
-
-  // Back Label State
   const [ingredientText, setIngredientText] = useState<string>(SAMPLE_PRODUCTS[0].ingredientLabelText);
-  const [backImageThumbnail, setBackImageThumbnail] = useState<string | null>(null);
 
   // Selected Sample
   const [selectedSampleId, setSelectedSampleId] = useState<string>(SAMPLE_PRODUCTS[0].id);
 
-  // Scanning / Vision AI Progress
+  // Scanning Progress
   const [isScanningFront, setIsScanningFront] = useState<boolean>(false);
   const [isScanningBack, setIsScanningBack] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<{ percent: number; status: string }>({ percent: 0, status: '' });
@@ -59,13 +50,11 @@ export const LabelLensView: React.FC = () => {
   const [saveModalOpen, setSaveModalOpen] = useState<boolean>(false);
   const [saveTimeOfDay, setSaveTimeOfDay] = useState<'morning' | 'evening' | 'both'>('evening');
 
-  // File Input References
+  // File Inputs
   const frontFileInputRef = useRef<HTMLInputElement>(null);
   const backFileInputRef = useRef<HTMLInputElement>(null);
 
-  // ============================================================================
-  // ANALYSIS ENGINE (RUNS CROSS-EXAMINATION ON INGREDIENTS & CLAIMS)
-  // ============================================================================
+  // Analysis Result
   const [analysisResult, setAnalysisResult] = useState<ProductAnalysisResult>(() => {
     return analyzeLabelText(
       SAMPLE_PRODUCTS[0].ingredientLabelText,
@@ -86,8 +75,6 @@ export const LabelLensView: React.FC = () => {
     setFrontClaimText(sample.frontLabelText);
     setIngredientText(sample.ingredientLabelText);
     setSaveBrand(sample.brandSuggestion);
-    setFrontImageThumbnail(null);
-    setBackImageThumbnail(null);
 
     const res = analyzeLabelText(
       sample.ingredientLabelText,
@@ -96,7 +83,7 @@ export const LabelLensView: React.FC = () => {
       sample.name
     );
     setAnalysisResult(res);
-    showToast(`Loaded sample: ${sample.name}`, 'info');
+    showToast(`Loaded: ${sample.name}`, 'info');
   };
 
   // Process Vision AI for Front Label (Claims & Name)
@@ -104,13 +91,8 @@ export const LabelLensView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = () => setFrontImageThumbnail(reader.result as string);
-    reader.readAsDataURL(file);
-
     setIsScanningFront(true);
-    setScanProgress({ percent: 20, status: 'Scanning Front Label for marketing claims & brand...' });
+    setScanProgress({ percent: 25, status: 'Scanning Front Label for claims...' });
 
     try {
       const result = await extractLabelFromImageWithAI(
@@ -128,27 +110,22 @@ export const LabelLensView: React.FC = () => {
 
       handleReanalyze(ingredientText, claims, result.productName || productName);
       setSelectedSampleId('');
-      showToast('Front label claims extracted successfully!', 'success');
+      showToast('Front claims extracted!', 'success');
     } catch (err: any) {
-      showToast(err.message || 'Vision AI scan failed. You can type claims manually.', 'warning');
+      showToast(err.message || 'Scan failed. You can type claims manually.', 'warning');
     } finally {
       setIsScanningFront(false);
       setScanProgress({ percent: 0, status: '' });
     }
   };
 
-  // Process Vision AI for Back Label (Ingredients & Dosage)
+  // Process Vision AI for Back Label (Ingredients)
   const handleBackFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = () => setBackImageThumbnail(reader.result as string);
-    reader.readAsDataURL(file);
-
     setIsScanningBack(true);
-    setScanProgress({ percent: 20, status: 'Scanning Back Label for ingredients & active concentrations...' });
+    setScanProgress({ percent: 25, status: 'Scanning Back Label for ingredients...' });
 
     try {
       const result = await extractLabelFromImageWithAI(
@@ -165,9 +142,9 @@ export const LabelLensView: React.FC = () => {
 
       handleReanalyze(result.ingredientText, frontClaimText, result.productName || productName);
       setSelectedSampleId('');
-      showToast('Back label ingredients parsed successfully!', 'success');
+      showToast('Back ingredients extracted!', 'success');
     } catch (err: any) {
-      showToast(err.message || 'Vision AI scan failed. You can paste ingredients manually.', 'warning');
+      showToast(err.message || 'Scan failed. You can paste ingredients manually.', 'warning');
     } finally {
       setIsScanningBack(false);
       setScanProgress({ percent: 0, status: '' });
@@ -180,16 +157,14 @@ export const LabelLensView: React.FC = () => {
     setIngredientText(result.ingredientText);
     setAnalysisResult(result.analysis);
     setSelectedSampleId('');
-    showToast(`Found product via barcode: ${result.productName}`, 'success');
+    showToast(`Found: ${result.productName}`, 'success');
   };
 
-  // Matching Clinical Alternatives
   const matchingFormulations = useMemo(() => {
     const activeNames = analysisResult?.detectedIngredients?.map(i => i.ingredient?.name || i.rawTextMatch) || [];
     return findMatchingMosaicProducts(activeNames, profile.primaryGoal);
   }, [analysisResult?.detectedIngredients, profile.primaryGoal]);
 
-  // Save Product to Smart Shelf
   const handleSaveToShelf = () => {
     const activeNames = analysisResult.detectedIngredients.map(d => d.ingredient.name);
     let topTier: EvidenceTier = 'supporting_ingredient';
@@ -214,13 +189,13 @@ export const LabelLensView: React.FC = () => {
     });
 
     setSaveModalOpen(false);
-    showToast('Saved product to Smart Shelf!', 'success');
+    showToast('Saved to Smart Shelf!', 'success');
   };
 
   const claimsCount = analysisResult.detectedClaims.length;
 
   return (
-    <div className="space-y-6 pb-28 text-charcoal-900 font-sans">
+    <div className="space-y-5 pb-28 text-charcoal-900 font-sans max-w-5xl mx-auto">
       {/* Hidden File Inputs */}
       <input
         type="file"
@@ -240,314 +215,200 @@ export const LabelLensView: React.FC = () => {
       />
 
       {/* ========================================================================= */}
-      {/* 🛡️ HERO BANNER: DUAL FRONT & BACK CAPTURE / AUDIT ENGINE                  */}
+      {/* 🌟 MINIMAL HEADER & SCANNER CONTROLS                                       */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-mint-200/80 shadow-card space-y-4">
+        {/* Title & Quick Action Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-mint-100 pb-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-mint-100 text-forest-800 text-[10px] font-black uppercase tracking-wider font-mono border border-mint-200">
-                CLINICAL MYTH BUSTER
-              </span>
-              <span className="text-xs text-charcoal-500 font-mono">
-                Front Claims vs Back Formulation Cross-Examination
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-forest-950 tracking-tight mt-1">
-              Label Lens & Myth Buster
+            <h1 className="text-xl sm:text-2xl font-black text-forest-950 tracking-tight flex items-center gap-2">
+              <span>Myth Buster & Label Lens</span>
             </h1>
-            <p className="text-xs text-charcoal-600 mt-1 max-w-xl">
-              Snap both Front (Claims & Buzzwords) and Back (Ingredients List) to uncover marketing exaggerations, fairy dusting, and true clinical actives.
+            <p className="text-xs text-charcoal-600 mt-0.5">
+              Cross-examine front marketing claims against back formulation chemistry & PubMed clinical trials.
             </p>
           </div>
 
-          {/* Quick Barcode Scanner Button */}
-          <button
-            type="button"
-            onClick={() => setIsBarcodeModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-cream-50 hover:bg-mint-100 border border-mint-200 text-forest-900 font-black text-xs flex items-center gap-2 shadow-soft transition active:scale-95 shrink-0"
-          >
-            <ScanBarcode className="w-4 h-4 text-forest-800" />
-            <span>Scan Barcode</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsBarcodeModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+            >
+              <ScanBarcode className="w-3.5 h-3.5 text-forest-800" />
+              <span>Barcode Scan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSaveModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-soft"
+            >
+              <BookmarkPlus className="w-3.5 h-3.5 text-mint-300" />
+              <span>Save Shelf</span>
+            </button>
+          </div>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 📸 DUAL CAPTURE SLOTS: FRONT (CLAIMS) & BACK (INGREDIENTS)                 */}
-        {/* ========================================================================= */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
-          {/* SLOT 1: FRONT LABEL (MARKETING CLAIMS & BUZZWORDS) */}
-          <div className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 space-y-3 flex flex-col justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
-                    1
-                  </span>
-                  <h3 className="text-sm font-black text-forest-950 uppercase tracking-wider font-mono">
-                    Front Label (Claims)
-                  </h3>
-                </div>
-
-                <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-full border border-mint-200 text-forest-800">
-                  {claimsCount} Claims Found
+        {/* Minimalist Dual Capture Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Front Card (Claims) */}
+          <div className="p-4 rounded-2xl bg-cream-50/60 border border-mint-200/80 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-forest-900 text-white font-mono text-[10px] font-black flex items-center justify-center">
+                  1
+                </span>
+                <span className="text-xs font-black text-forest-950 uppercase font-mono">
+                  Front Label (Claims)
                 </span>
               </div>
 
-              <p className="text-[11px] text-charcoal-600">
-                Marketing promises, buzzwords & product name (e.g. "10x Fast Growth", "100% Organic", "No Chemicals").
-              </p>
-
-              {/* Photo Preview / Upload Buttons */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => frontFileInputRef.current?.click()}
                   disabled={isScanningFront}
-                  className="flex-1 py-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-soft"
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-mint-50 border border-mint-200 text-forest-900 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
                 >
-                  <Camera className="w-3.5 h-3.5 text-forest-800" />
-                  <span>{isScanningFront ? 'AI Scanning...' : frontImageThumbnail ? 'Retake Front' : 'Snap Front Photo'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => frontFileInputRef.current?.click()}
-                  disabled={isScanningFront}
-                  className="p-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 transition"
-                  title="Upload Front Image"
-                >
-                  <Upload className="w-3.5 h-3.5" />
+                  <Camera className="w-3 h-3 text-forest-800" />
+                  <span>{isScanningFront ? 'Scanning...' : 'Scan Front'}</span>
                 </button>
               </div>
-
-              {/* Editable Front Claim Textarea */}
-              <textarea
-                rows={2}
-                value={frontClaimText}
-                onChange={(e) => {
-                  setFrontClaimText(e.target.value);
-                  handleReanalyze(ingredientText, e.target.value, productName);
-                }}
-                placeholder="Type or edit front label claims (e.g. '100% Chemical-Free, Regrows Hair in 14 Days')..."
-                className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500 resize-none font-mono"
-              />
             </div>
 
-            {/* Front Photo Thumbnail Preview */}
-            {frontImageThumbnail && (
-              <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-mint-100 text-[11px]">
-                <div className="flex items-center gap-2 truncate">
-                  <img src={frontImageThumbnail} alt="Front Thumbnail" className="w-8 h-8 rounded-lg object-cover border border-mint-200" />
-                  <span className="font-bold text-forest-950 truncate">Front photo captured</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFrontImageThumbnail(null)}
-                  className="text-charcoal-400 hover:text-rose-600 p-1"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+            <textarea
+              rows={2}
+              value={frontClaimText}
+              onChange={(e) => {
+                setFrontClaimText(e.target.value);
+                handleReanalyze(ingredientText, e.target.value, productName);
+              }}
+              placeholder="Enter front marketing claims..."
+              className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-mono focus:outline-none focus:ring-1 focus:ring-mint-500 resize-none"
+            />
           </div>
 
-          {/* SLOT 2: BACK LABEL (FULL INGREDIENTS LIST & DOSING) */}
-          <div className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 space-y-3 flex flex-col justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
-                    2
-                  </span>
-                  <h3 className="text-sm font-black text-forest-950 uppercase tracking-wider font-mono">
-                    Back Label (Ingredients)
-                  </h3>
-                </div>
-
-                <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-full border border-mint-200 text-forest-800">
-                  {analysisResult.detectedIngredients.length} Compounds Parsed
+          {/* Back Card (Ingredients) */}
+          <div className="p-4 rounded-2xl bg-cream-50/60 border border-mint-200/80 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-forest-900 text-white font-mono text-[10px] font-black flex items-center justify-center">
+                  2
+                </span>
+                <span className="text-xs font-black text-forest-950 uppercase font-mono">
+                  Back Label (Ingredients)
                 </span>
               </div>
 
-              <p className="text-[11px] text-charcoal-600">
-                Full ingredient (INCI) composition, carrier oils, excipients, and declared active percentages.
-              </p>
-
-              {/* Photo Preview / Upload Buttons */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => backFileInputRef.current?.click()}
                   disabled={isScanningBack}
-                  className="flex-1 py-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-soft"
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-mint-50 border border-mint-200 text-forest-900 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
                 >
-                  <Camera className="w-3.5 h-3.5 text-forest-800" />
-                  <span>{isScanningBack ? 'AI Scanning...' : backImageThumbnail ? 'Retake Back' : 'Snap Back Photo'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => backFileInputRef.current?.click()}
-                  disabled={isScanningBack}
-                  className="p-2 rounded-xl bg-white hover:bg-mint-100 border border-mint-200 text-forest-900 transition"
-                  title="Upload Back Image"
-                >
-                  <Upload className="w-3.5 h-3.5" />
+                  <Camera className="w-3 h-3 text-forest-800" />
+                  <span>{isScanningBack ? 'Scanning...' : 'Scan Back'}</span>
                 </button>
               </div>
-
-              {/* Editable Ingredients Textarea */}
-              <textarea
-                rows={2}
-                value={ingredientText}
-                onChange={(e) => {
-                  setIngredientText(e.target.value);
-                  handleReanalyze(e.target.value, frontClaimText, productName);
-                }}
-                placeholder="Paste or edit ingredients list (e.g. 'Water, Redensyl 3%, Rosemary Oil 1%, Glycerin, Phenoxyethanol')..."
-                className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-medium focus:outline-none focus:ring-2 focus:ring-mint-500 resize-none font-mono"
-              />
             </div>
 
-            {/* Back Photo Thumbnail Preview */}
-            {backImageThumbnail && (
-              <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-mint-100 text-[11px]">
-                <div className="flex items-center gap-2 truncate">
-                  <img src={backImageThumbnail} alt="Back Thumbnail" className="w-8 h-8 rounded-lg object-cover border border-mint-200" />
-                  <span className="font-bold text-forest-950 truncate">Back photo captured</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setBackImageThumbnail(null)}
-                  className="text-charcoal-400 hover:text-rose-600 p-1"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+            <textarea
+              rows={2}
+              value={ingredientText}
+              onChange={(e) => {
+                setIngredientText(e.target.value);
+                handleReanalyze(e.target.value, frontClaimText, productName);
+              }}
+              placeholder="Paste ingredient list..."
+              className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-mono focus:outline-none focus:ring-1 focus:ring-mint-500 resize-none"
+            />
           </div>
         </div>
 
-        {/* Scanning Live Status Banner */}
+        {/* Live Scan Status */}
         {(isScanningFront || isScanningBack) && (
-          <div className="p-4 rounded-2xl bg-mint-100/80 border border-mint-300 flex items-center justify-between gap-3 animate-in fade-in">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-forest-800 animate-spin" />
-              <span className="text-xs font-bold text-forest-950 font-mono">
-                {scanProgress.status || 'Multimodal Vision AI processing label pixels...'}
-              </span>
+          <div className="p-3 rounded-xl bg-mint-100 border border-mint-300 flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-forest-800 animate-spin" />
+              <span className="font-bold text-forest-950">{scanProgress.status}</span>
             </div>
-            <span className="text-xs font-mono font-black text-forest-900">{scanProgress.percent}%</span>
+            <span className="font-black text-forest-900">{scanProgress.percent}%</span>
           </div>
         )}
 
-        {/* Quick Pre-Loaded Sample Debunk Products Carousel */}
-        <div className="space-y-2 pt-2">
-          <span className="text-[11px] font-mono font-bold uppercase text-charcoal-500 block">
-            Or Test with Pre-Loaded Real-World Debunk Samples:
+        {/* Sample Presets */}
+        <div className="flex items-center gap-2 overflow-x-auto pt-1 no-scrollbar">
+          <span className="text-[10px] font-mono font-bold uppercase text-charcoal-400 shrink-0">
+            Samples:
           </span>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {SAMPLE_PRODUCTS.map((sample) => (
-              <button
-                key={sample.id}
-                type="button"
-                onClick={() => handleSelectSample(sample)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex items-center gap-1.5 ${
-                  selectedSampleId === sample.id
-                    ? 'bg-forest-900 text-white shadow-soft font-black'
-                    : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-200'
-                }`}
-              >
-                <span>{sample.name.split(' ')[0]} {sample.name.split(' ')[1]}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
-                  sample.bannerBadge.includes('Busted') || sample.bannerBadge.includes('Alert')
-                    ? 'bg-rose-100 text-rose-800'
-                    : 'bg-mint-100 text-forest-800'
-                }`}>
-                  {sample.bannerBadge.split(' ')[0]}
-                </span>
-              </button>
-            ))}
-          </div>
+          {SAMPLE_PRODUCTS.map((sample) => (
+            <button
+              key={sample.id}
+              type="button"
+              onClick={() => handleSelectSample(sample)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition active:scale-95 flex items-center gap-1.5 ${
+                selectedSampleId === sample.id
+                  ? 'bg-forest-900 text-white font-black'
+                  : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 border border-mint-100'
+              }`}
+            >
+              <span>{sample.name.split(' ')[0]} {sample.name.split(' ')[1]}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 🧭 MYTH BUSTER AUDIT REPORT TABS                                          */}
+      {/* 🧭 MINIMAL TAB NAVIGATION                                                  */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-[2.5rem] p-3 sm:p-4 border border-mint-200/80 shadow-card flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('audit_paper')}
-            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
-              activeTab === 'audit_paper'
-                ? 'bg-forest-900 text-white shadow-soft'
-                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
-            }`}
-          >
-            <FileText className="w-4 h-4 text-mint-300" />
-            <span>Formulation Debunk Paper</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('claims_matrix')}
-            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
-              activeTab === 'claims_matrix'
-                ? 'bg-forest-900 text-white shadow-soft'
-                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 text-mint-400" />
-            <span>Front Claims vs Back Reality ({claimsCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('science_pillars')}
-            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
-              activeTab === 'science_pillars'
-                ? 'bg-forest-900 text-white shadow-soft'
-                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
-            }`}
-          >
-            <Award className="w-4 h-4 text-forest-700" />
-            <span>4-Pillar Scientific Matrix</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('alternatives')}
-            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
-              activeTab === 'alternatives'
-                ? 'bg-forest-900 text-white shadow-soft'
-                : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 hover:text-forest-900 border border-mint-100'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Clinical Formulations ({matchingFormulations.length})</span>
-          </button>
-        </div>
-
-        {/* Save to Smart Shelf CTA */}
+      <div className="bg-white rounded-2xl p-1.5 border border-mint-200/80 shadow-soft flex items-center gap-1">
         <button
           type="button"
-          onClick={() => setSaveModalOpen(true)}
-          className="hidden md:flex px-4 py-2 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-extrabold text-xs items-center gap-1.5 shrink-0 transition active:scale-95 shadow-soft"
+          onClick={() => setActiveTab('debunk')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'debunk'
+              ? 'bg-forest-900 text-white shadow-sm'
+              : 'text-charcoal-600 hover:text-forest-900 hover:bg-mint-50'
+          }`}
         >
-          <BookmarkPlus className="w-3.5 h-3.5 text-mint-300" />
-          <span>Save to Smart Shelf</span>
+          <FileText className="w-3.5 h-3.5" />
+          <span>Formulation Audit</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('claims')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'claims'
+              ? 'bg-forest-900 text-white shadow-sm'
+              : 'text-charcoal-600 hover:text-forest-900 hover:bg-mint-50'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Claims vs Reality ({claimsCount})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('alternatives')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'alternatives'
+              ? 'bg-forest-900 text-white shadow-sm'
+              : 'text-charcoal-600 hover:text-forest-900 hover:bg-mint-50'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Clinical Alternatives ({matchingFormulations.length})</span>
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* 📜 TAB 1: FORMULATION DEBUNK PAPER (ANIMATED STRIKETHROUGH REPORT)        */}
+      {/* 📜 TAB 1: FORMULATION AUDIT & DEBUNK PAPER                                */}
       {/* ========================================================================= */}
-      {activeTab === 'audit_paper' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
+      {activeTab === 'debunk' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
           <IngredientDebunkPaper
             productName={productName}
             brand={saveBrand}
@@ -558,38 +419,27 @@ export const LabelLensView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* ⚔️ TAB 2: FRONT CLAIMS VS BACK REALITY CROSS-EXAMINATION MATRIX           */}
+      {/* ⚔️ TAB 2: CLAIMS VS REALITY REPORT                                        */}
       {/* ========================================================================= */}
-      {activeTab === 'claims_matrix' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
+      {activeTab === 'claims' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-mint-200/80 shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div>
-                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-wider block">
-                  CROSS-EXAMINATION REPORT
-                </span>
-                <h2 className="text-2xl font-black text-forest-950 mt-0.5">
-                  Front Marketing Claims vs Back Chemistry
-                </h2>
-                <p className="text-xs text-charcoal-600 mt-0.5">
-                  We cross-examined every front-pack promise against the physical ingredients and declared clinical dosage.
-                </p>
+                <h3 className="text-base font-black text-forest-950">Marketing Claims Cross-Examination</h3>
+                <p className="text-xs text-charcoal-600">Front buzzwords evaluated against clinical dosage & physical formulation.</p>
               </div>
-
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-800 font-mono font-black text-xs border border-mint-200">
-                  {claimsCount} Promises Audited
-                </span>
-              </div>
+              <span className="px-2.5 py-1 rounded-full bg-mint-100 text-forest-800 font-mono font-bold text-xs border border-mint-200">
+                {claimsCount} Audited
+              </span>
             </div>
 
-            {/* Claims Audit Cards List */}
             {analysisResult.detectedClaims.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-cream-50/70 border border-mint-100 text-center text-xs text-charcoal-600">
-                No specific marketing buzzwords detected. Type your front-label claims in the top box above to audit!
+              <div className="p-6 rounded-2xl bg-cream-50 text-center text-xs text-charcoal-600">
+                No specific marketing buzzwords detected. Enter claims in the box above to audit.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {analysisResult.detectedClaims.map((claim, cIdx) => {
                   const isPositive = claim.verdict === 'supported';
                   const isUnderdosed = claim.verdict === 'partially_supported' || claim.verdict === 'too_vague_to_verify';
@@ -598,7 +448,7 @@ export const LabelLensView: React.FC = () => {
                   return (
                     <div
                       key={cIdx}
-                      className={`p-5 rounded-[2rem] border transition shadow-soft space-y-3.5 ${
+                      className={`p-4 rounded-2xl border transition space-y-3 ${
                         isPositive
                           ? 'bg-emerald-50/40 border-emerald-300'
                           : isUnderdosed
@@ -606,88 +456,59 @@ export const LabelLensView: React.FC = () => {
                           : 'bg-rose-50/40 border-rose-300'
                       }`}
                     >
-                      {/* Top Header: Claim Name & Myth Buster Verdict */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/5 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black font-mono px-2 py-0.5 rounded-md bg-white border border-black/10 text-charcoal-800">
-                            Claim #{cIdx + 1}
-                          </span>
-                          <h3 className="text-base font-black text-forest-950">
-                            "{claim.displayName}"
-                          </h3>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <h4 className="text-sm font-black text-forest-950">
+                          "{claim.displayName}"
+                        </h4>
+                        <div>
                           {isPositive && (
-                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs font-mono flex items-center gap-1 border border-emerald-300">
-                              <ThumbsUp className="w-3.5 h-3.5" />
+                            <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-black text-[11px] font-mono flex items-center gap-1 border border-emerald-300">
+                              <ThumbsUp className="w-3 h-3" />
                               <span>Clinically Validated</span>
                             </span>
                           )}
                           {isUnderdosed && (
-                            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs font-mono flex items-center gap-1 border border-amber-300">
-                              <AlertTriangle className="w-3.5 h-3.5" />
-                              <span>Vague / Unregulated Marketing</span>
+                            <span className="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 font-black text-[11px] font-mono flex items-center gap-1 border border-amber-300">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Vague / Unregulated</span>
                             </span>
                           )}
                           {isBusted && (
-                            <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-800 font-black text-xs font-mono flex items-center gap-1 border border-rose-300">
-                              <ThumbsDown className="w-3.5 h-3.5" />
-                              <span>Busted Marketing Gimmick</span>
+                            <span className="px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black text-[11px] font-mono flex items-center gap-1 border border-rose-300">
+                              <ThumbsDown className="w-3 h-3" />
+                              <span>Marketing Gimmick</span>
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Side-by-Side Comparison: Front Promise vs Back Reality */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="p-3.5 rounded-xl bg-white/90 border border-black/5 space-y-1">
-                          <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 block">
-                            Front Marketing Promise:
-                          </span>
-                          <p className="text-xs font-bold text-forest-950">
-                            {claim.displayName}
-                          </p>
-                          <p className="text-[11px] text-charcoal-600">
-                            {claim.whatItMeans}
-                          </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div className="p-3 rounded-xl bg-white/90 border border-black/5 space-y-0.5">
+                          <span className="text-[10px] font-mono font-bold uppercase text-charcoal-400">Claim Promise</span>
+                          <p className="text-forest-950 font-medium">{claim.whatItMeans}</p>
                         </div>
-
-                        <div className="p-3.5 rounded-xl bg-white/90 border border-black/5 space-y-1">
-                          <span className="text-[10px] font-mono font-black uppercase text-charcoal-500 block">
-                            Back Formulation Reality:
-                          </span>
-                          <p className="text-xs font-bold text-forest-950">
-                            {claim.supportRationale}
-                          </p>
-                          {claim.missingInformation && (
-                            <span className="text-[10px] text-amber-700 font-mono font-bold block">
-                              Missing Info: {claim.missingInformation}
-                            </span>
-                          )}
+                        <div className="p-3 rounded-xl bg-white/90 border border-black/5 space-y-0.5">
+                          <span className="text-[10px] font-mono font-bold uppercase text-charcoal-400">Chemical Reality</span>
+                          <p className="text-forest-950 font-medium">{claim.supportRationale}</p>
                         </div>
                       </div>
 
-                      {/* Scientific Citation / Peer-Reviewed PubMed Paper */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[11px] text-charcoal-700 bg-white/80 p-3 rounded-xl border border-black/5 shadow-xs">
-                        <div className="flex items-center gap-2 truncate">
-                          <BookOpen className="w-4 h-4 text-forest-800 shrink-0" />
-                          <span className="truncate">
-                            <strong>Scientific Paper:</strong> {claim.sourceLabel || 'Peer-Reviewed Clinical Literature'}
+                      {claim.sourceUrl && (
+                        <div className="flex items-center justify-between pt-1 text-[11px]">
+                          <span className="text-charcoal-600 truncate">
+                            <strong>Reference:</strong> {claim.sourceLabel || 'Clinical Trial'}
                           </span>
-                        </div>
-                        {claim.sourceUrl && (
                           <a
                             href={claim.sourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-forest-900 hover:text-forest-950 bg-mint-50 hover:bg-mint-100 px-3 py-1.5 rounded-lg border border-mint-200 shrink-0 transition"
+                            className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-forest-900 bg-white hover:bg-mint-50 px-2.5 py-1 rounded-lg border border-mint-200 shrink-0 transition"
                           >
-                            <span>Read PubMed Paper</span>
+                            <span>PubMed Trial</span>
                             <ExternalLink className="w-3 h-3 text-forest-700" />
                           </a>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -698,243 +519,65 @@ export const LabelLensView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* 🔬 TAB 3: 4-PILLAR SCIENTIFIC MATRIX                                      */}
+      {/* 🌿 TAB 3: CLINICAL ALTERNATIVES                                           */}
       {/* ========================================================================= */}
-      {activeTab === 'science_pillars' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-5">
-            <div className="flex items-center justify-between border-b border-mint-100 pb-4">
+      {activeTab === 'alternatives' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-mint-200/80 shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-forest-700 font-mono">
-                  OBJECTIVE 4-PILLAR METRIC
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-forest-950">
-                  Scientific Evaluation Dimensions
-                </h3>
+                <h3 className="text-base font-black text-forest-950">Evidence-Backed Formulations</h3>
+                <p className="text-xs text-charcoal-600">Formulations with 100% declared active dosages.</p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-900 border border-mint-200 text-xs font-mono font-black">
-                {analysisResult.summary.goalRelevanceScore} Relevance
+              <span className="px-2.5 py-1 rounded-full bg-mint-100 text-forest-800 font-mono font-bold text-xs border border-mint-200">
+                {matchingFormulations.length} Available
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* 1. Goal Relevance */}
-              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
-                    1. Goal Relevance
-                  </span>
-                  <span className="text-sm">🎯</span>
-                </div>
-                <div className="text-lg font-black text-forest-950">
-                  {analysisResult.summary.goalRelevanceScore}
-                </div>
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  {analysisResult.summary.goalRelevanceDescription}
-                </p>
-              </div>
-
-              {/* 2. Evidence Quality */}
-              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
-                    2. Evidence Quality
-                  </span>
-                  <span className="text-sm">🔬</span>
-                </div>
-                <div className="text-lg font-black text-forest-950">
-                  {analysisResult.summary.evidenceQualityScore}
-                </div>
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  {analysisResult.summary.evidenceQualityDescription}
-                </p>
-              </div>
-
-              {/* 3. Dose Transparency */}
-              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
-                    3. Dose Transparency
-                  </span>
-                  <span className="text-sm">📊</span>
-                </div>
-                <div className="text-lg font-black text-forest-950">
-                  {analysisResult.summary.doseTransparencyScore}
-                </div>
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  {analysisResult.summary.doseTransparencyDescription}
-                </p>
-              </div>
-
-              {/* 4. Claim Credibility */}
-              <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-500 font-mono">
-                    4. Claim Credibility
-                  </span>
-                  <span className="text-sm">🛡️</span>
-                </div>
-                <div className="text-lg font-black text-forest-950">
-                  {analysisResult.summary.claimCredibilityScore}
-                </div>
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  {analysisResult.summary.claimCredibilityDescription}
-                </p>
-              </div>
-            </div>
-
-            {/* Clinical Synthesis Box */}
-            <div className="p-5 rounded-2xl bg-mint-50/90 border border-mint-200 text-xs sm:text-sm text-charcoal-800 space-y-2">
-              <div className="flex items-center gap-1.5 text-forest-950 font-bold uppercase tracking-wider text-[11px] font-mono">
-                <Sparkles className="w-4 h-4 text-forest-800" />
-                <span>Clinical Pharmacological Synthesis</span>
-              </div>
-              <p className="font-sans text-charcoal-800 leading-relaxed">
-                "{analysisResult.summary.synthesisText}"
-              </p>
-            </div>
-
-            {/* Direct PubMed Evidence Repository */}
-            <div className="p-5 rounded-2xl bg-cream-50/70 border border-mint-200/80 space-y-3">
-              <div className="flex items-center justify-between border-b border-mint-100 pb-2">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-forest-900" />
-                  <span className="text-xs font-black uppercase tracking-wider text-forest-950 font-mono">
-                    PubMed Clinical Trial Citations
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-charcoal-500">
-                  {analysisResult.detectedIngredients.length} Compounds Audited
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {analysisResult.detectedIngredients.map((d, i) => (
-                  <div
-                    key={i}
-                    className="p-3 rounded-xl bg-white border border-mint-100 flex items-center justify-between gap-2 shadow-xs"
-                  >
-                    <div className="space-y-0.5 truncate">
-                      <span className="text-xs font-black text-forest-950 block truncate">
-                        {d.ingredient.name}
-                      </span>
-                      <span className="text-[10px] text-charcoal-500 font-mono block truncate">
-                        {d.ingredient.sourceLabel || 'PubMed Clinical Reference'}
-                      </span>
-                    </div>
-
-                    {d.ingredient.sourceUrl && (
-                      <a
-                        href={d.ingredient.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-forest-900 bg-mint-50 hover:bg-mint-100 px-2 py-1 rounded-lg border border-mint-200 shrink-0 transition"
-                      >
-                        <span>PubMed</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 🌿 TAB 4: CLINICAL ALTERNATIVES & MOSAIC WELLNESS FORMULATIONS            */}
-      {/* ========================================================================= */}
-      {activeTab === 'alternatives' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-mint-200/80 shadow-card space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
-              <div>
-                <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
-                  TRANSPARENT FORMULATIONS
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-forest-950 mt-1">
-                  Evidence-Backed Clinical Formulations
-                </h2>
-                <p className="text-xs text-charcoal-600 mt-0.5">
-                  Peer-reviewed formulations with transparent dosage disclosure and clinical bio-availability.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-full bg-mint-100 border border-mint-200 text-forest-800 text-xs font-mono font-black flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-mint-600" />
-                  <span>100% Label Transparency</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {matchingFormulations.map((prod) => (
                 <div
                   key={prod.id}
-                  className="p-5 rounded-[2rem] bg-cream-50/70 border border-mint-200/80 hover:border-mint-400 transition space-y-4 flex flex-col justify-between group shadow-soft"
+                  className="p-4 rounded-2xl bg-cream-50/60 border border-mint-200/80 hover:border-mint-400 transition space-y-3 flex flex-col justify-between"
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-black uppercase text-forest-800 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
-                        {prod.brand} • {prod.category}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-forest-900">
-                        ₹{prod.sitePrice}
+                      <span className="text-[10px] font-mono font-bold text-forest-800 bg-mint-100 px-2 py-0.5 rounded-md border border-mint-200">
+                        {prod.brand} • ₹{prod.sitePrice}
                       </span>
                     </div>
 
-                    <div className="flex items-start gap-3.5">
-                      <div className="w-16 h-16 rounded-2xl bg-white border border-mint-200 shrink-0 overflow-hidden relative flex items-center justify-center">
+                    <div className="flex items-start gap-3">
+                      <div className="w-14 h-14 rounded-xl bg-white border border-mint-200 shrink-0 overflow-hidden flex items-center justify-center">
                         {prod.imageUrl && (
                           <img
                             src={prod.imageUrl}
                             alt={prod.product}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            className="w-full h-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
                         )}
                       </div>
-
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-black text-forest-950 group-hover:text-forest-800 transition leading-tight">
-                          {prod.product}
-                        </h3>
-                        <p className="text-xs text-charcoal-600 mt-1 leading-relaxed line-clamp-2">
-                          {prod.description}
-                        </p>
+                        <h4 className="text-sm font-black text-forest-950 truncate">{prod.product}</h4>
+                        <p className="text-xs text-charcoal-600 line-clamp-2 mt-0.5">{prod.description}</p>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-white border border-mint-100 space-y-1 text-xs">
-                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
-                        <span>Declared Actives</span>
-                        <span className="font-mono text-forest-950 font-bold">{prod.keyIngredients.join(' • ')}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-charcoal-600 text-[11px]">
-                        <span>Clinical Advantage</span>
-                        <span className="font-mono text-mint-700 font-bold">{prod.clinicalAdvantage || 'Bio-enhanced formulation'}</span>
-                      </div>
+                    <div className="p-2 rounded-lg bg-white border border-mint-100 text-[11px] font-mono text-charcoal-600">
+                      <strong>Actives:</strong> {prod.keyIngredients.join(', ')}
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-mint-100 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-charcoal-600">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      <span>{prod.potencyBadge || 'Verified Clinical Efficacy'}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => showToast(`Added ${prod.product} to your routine!`, 'success')}
-                      className="px-4 py-1.5 rounded-full bg-forest-900 text-white hover:bg-forest-800 text-xs font-black transition active:scale-95 shadow-soft"
-                    >
-                      Add to Routine
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => showToast(`Added ${prod.product} to routine!`, 'success')}
+                    className="w-full py-2 rounded-xl bg-forest-900 text-white hover:bg-forest-800 text-xs font-bold transition active:scale-95"
+                  >
+                    Add to Routine
+                  </button>
                 </div>
               ))}
             </div>
@@ -947,16 +590,16 @@ export const LabelLensView: React.FC = () => {
       {/* ========================================================================= */}
       {saveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[2.5rem] max-w-md w-full p-6 shadow-modal border border-mint-200 space-y-5 text-charcoal-900">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-modal border border-mint-200 space-y-4 text-charcoal-900">
             <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div className="flex items-center gap-2">
-                <BookmarkPlus className="w-5 h-5 text-forest-800" />
+                <BookmarkPlus className="w-4 h-4 text-forest-800" />
                 <h3 className="text-base font-black text-forest-950">Save to Smart Shelf</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSaveModalOpen(false)}
-                className="p-1.5 rounded-full text-charcoal-400 hover:text-charcoal-700 bg-cream-50"
+                className="p-1 rounded-full text-charcoal-400 hover:text-charcoal-700"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -993,7 +636,7 @@ export const LabelLensView: React.FC = () => {
                       onClick={() => setSaveTimeOfDay(t)}
                       className={`p-2 rounded-xl font-bold uppercase text-[10px] font-mono transition ${
                         saveTimeOfDay === t
-                          ? 'bg-forest-900 text-white shadow-soft'
+                          ? 'bg-forest-900 text-white'
                           : 'bg-cream-50 text-charcoal-600 border border-mint-100'
                       }`}
                     >
@@ -1015,7 +658,7 @@ export const LabelLensView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveToShelf}
-                className="flex-1 py-2.5 rounded-xl bg-forest-900 text-white font-black text-xs shadow-soft"
+                className="flex-1 py-2.5 rounded-xl bg-forest-900 text-white font-bold text-xs"
               >
                 Confirm & Save
               </button>
