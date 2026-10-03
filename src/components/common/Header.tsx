@@ -106,7 +106,7 @@ export const Header: React.FC = () => {
 
                 const data: ShareCardData = {
                   type: activePillar === 'health' ? 'workout' : 'protocol',
-                  title: activePillar === 'health' ? 'Daily Athletic & Kinetic Stack' : 'Daily Bio-Protocol Check-In',
+                  title: activePillar === 'health' ? 'Daily Workout & Training Stack' : 'Daily Wellness Protocol',
                   subtitle: `Tracked on Ritual • ${profile.name || 'Athlete'}`,
                   date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                   primaryStat: {

@@ -1391,13 +1391,13 @@ export const GymTrackerView: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mint-100 pb-5">
               <div>
                 <span className="text-[10px] font-mono font-black uppercase text-forest-700 tracking-widest block">
-                  ERGOGENIC AIDS
+                  PERFORMANCE & RECOVERY
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-forest-950 mt-1">
-                  Athletic Formulations & Kinetic Dosage
+                  Sports Nutrition & Formulations
                 </h2>
                 <p className="text-xs text-charcoal-600 mt-0.5">
-                  Peer-reviewed sports nutrition calibrated for hypertrophy, power output, and rapid CNS recovery.
+                  Evidence-backed sports nutrition for strength, endurance, and faster recovery.
                 </p>
               </div>
 
@@ -1492,7 +1492,7 @@ export const GymTrackerView: React.FC = () => {
           <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-6 shadow-modal border border-mint-200 space-y-4 max-h-[85vh] flex flex-col text-charcoal-900">
             <div className="flex items-center justify-between border-b border-mint-100 pb-3">
               <div>
-                <h3 className="text-lg font-black text-forest-950">Movement Database</h3>
+                <h3 className="text-lg font-black text-forest-950">Exercise Library</h3>
                 <p className="text-xs text-charcoal-600">Select an exercise to add to your live workout</p>
               </div>
               <button
