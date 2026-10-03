@@ -4,10 +4,10 @@ import { ShareCardData } from '../../types';
 import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2, LogIn, LogOut, User } from 'lucide-react';
 import { SocialShareModal } from './SocialShareModal';
 import { AuthModal } from '../auth/AuthModal';
-import { signOutUser, supabase } from '../../services/supabase';
+import { supabase } from '../../services/supabase';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory, showToast } = useApp();
+  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory, logout } = useApp();
   const [showSettings, setShowSettings] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authUser, setAuthUser] = useState<{ email: string; name?: string } | null>(() => {
@@ -51,10 +51,8 @@ export const Header: React.FC = () => {
   }, []);
 
   const handleLogout = async () => {
-    await signOutUser();
+    await logout();
     setAuthUser(null);
-    localStorage.removeItem('ritual_auth_user');
-    showToast('Logged out successfully', 'info');
   };
   const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
   const [tempName, setTempName] = useState(profile.name || 'Alex');
@@ -450,45 +448,32 @@ export const Header: React.FC = () => {
                 </div>
               </div>
 
-              {/* Cloud Account Status Section */}
+              {/* Supabase Cloud Account Status */}
               <div className="p-3.5 rounded-2xl bg-cream-50 border border-mint-200 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${authUser ? 'bg-forest-900 text-mint-300' : 'bg-charcoal-200 text-charcoal-600'}`}>
+                  <div className="w-8 h-8 rounded-xl bg-forest-900 text-mint-300 flex items-center justify-center shrink-0">
                     <User className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] font-mono uppercase font-bold text-charcoal-500 block">
-                      Supabase Cloud Sync
+                      Supabase Cloud Account
                     </span>
                     <span className="text-xs font-bold text-forest-950 truncate block">
-                      {authUser ? authUser.email : 'Guest Mode (Local Only)'}
+                      {authUser?.email || profile.email || 'Connected'}
                     </span>
                   </div>
                 </div>
 
-                {authUser ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleLogout();
-                      setShowSettings(false);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold transition shrink-0"
-                  >
-                    Log Out
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSettings(false);
-                      setShowAuthModal(true);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white text-[11px] font-black transition shrink-0"
-                  >
-                    Log In
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout();
+                    setShowSettings(false);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold transition shrink-0"
+                >
+                  Log Out
+                </button>
               </div>
 
               {/* Action Buttons */}

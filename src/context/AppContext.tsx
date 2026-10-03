@@ -20,7 +20,8 @@ import {
   syncProfileToSupabase, 
   fetchProfileFromSupabase, 
   syncRoutineStepsToSupabase, 
-  saveProgressEntryToSupabase 
+  saveProgressEntryToSupabase,
+  signOutUser
 } from '../services/supabase';
 
 export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'progress';
@@ -54,6 +55,7 @@ interface AppContextType {
   // Actions
   updateProfile: (updates: Partial<UserProfile>) => void;
   completeOnboarding: (data: Partial<UserProfile>, scannedProducts?: OnboardingProduct[]) => void;
+  logout: () => Promise<void>;
   addShelfProduct: (product: Omit<ShelfProduct, 'id' | 'dateAdded'>) => void;
   editShelfProduct: (id: string, updates: Partial<ShelfProduct>) => void;
   removeShelfProduct: (id: string) => void;
@@ -469,6 +471,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Reset to clean state. Ready for fresh onboarding.', 'info');
   };
 
+  const logout = async () => {
+    try {
+      await signOutUser();
+    } catch (e) {}
+    localStorage.removeItem('ritual_auth_user');
+    localStorage.removeItem(STORAGE_KEYS.PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.SHELF);
+    localStorage.removeItem(STORAGE_KEYS.ROUTINE);
+    localStorage.removeItem(STORAGE_KEYS.PROGRESS);
+    localStorage.removeItem('ritual_health_docs_v1');
+    localStorage.removeItem('ritual_food_logs');
+    localStorage.removeItem('ritual_water_ml');
+    localStorage.removeItem('ritual_workout_history');
+    setProfile(INITIAL_PROFILE);
+    setShelfProducts([]);
+    setRoutineSteps([]);
+    setProgressHistory([]);
+    setHealthDocuments([]);
+    showToast('Signed out of Supabase Cloud Account', 'info');
+  };
+
   const simulateMissedDays = () => {
     setProgressHistory(getMissedAdherenceHistory());
     setShowRoutineRescue(true);
@@ -522,6 +545,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateAISettings,
       updateProfile,
       completeOnboarding,
+      logout,
       addShelfProduct,
       editShelfProduct,
       removeShelfProduct,
