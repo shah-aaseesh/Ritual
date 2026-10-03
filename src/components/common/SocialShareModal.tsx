@@ -38,12 +38,12 @@ interface SocialShareModalProps {
 }
 
 const THEMES: { id: ShareTheme; name: string; color: string; bg: string; icon: string }[] = [
-  { id: 'strava_orange', name: 'Strava Orange', color: '#FC5200', bg: 'bg-[#FC5200]', icon: '🔥' },
+  { id: 'ember_flame', name: 'Athletic Ember', color: '#FC5200', bg: 'bg-[#FC5200]', icon: '🔥' },
   { id: 'mosaic_emerald', name: 'Mosaic Emerald', color: '#10B981', bg: 'bg-[#10B981]', icon: '🌲' },
   { id: 'cyber_neon', name: 'Cyber Neon', color: '#CCFF00', bg: 'bg-[#CCFF00]', icon: '⚡' },
   { id: 'sunset_mirage', name: 'Sunset Mirage', color: '#FF5E62', bg: 'bg-gradient-to-r from-[#FF5E62] to-[#FF9966]', icon: '🌅' },
-  { id: 'clean_mono', name: 'Clean Mono', color: '#FFFFFF', bg: 'bg-zinc-100', icon: '⚪' },
-  { id: 'gold_champion', name: 'Gold Tier', color: '#F59E0B', bg: 'bg-amber-500', icon: '🏆' },
+  { id: 'clean_mono', name: 'Stealth Mono', color: '#FFFFFF', bg: 'bg-zinc-100', icon: '⚪' },
+  { id: 'gold_champion', name: 'Gold Champion', color: '#F59E0B', bg: 'bg-amber-500', icon: '🏆' },
 ];
 
 const PHOTO_FILTERS: { id: PhotoFilter; name: string }[] = [
@@ -93,7 +93,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
 
   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  const [selectedTheme, setSelectedTheme] = useState<ShareTheme>('strava_orange');
+  const [selectedTheme, setSelectedTheme] = useState<ShareTheme>('ember_flame');
   const [aspectRatio, setAspectRatio] = useState<ShareAspectRatio>('post');
   const [userCaption, setUserCaption] = useState<string>(
     initialData.userCaption || (initialData.type === 'workout' ? 'Crushed today’s session! 💪' : '100% daily protocol locked in! 🌿')
@@ -220,7 +220,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setBackgroundImageUrl(base64);
-      showToast('📸 Screenshot / Photo loaded as Strava backdrop!', 'success');
+      showToast('📸 Photo loaded as card backdrop!', 'success');
     };
     reader.readAsDataURL(file);
     // Reset value so user can pick the same file again if desired
@@ -348,7 +348,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
 
   const handleTwitterShare = () => {
     const text = encodeURIComponent(
-      `Just finished ${cardData.title}! 💥\n${cardData.primaryStat.label}: ${cardData.primaryStat.value} ${cardData.primaryStat.unit || ''}\n\nTracked with @RitualApp #StravaForWellness #MosaicWellness #Fitness`
+      `Just finished ${cardData.title}! 💥\n${cardData.primaryStat.label}: ${cardData.primaryStat.value} ${cardData.primaryStat.unit || ''}\n\nTracked with @RitualApp #RitualPerformance #Fitness #Consistency`
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
   };
@@ -378,11 +378,11 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
                   Social Media Share Card
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[#FC5200] text-white">
-                  Strava & Photos
+                  HD Story & Post
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-zinc-400 line-clamp-1">
-                Overlay workout stats on screenshots, selfies, or gradients
+                Overlay workout & wellness stats on photos, selfies, or gradients
               </p>
             </div>
           </div>

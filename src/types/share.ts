@@ -3,7 +3,7 @@ import { MuscleGroup } from './index';
 export type ShareCardType = 'workout' | 'protocol' | 'nutrition' | 'milestone';
 
 export type ShareTheme = 
-  | 'strava_orange'   // Iconic Strava: Carbon slate background, intense Strava orange, topographic contours
+  | 'ember_flame'     // Intense Athletic Ember / Volcanic Orange with sleek topographic contours
   | 'mosaic_emerald'  // Deep obsidian & forest green, mint accents, gold badge
   | 'cyber_neon'      // Midnight black, neon radioactive lime & cyan glow
   | 'sunset_mirage'   // Violet-to-coral dusk gradient, warm energetic tones

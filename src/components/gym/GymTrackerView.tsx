@@ -1355,7 +1355,7 @@ export const GymTrackerView: React.FC = () => {
                         type="button"
                         onClick={() => setShareModalData(createWorkoutShareData(session))}
                         className="p-1.5 px-3 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1.5"
-                        title="Generate Strava-Style Share Card"
+                        title="Share Workout Card"
                       >
                         <Share2 className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Share Card</span>
@@ -1790,7 +1790,7 @@ export const GymTrackerView: React.FC = () => {
                 className="w-full py-4 rounded-2xl bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-sm transition active:scale-95 shadow-lg shadow-[#FC5200]/25 flex items-center justify-center gap-2"
               >
                 <Share2 className="w-5 h-5" />
-                <span>Generate Strava-Style Share Card 📸</span>
+                <span>Share Workout Card 📸</span>
               </button>
 
               <button

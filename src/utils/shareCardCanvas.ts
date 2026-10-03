@@ -35,13 +35,13 @@ interface ThemeConfig {
 
 export function getThemeConfig(theme: ShareTheme): ThemeConfig {
   switch (theme) {
-    case 'strava_orange':
+    case 'ember_flame':
       return {
         bgStart: '#121316',
         bgEnd: '#1E2026',
         cardBg: 'rgba(28, 30, 38, 0.88)',
         cardBorder: 'rgba(252, 82, 0, 0.4)',
-        accent: '#FC5200', // Iconic Strava Orange
+        accent: '#FC5200', // Athletic Ember Orange
         accentGlow: 'rgba(252, 82, 0, 0.4)',
         secondaryAccent: '#FFA000',
         textPrimary: '#FFFFFF',
@@ -155,7 +155,7 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
-// Helper: Topographic & Elevation lines (Strava aesthetic)
+// Helper: Topographic & Elevation lines (Athletic contour aesthetic)
 function drawTopographyLines(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -600,21 +600,20 @@ export function renderShareCardToCanvas(
 
     ctx.font = '800 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.accent;
-    ctx.fillText('⚡ STRAVA FOR WELLNESS & HYPERTROPHY', padX, footerY + 5);
+    ctx.fillText('⚡ RITUAL ATHLETIC PERFORMANCE', padX, footerY + 5);
 
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
-    ctx.fillText('Mosaic Wellness Clinical Evidence Engine', padX, footerY + 26);
+    ctx.fillText('Evidence-Based Fitness & Wellness Protocol', padX, footerY + 26);
 
     ctx.textAlign = 'right';
     ctx.font = '900 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textPrimary;
-    ctx.letterSpacing = '1px';
-    ctx.fillText('RITUAL.APP', width - padX, footerY + 5);
+    ctx.fillText('RITUAL', width - padX, footerY + 5);
 
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = config.textMuted;
-    ctx.fillText('Tracked with Ritual', width - padX, footerY + 26);
+    ctx.fillText('Daily Consistency Protocol', width - padX, footerY + 26);
 
     ctx.restore();
   }

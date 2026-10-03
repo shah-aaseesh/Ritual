@@ -271,7 +271,7 @@ export const CalorieTrackerView: React.FC = () => {
                     setShareModalData(data);
                   }}
                   className="px-4 py-2 rounded-full bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-xs transition shadow-soft flex items-center gap-1.5 active:scale-95"
-                  title="Share Strava-Style Nutrition Card"
+                  title="Share Nutrition Target Card"
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   <span>Share Card</span>

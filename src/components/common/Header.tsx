@@ -156,7 +156,7 @@ export const Header: React.FC = () => {
                 setShareModalData(data);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FC5200] hover:bg-[#E04800] text-xs font-black text-white transition active:scale-95 shadow-soft"
-              title="Screenshot & Share Strava-Style Card"
+              title="Share Activity & Workout Card"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Share / Snap</span>

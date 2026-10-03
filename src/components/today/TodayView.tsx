@@ -190,7 +190,7 @@ export const TodayView: React.FC = () => {
                 type="button"
                 onClick={() => setShareModalData(createProtocolShareData())}
                 className="px-3.5 py-2.5 rounded-2xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs font-black transition active:scale-95 shadow-soft flex items-center gap-1.5"
-                title="Share Strava-Style Activity Card"
+                title="Share Protocol Activity Card"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Share Card</span>
@@ -218,7 +218,7 @@ export const TodayView: React.FC = () => {
                     Flawless Consistency Today!
                   </h3>
                   <p className="text-xs text-mint-100/80">
-                    You checked in every morning & evening habit. Share your achievement to Strava / Socials!
+                    You checked in every morning & evening habit. Share your achievement to your Story or feed!
                   </p>
                 </div>
               </div>
