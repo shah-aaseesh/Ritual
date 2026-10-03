@@ -78,39 +78,6 @@ export const OnboardingFlow: React.FC = () => {
     };
   }, [gender, age, heightFeet, heightInches, weightKg]);
 
-  const handleQuickSkip = () => {
-    try {
-      localStorage.setItem('ritual_macro_targets', JSON.stringify({
-        calories: 2490,
-        proteinG: 144,
-        carbsG: 280,
-        fatG: 68,
-        waterMl: 3000
-      }));
-    } catch (e) {}
-
-    completeOnboarding({
-      name: 'Alex Patel',
-      email: 'alex@ritual.health',
-      age: 24,
-      heightFeet: 5,
-      heightInches: 10,
-      weightKg: 72,
-      gender: 'male',
-      bmi: 22.8,
-      bmiCategory: 'Healthy Normal',
-      bmr: 1720,
-      maintenanceCalories: 2490,
-      primaryGoal: 'hair_health',
-      healthGoal: 'hypertrophy_strength',
-      trainingExperience: 'intermediate',
-      dailyTime: '5_min',
-      alreadyOwnsProducts: true,
-      isOnboarded: true
-    });
-    setActiveTab('home');
-  };
-
   const handleFinishOnboarding = () => {
     try {
       localStorage.setItem('ritual_macro_targets', JSON.stringify({
@@ -164,14 +131,6 @@ export const OnboardingFlow: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleQuickSkip}
-              className="px-3.5 py-1.5 rounded-full bg-cream-50 hover:bg-mint-100 text-xs font-bold text-forest-900 border border-mint-200 transition active:scale-95 shadow-2xs"
-            >
-              <span>Quick Demo Profile ›</span>
-            </button>
-
             <button
               type="button"
               onClick={() => setShowApiKeyModal(true)}

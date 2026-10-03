@@ -4,7 +4,6 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { ToastContainer } from './components/common/Toast';
-import { DemoBar } from './components/demo/DemoBar';
 import { InstallPrompt } from './components/common/InstallPrompt';
 import { HomeDashboardView } from './components/home/HomeDashboardView';
 import { DocumentStoreAIView } from './components/documents/DocumentStoreAIView';
@@ -22,7 +21,6 @@ const MainLayout: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#FBF9F5] text-charcoal-900">
         <ToastContainer />
-        <DemoBar />
         <InstallPrompt />
         <OnboardingFlow />
       </div>
@@ -33,9 +31,6 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-[#FBF9F5] flex flex-col text-charcoal-900 font-sans">
       <ToastContainer />
       
-      {/* Reviewer Top Bar */}
-      <DemoBar />
-
       {/* Top Header & Desktop Navigation */}
       <Header />
 

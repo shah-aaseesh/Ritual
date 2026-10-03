@@ -19,6 +19,7 @@ import { PRESET_FOODS, DEFAULT_MACRO_TARGETS, DEMO_FOOD_LOGS } from '../../data/
 import { useApp } from '../../context/AppContext';
 import { FoodCameraModal } from './FoodCameraModal';
 import { SocialShareModal } from '../common/SocialShareModal';
+import { saveNutritionLogToSupabase } from '../../services/supabase';
 
 type CalorieSubView = 'hub' | 'meal_detail' | 'hydration' | 'food_library' | 'targets' | 'custom_food';
 
@@ -77,15 +78,6 @@ export const CalorieTrackerView: React.FC = () => {
   const [customCarbs, setCustomCarbs] = useState<number>(20);
   const [customFat, setCustomFat] = useState<number>(6);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('ritual_food_logs', JSON.stringify(foodLogs));
-  }, [foodLogs]);
-
-  useEffect(() => {
-    localStorage.setItem('ritual_water_ml', waterMl.toString());
-  }, [waterMl]);
-
   // Aggregate current daily macros
   const currentMacros = useMemo(() => {
     return foodLogs.reduce((acc, entry) => {
@@ -98,6 +90,17 @@ export const CalorieTrackerView: React.FC = () => {
       };
     }, { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 });
   }, [foodLogs]);
+
+  // Save to localStorage & Supabase
+  useEffect(() => {
+    localStorage.setItem('ritual_food_logs', JSON.stringify(foodLogs));
+    const todayStr = new Date().toISOString().split('T')[0];
+    saveNutritionLogToSupabase(todayStr, foodLogs, { ...currentMacros, waterMl });
+  }, [foodLogs, waterMl, currentMacros]);
+
+  useEffect(() => {
+    localStorage.setItem('ritual_water_ml', waterMl.toString());
+  }, [waterMl]);
 
   const calRemaining = Math.max(0, macroTargets.calories - currentMacros.calories);
   const calPercentage = Math.min(100, Math.round((currentMacros.calories / macroTargets.calories) * 100));

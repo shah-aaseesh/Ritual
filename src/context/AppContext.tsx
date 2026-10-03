@@ -17,6 +17,12 @@ import {
   getMissedAdherenceHistory 
 } from '../data/demoState';
 import { DEMO_HEALTH_DOCUMENTS } from '../data/demoDocuments';
+import { 
+  syncProfileToSupabase, 
+  fetchProfileFromSupabase, 
+  syncRoutineStepsToSupabase, 
+  saveProgressEntryToSupabase 
+} from '../services/supabase';
 
 export type NavTab = 'home' | 'workout' | 'calories' | 'mythbuster' | 'documents' | 'today' | 'gym' | 'labellens' | 'smartshelf' | 'progress';
 export type AppPillar = 'wellness' | 'health';
@@ -189,9 +195,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [showRoutineRescue, setShowRoutineRescue] = useState<boolean>(false);
 
-  // LocalStorage Sync
+  // Fetch profile from Supabase on initial load if available
+  useEffect(() => {
+    fetchProfileFromSupabase().then((remoteProfile) => {
+      if (remoteProfile && remoteProfile.isOnboarded) {
+        setProfile(prev => ({ ...prev, ...remoteProfile }));
+      }
+    });
+  }, []);
+
+  // Supabase + LocalStorage Cloud & Offline Sync
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+    if (profile.isOnboarded) {
+      syncProfileToSupabase(profile);
+    }
   }, [profile]);
 
   useEffect(() => {
@@ -204,10 +222,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.ROUTINE, JSON.stringify(routineSteps));
+    if (routineSteps.length > 0) {
+      syncRoutineStepsToSupabase(routineSteps);
+    }
   }, [routineSteps]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(progressHistory));
+    if (progressHistory.length > 0) {
+      const latest = progressHistory[progressHistory.length - 1];
+      saveProgressEntryToSupabase(latest);
+    }
   }, [progressHistory]);
 
   useEffect(() => {

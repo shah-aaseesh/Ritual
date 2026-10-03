@@ -36,6 +36,7 @@ import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { useApp } from '../../context/AppContext';
 import { HumanBodyModel } from './HumanBodyModel';
 import { SocialShareModal } from '../common/SocialShareModal';
+import { saveWorkoutToSupabase } from '../../services/supabase';
 
 type GymTab = 'builder' | 'live' | 'splits' | 'history' | 'supplements';
 
@@ -454,6 +455,7 @@ export const GymTrackerView: React.FC = () => {
     };
 
     setWorkoutHistory(prev => [session, ...prev]);
+    saveWorkoutToSupabase(session);
     setIsWorkoutActive(false);
     setIsRestTimerRunning(false);
     setFinishedSummary(session);
