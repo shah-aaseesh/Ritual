@@ -294,4 +294,4 @@ export interface HealthDocument {
     recommendedSupplementIds: string[];
   };
 }
-
+export * from './share';

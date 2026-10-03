@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
-import { WellnessGoal, HealthGoal, DailyTimeCommitment } from '../../types';
-import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Download } from 'lucide-react';
+import { WellnessGoal, HealthGoal, DailyTimeCommitment, ShareCardData } from '../../types';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, Check, X, Download, Share2 } from 'lucide-react';
+import { SocialShareModal } from './SocialShareModal';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar } = useApp();
+  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory } = useApp();
   const [showSettings, setShowSettings] = useState(false);
+  const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
   const [tempGoal, setTempGoal] = useState<WellnessGoal>(profile.primaryGoal);
   const [tempHealthGoal, setTempHealthGoal] = useState<HealthGoal>(profile.healthGoal || 'hypertrophy_strength');
   const [tempTime, setTempTime] = useState<DailyTimeCommitment>(profile.dailyTime);
@@ -93,13 +95,50 @@ export const Header: React.FC = () => {
 
           {/* Right Action: Goal Chip & Profile Settings */}
           <div className="flex items-center gap-2">
+            {/* Screenshot & Strava Share Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const completedCount = routineSteps.filter(s => s.isCompletedToday).length;
+                const totalSteps = routineSteps.length;
+                const rate = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
+                const streak = progressHistory.filter(p => p.completionRate >= 0.75).length + (rate >= 75 ? 1 : 0);
+
+                const data: ShareCardData = {
+                  type: activePillar === 'health' ? 'workout' : 'protocol',
+                  title: activePillar === 'health' ? 'Daily Athletic & Kinetic Stack' : 'Daily Bio-Protocol Check-In',
+                  subtitle: `Tracked on Ritual • ${profile.name || 'Athlete'}`,
+                  date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  primaryStat: {
+                    label: activePillar === 'health' ? 'PERFORMANCE SCORE' : 'DAILY ADHERENCE',
+                    value: `${rate}%`,
+                    unit: 'LOCKED'
+                  },
+                  secondaryStats: [
+                    { label: 'STREAK', value: `${streak} Days`, highlight: true },
+                    { label: 'HABITS DONE', value: `${completedCount}/${totalSteps}` },
+                    { label: 'HEALTH PILLAR', value: activePillar.toUpperCase() }
+                  ],
+                  highlightItems: ['Habit Consistency', 'Clinical Formulations', 'Biomarker Tracking'],
+                  badgeText: '⚡ RITUAL // PERFORMANCE LAB',
+                  tagline: 'Evidence-Based Longevity & Fitness'
+                };
+                setShareModalData(data);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FC5200] hover:bg-[#E04800] text-xs font-black text-white transition active:scale-95 shadow-soft"
+              title="Screenshot & Share Strava-Style Card"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Share / Snap</span>
+            </button>
+
             {/* Install PWA App Button */}
             <button
               type="button"
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('open-install-prompt'));
               }}
-              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 border border-mint-300 text-xs font-black text-forest-950 transition active:scale-95 shadow-xs"
+              className="hidden sm:flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 border border-mint-300 text-xs font-black text-forest-950 transition active:scale-95 shadow-xs"
               title="Install Ritual App on Phone"
             >
               <Download className="w-3.5 h-3.5 text-forest-900 stroke-[2.5]" />
@@ -254,6 +293,15 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Strava-Style Social Share Modal */}
+      {shareModalData && (
+        <SocialShareModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          data={shareModalData}
+        />
       )}
     </>
   );

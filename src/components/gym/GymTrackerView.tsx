@@ -21,9 +21,10 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Rotate3d
+  Rotate3d,
+  Share2
 } from 'lucide-react';
-import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession } from '../../types';
+import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession, ShareCardData } from '../../types';
 import { 
   PRESET_EXERCISES, 
   PRESET_ROUTINE_TEMPLATES, 
@@ -34,6 +35,7 @@ import {
 import { MOSAIC_PRODUCTS_CATALOG } from '../../data/mosaicProducts';
 import { useApp } from '../../context/AppContext';
 import { HumanBodyModel } from './HumanBodyModel';
+import { SocialShareModal } from '../common/SocialShareModal';
 
 type GymTab = 'builder' | 'live' | 'splits' | 'history' | 'supplements';
 
@@ -79,6 +81,7 @@ export const GymTrackerView: React.FC = () => {
 
   // Finished Workout Summary Modal
   const [finishedSummary, setFinishedSummary] = useState<WorkoutSession | null>(null);
+  const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
 
   // Technique Cues Open Accordion Map
   const [expandedCues, setExpandedCues] = useState<Record<string, boolean>>({});
@@ -407,6 +410,46 @@ export const GymTrackerView: React.FC = () => {
     setIsRestTimerRunning(false);
     setFinishedSummary(session);
     showToast(`🏁 Workout Complete! ${totalVolume.toLocaleString()} kg lifted!`, 'success');
+  };
+
+  // Helper to convert any workout session into a rich Strava-style Social Share card data
+  const createWorkoutShareData = (session: WorkoutSession): ShareCardData => {
+    const muscles = Array.from(new Set(session.exercises.map(e => e.muscleGroup)));
+    const topExercises = session.exercises.map(e => e.exerciseName).slice(0, 3);
+    
+    // Find highest single weight lifted in session
+    let maxWeight = 0;
+    let maxWeightExercise = '';
+    session.exercises.forEach(ex => {
+      ex.sets.forEach(s => {
+        if (s.isCompleted && s.weightKg > maxWeight) {
+          maxWeight = s.weightKg;
+          maxWeightExercise = ex.exerciseName;
+        }
+      });
+    });
+
+    return {
+      type: 'workout',
+      title: session.title || 'Strength & Hypertrophy Session',
+      subtitle: `${session.durationMinutes} min workout • ${session.totalSets} completed sets`,
+      date: session.date,
+      primaryStat: {
+        label: 'TOTAL VOLUME',
+        value: session.totalVolumeKg,
+        unit: 'KG'
+      },
+      secondaryStats: [
+        { label: 'DURATION', value: `${session.durationMinutes}m` },
+        { label: 'SETS DONE', value: session.totalSets },
+        { label: 'EST. BURN', value: `${Math.round(session.durationMinutes * 7.5)} kcal`, highlight: true }
+      ],
+      targetMuscles: muscles,
+      highlightItems: topExercises,
+      personalRecord: maxWeight > 0 ? `Top Lift: ${maxWeight}kg (${maxWeightExercise})` : undefined,
+      badgeText: '⚡ WORKOUT COMPLETED',
+      tagline: 'Hypertrophy & Strength'
+    };
   };
 
   // Live Metrics
@@ -1306,13 +1349,22 @@ export const GymTrackerView: React.FC = () => {
                       <h3 className="text-base font-black text-forest-950 mt-1">{session.title}</h3>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs font-mono">
+                    <div className="flex items-center gap-2 text-xs font-mono">
                       <div className="px-3 py-1 rounded-xl bg-white border border-mint-100 text-charcoal-800 font-bold shadow-soft">
                         ⏱️ {session.durationMinutes} mins
                       </div>
                       <div className="px-3 py-1 rounded-xl bg-mint-100 text-forest-900 border border-mint-200 font-black">
                         ⚡ {session.totalVolumeKg.toLocaleString()} kg Lifted
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setShareModalData(createWorkoutShareData(session))}
+                        className="p-1.5 px-3 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1.5"
+                        title="Generate Strava-Style Share Card"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Share Card</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1732,18 +1784,42 @@ export const GymTrackerView: React.FC = () => {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setFinishedSummary(null);
-                setActiveTab('history');
-              }}
-              className="w-full py-3.5 rounded-2xl bg-forest-900 hover:bg-forest-800 text-white font-black text-xs sm:text-sm transition active:scale-95 shadow-soft"
-            >
-              View In Session History ›
-            </button>
+            {/* Action Buttons: Strava Share & History */}
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const data = createWorkoutShareData(finishedSummary);
+                  setShareModalData(data);
+                }}
+                className="w-full py-4 rounded-2xl bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-sm transition active:scale-95 shadow-lg shadow-[#FC5200]/25 flex items-center justify-center gap-2"
+              >
+                <Share2 className="w-5 h-5" />
+                <span>Generate Strava-Style Share Card 📸</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFinishedSummary(null);
+                  setActiveTab('history');
+                }}
+                className="w-full py-3 rounded-2xl bg-cream-100 hover:bg-cream-200 text-forest-950 font-bold text-xs transition active:scale-95"
+              >
+                View In Session History ›
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Strava-Style Social Share Modal */}
+      {shareModalData && (
+        <SocialShareModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          data={shareModalData}
+        />
       )}
     </div>
   );

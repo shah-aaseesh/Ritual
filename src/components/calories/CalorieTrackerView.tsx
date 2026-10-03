@@ -11,12 +11,14 @@ import {
   Flame, 
   Search, 
   Sliders,
-  Camera
+  Camera,
+  Share2
 } from 'lucide-react';
-import { FoodItem, FoodLogEntry, MealCategory, DailyMacroTarget } from '../../types';
+import { FoodItem, FoodLogEntry, MealCategory, DailyMacroTarget, ShareCardData } from '../../types';
 import { PRESET_FOODS, DEFAULT_MACRO_TARGETS, DEMO_FOOD_LOGS } from '../../data/calorieData';
 import { useApp } from '../../context/AppContext';
 import { FoodCameraModal } from './FoodCameraModal';
+import { SocialShareModal } from '../common/SocialShareModal';
 
 type CalorieSubView = 'hub' | 'meal_detail' | 'hydration' | 'food_library' | 'targets' | 'custom_food';
 
@@ -27,6 +29,7 @@ export const CalorieTrackerView: React.FC = () => {
   const [subView, setSubView] = useState<CalorieSubView>('hub');
   const [activeMealCategory, setActiveMealCategory] = useState<MealCategory>('breakfast');
   const [isCameraModalOpen, setIsCameraModalOpen] = useState<boolean>(false);
+  const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
 
   // Macro Targets (dynamically calibrated from user's onboarding profile or stored preferences)
   const [macroTargets, setMacroTargets] = useState<DailyMacroTarget>(() => {
@@ -241,6 +244,37 @@ export const CalorieTrackerView: React.FC = () => {
                 >
                   <Camera className="w-3.5 h-3.5 text-mint-300" />
                   <span>Snap Meal (AI Vision)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const data: ShareCardData = {
+                      type: 'nutrition',
+                      title: 'Daily Nutrition & Fuel Intake',
+                      subtitle: `${currentMacros.calories} / ${macroTargets.calories} kcal consumed`,
+                      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                      primaryStat: {
+                        label: 'PROTEIN ACHIEVED',
+                        value: `${currentMacros.proteinG}g`,
+                        unit: `(${proteinPercentage}% Goal)`
+                      },
+                      secondaryStats: [
+                        { label: 'CALORIES', value: `${currentMacros.calories} kcal`, highlight: true },
+                        { label: 'CARBS', value: `${currentMacros.carbsG}g` },
+                        { label: 'HYDRATION', value: `${waterMl}ml` }
+                      ],
+                      highlightItems: ['Macro Calibration', 'Lean Protein Target', `${waterMl}ml Clean Hydration`],
+                      badgeText: '🥗 NUTRITION TARGET HIT',
+                      tagline: 'Evidence-Based Nutrition Stack'
+                    };
+                    setShareModalData(data);
+                  }}
+                  className="px-4 py-2 rounded-full bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-xs transition shadow-soft flex items-center gap-1.5 active:scale-95"
+                  title="Share Strava-Style Nutrition Card"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share Card</span>
                 </button>
 
                 <button
@@ -985,6 +1019,15 @@ export const CalorieTrackerView: React.FC = () => {
         defaultMeal={activeMealCategory}
         onFoodLogged={(meal, food, quantity) => handleLogFood(food, quantity, meal)}
       />
+
+      {/* Strava-Style Social Share Modal */}
+      {shareModalData && (
+        <SocialShareModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          data={shareModalData}
+        />
+      )}
     </div>
   );
 };

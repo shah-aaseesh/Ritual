@@ -5,8 +5,11 @@ import {
   Calendar, 
   Camera, 
   Plus, 
-  Sparkles
+  Sparkles,
+  Share2
 } from 'lucide-react';
+import { SocialShareModal } from '../common/SocialShareModal';
+import { ShareCardData } from '../../types';
 
 export const ProgressView: React.FC = () => {
   const { progressHistory, routineSteps, addProgressEntry, showToast } = useApp();
@@ -28,11 +31,38 @@ export const ProgressView: React.FC = () => {
   );
 
   const [isCheckInOpen, setIsCheckInOpen] = useState<boolean>(true);
+  const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
 
   // 7-day consistency calculation
   const recent7 = progressHistory.slice(-7);
   const completedStepsCount = routineSteps.filter(s => s.isCompletedToday).length;
   const currentCompletionRate = routineSteps.length > 0 ? completedStepsCount / routineSteps.length : 0;
+  const avgCompletion = recent7.length > 0 
+    ? Math.round((recent7.reduce((acc, curr) => acc + curr.completionRate, 0) / recent7.length) * 100) 
+    : 0;
+  const totalCheckIns = progressHistory.length;
+
+  const createMilestoneShareData = (): ShareCardData => {
+    return {
+      type: 'milestone',
+      title: '7-Day Consistency Milestone',
+      subtitle: `${avgCompletion}% average adherence across 7 days`,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      primaryStat: {
+        label: 'CONSISTENCY SCORE',
+        value: `${avgCompletion}%`,
+        unit: '7-DAY'
+      },
+      secondaryStats: [
+        { label: 'CHECK-INS', value: `${totalCheckIns} Total` },
+        { label: 'TODAY', value: `${Math.round(currentCompletionRate * 100)}%`, highlight: true },
+        { label: 'HABIT STACK', value: `${routineSteps.length} Daily` }
+      ],
+      highlightItems: ['Habit Consistency', 'Clinical Protocols', 'Daily Journal'],
+      badgeText: '🏆 MILESTONE UNLOCKED',
+      tagline: 'Discipline Over Motivation'
+    };
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -96,16 +126,27 @@ export const ProgressView: React.FC = () => {
 
       {/* 7-Day Consistency Visualization */}
       <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border border-mint-200/80 shadow-card space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-forest-800" />
             <h3 className="text-lg font-black text-forest-950">
               7-Day Consistency Trend
             </h3>
           </div>
-          <span className="text-xs font-mono font-bold text-charcoal-500">
-            Past 7 check-ins
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-charcoal-500">
+              Past 7 check-ins
+            </span>
+            <button
+              type="button"
+              onClick={() => setShareModalData(createMilestoneShareData())}
+              className="p-1.5 px-3 rounded-xl bg-[#FC5200] hover:bg-[#E04800] text-white font-black text-xs transition active:scale-95 shadow-soft flex items-center gap-1.5"
+              title="Share Consistency Card"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share Card</span>
+            </button>
+          </div>
         </div>
 
         {/* Bar Chart Visualization */}
@@ -324,6 +365,15 @@ export const ProgressView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Strava-Style Social Share Modal */}
+      {shareModalData && (
+        <SocialShareModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          data={shareModalData}
+        />
+      )}
     </div>
   );
 };
