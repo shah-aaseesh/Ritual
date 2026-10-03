@@ -212,18 +212,18 @@ export const OnboardingFlow: React.FC = () => {
                 Personal Details & Body Stats
               </h2>
               <p className="text-xs text-charcoal-600">
-                We calibrate your exact daily energy needs, protein goals, and routine steps from your body metrics.
+                We calibrate your exact daily energy needs, protein targets, and routine protocols from your body metrics.
               </p>
             </div>
 
-            {/* Input Card */}
-            <div className="p-5 sm:p-6 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-4">
+            {/* Main Details Card */}
+            <div className="p-5 sm:p-7 rounded-[2rem] bg-white border border-mint-200/90 shadow-card space-y-5">
               
               {/* Row 1: Name & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                    <User className="w-3.5 h-3.5 text-forest-800" />
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <User className="w-3.5 h-3.5 text-forest-700" />
                     <span>Your Name</span>
                   </label>
                   <input
@@ -231,41 +231,41 @@ export const OnboardingFlow: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Alex Patel"
-                    className="w-full px-4 py-2.5 rounded-xl bg-cream-50/70 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-mint-500 font-medium"
+                    className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-bold"
                     autoFocus
                   />
                 </div>
 
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                    <Mail className="w-3.5 h-3.5 text-forest-800" />
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <Mail className="w-3.5 h-3.5 text-forest-700" />
                     <span>Email Address</span>
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="alex@example.com"
-                    className="w-full px-4 py-2.5 rounded-xl bg-cream-50/70 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-mint-500 font-medium font-mono"
+                    placeholder="alex@gmail.com"
+                    className="w-full px-4 py-3 rounded-2xl bg-cream-50/80 border border-mint-200 text-charcoal-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-700 font-medium font-mono"
                   />
                 </div>
               </div>
 
               {/* Row 2: Biological Sex & Age */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                    <Activity className="w-3.5 h-3.5 text-forest-800" />
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <Activity className="w-3.5 h-3.5 text-forest-700" />
                     <span>Biological Sex</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 bg-cream-50/80 p-1.5 rounded-2xl border border-mint-200">
                     <button
                       type="button"
                       onClick={() => setGender('male')}
-                      className={`py-2 rounded-xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${
+                      className={`py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${
                         gender === 'male'
-                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                          : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                          ? 'bg-forest-900 text-white shadow-soft font-black'
+                          : 'text-charcoal-600 hover:text-forest-950 font-bold'
                       }`}
                     >
                       <span>♂ Male</span>
@@ -273,10 +273,10 @@ export const OnboardingFlow: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setGender('female')}
-                      className={`py-2 rounded-xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${
+                      className={`py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${
                         gender === 'female'
-                          ? 'bg-forest-900 text-white border-forest-900 shadow-soft'
-                          : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
+                          ? 'bg-forest-900 text-white shadow-soft font-black'
+                          : 'text-charcoal-600 hover:text-forest-950 font-bold'
                       }`}
                     >
                       <span>♀ Female</span>
@@ -284,94 +284,94 @@ export const OnboardingFlow: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500 mb-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-forest-800" />
-                    <span>Age: <strong className="text-forest-950 font-black">{age} years</strong></span>
+                <div className="space-y-1.5">
+                  <label className="flex items-center justify-between text-xs font-bold text-forest-950">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-forest-700" />
+                      <span>Age</span>
+                    </span>
+                    <span className="text-xs font-mono font-bold text-charcoal-500">{age} years old</span>
                   </label>
-                  <div className="flex items-center gap-1.5">
-                    {[18, 22, 26, 30, 35, 40].map((a) => (
-                      <button
-                        key={a}
-                        type="button"
-                        onClick={() => setAge(a)}
-                        className={`flex-1 py-2 rounded-xl border text-xs font-bold transition ${
-                          age === a
-                            ? 'bg-forest-900 text-white border-forest-900 font-black shadow-xs'
-                            : 'bg-cream-50/70 text-charcoal-700 border-mint-200 hover:bg-mint-50'
-                        }`}
-                      >
-                        {a}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAge(a => Math.max(14, a - 1))}
+                      className="w-10 h-11 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm text-forest-950 flex items-center justify-center active:scale-95 transition"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="14"
+                      max="100"
+                      value={age}
+                      onChange={(e) => setAge(Math.max(14, Math.min(100, parseInt(e.target.value) || 20)))}
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-cream-50/80 border border-mint-200 text-center text-sm font-black text-forest-950 font-mono focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAge(a => Math.min(100, a + 1))}
+                      className="w-10 h-11 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm text-forest-950 flex items-center justify-center active:scale-95 transition"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Row 3: Height in Feet & Inches */}
-              <div className="space-y-2 pt-1 border-t border-mint-100">
+              {/* Row 3: Height (Feet & Inches) */}
+              <div className="space-y-2 pt-2 border-t border-mint-100">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500">
-                    <Ruler className="w-3.5 h-3.5 text-forest-800" />
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <Ruler className="w-3.5 h-3.5 text-forest-700" />
                     <span>Height</span>
                   </label>
                   <span className="text-xs font-mono font-black text-forest-900 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
-                    {heightFeet}' {heightInches}" ({metrics.heightCm} cm)
+                    {heightFeet}' {heightInches}" • {metrics.heightCm} cm
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-[10px] font-mono text-charcoal-500 block mb-1">Feet</span>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[4, 5, 6, 7].map((ft) => (
-                        <button
-                          key={ft}
-                          type="button"
-                          onClick={() => setHeightFeet(ft)}
-                          className={`py-1.5 rounded-xl border text-xs font-bold transition ${
-                            heightFeet === ft
-                              ? 'bg-forest-900 text-white border-forest-900 font-black'
-                              : 'bg-cream-50 text-charcoal-700 border-mint-200 hover:bg-mint-50'
-                          }`}
-                        >
-                          {ft} ft
-                        </button>
-                      ))}
-                    </div>
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-bold text-charcoal-500">Feet</span>
+                    <select
+                      value={heightFeet}
+                      onChange={(e) => setHeightFeet(parseInt(e.target.value) || 5)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-cream-50/80 border border-mint-200 text-xs sm:text-sm font-black text-forest-950 focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    >
+                      <option value={4}>4 Feet</option>
+                      <option value={5}>5 Feet</option>
+                      <option value={6}>6 Feet</option>
+                      <option value={7}>7 Feet</option>
+                    </select>
                   </div>
 
-                  <div>
-                    <span className="text-[10px] font-mono text-charcoal-500 block mb-1">Inches</span>
-                    <div className="grid grid-cols-6 gap-1">
-                      {[0, 2, 4, 6, 8, 10].map((inc) => (
-                        <button
-                          key={inc}
-                          type="button"
-                          onClick={() => setHeightInches(inc)}
-                          className={`py-1.5 rounded-xl border text-xs font-bold transition ${
-                            heightInches === inc
-                              ? 'bg-forest-900 text-white border-forest-900 font-black'
-                              : 'bg-cream-50 text-charcoal-700 border-mint-200 hover:bg-mint-50'
-                          }`}
-                        >
-                          {inc}"
-                        </button>
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-bold text-charcoal-500">Inches</span>
+                    <select
+                      value={heightInches}
+                      onChange={(e) => setHeightInches(parseInt(e.target.value) || 0)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-cream-50/80 border border-mint-200 text-xs sm:text-sm font-black text-forest-950 focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    >
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((inc) => (
+                        <option key={inc} value={inc}>
+                          {inc} Inches ({Math.round(((heightFeet * 12) + inc) * 2.54)} cm)
+                        </option>
                       ))}
-                    </div>
+                    </select>
                   </div>
                 </div>
               </div>
 
               {/* Row 4: Body Weight in Kg */}
-              <div className="space-y-2 pt-1 border-t border-mint-100">
+              <div className="space-y-2 pt-2 border-t border-mint-100">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-charcoal-500">
-                    <Scale className="w-3.5 h-3.5 text-forest-800" />
-                    <span>Weight</span>
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-forest-950">
+                    <Scale className="w-3.5 h-3.5 text-forest-700" />
+                    <span>Body Weight</span>
                   </label>
                   <span className="text-xs font-mono font-black text-forest-900 bg-mint-100 px-2.5 py-0.5 rounded-full border border-mint-200">
-                    {weightKg} kg ({(weightKg * 2.20462).toFixed(1)} lbs)
+                    {weightKg} kg • {(weightKg * 2.20462).toFixed(1)} lbs
                   </span>
                 </div>
 
@@ -383,49 +383,57 @@ export const OnboardingFlow: React.FC = () => {
                     step="1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(parseInt(e.target.value))}
-                    className="flex-1 accent-forest-900 h-2 bg-mint-100 rounded-lg cursor-pointer"
+                    className="flex-1 accent-forest-900 h-2.5 bg-mint-100 rounded-lg cursor-pointer"
                   />
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => setWeightKg(w => Math.max(40, w - 1))}
-                      className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm flex items-center justify-center active:scale-95"
+                      className="w-9 h-9 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm text-forest-950 flex items-center justify-center active:scale-95 transition"
                     >
                       -
                     </button>
-                    <span className="w-12 text-center text-xs font-mono font-black text-forest-950">
+                    <span className="w-14 text-center text-xs font-mono font-black text-forest-950 bg-cream-50 py-2 rounded-xl border border-mint-200">
                       {weightKg} kg
                     </span>
                     <button
                       type="button"
                       onClick={() => setWeightKg(w => Math.min(140, w + 1))}
-                      className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm flex items-center justify-center active:scale-95"
+                      className="w-9 h-9 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 font-black text-sm text-forest-950 flex items-center justify-center active:scale-95 transition"
                     >
                       +
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Live Calculation Preview Strip */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-mint-50/90 border border-mint-200 flex items-center justify-between gap-3 shadow-soft">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-forest-900 text-white flex items-center justify-center shrink-0">
-                  <Flame className="w-4 h-4 text-mint-300" />
+              {/* Integrated Real-time Metabolic Health Dashboard Card */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-forest-900 text-white space-y-3 shadow-lg shadow-forest-950/10">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-mint-400" />
+                    <span className="font-bold text-mint-300 uppercase tracking-wider">Estimated Metabolic Targets</span>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border font-mono ${metrics.bmiColor}`}>
+                    {metrics.bmiCategory}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
-                    Metabolic Target Estimate
-                  </span>
-                  <span className="text-xs font-black text-forest-950">
-                    BMI {metrics.bmi} • {metrics.maintenanceCalories} kcal/day • {metrics.proteinG}g Protein
-                  </span>
+
+                <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                  <div className="p-2.5 rounded-xl bg-forest-800/80 border border-forest-700/60 space-y-0.5">
+                    <span className="text-[10px] text-cream-300/80 block uppercase tracking-wider font-bold">BMI</span>
+                    <span className="text-base font-black text-white font-mono">{metrics.bmi}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-forest-800/80 border border-forest-700/60 space-y-0.5">
+                    <span className="text-[10px] text-cream-300/80 block uppercase tracking-wider font-bold">Daily Burn</span>
+                    <span className="text-base font-black text-mint-300 font-mono">{metrics.maintenanceCalories} <span className="text-[10px]">kcal</span></span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-forest-800/80 border border-forest-700/60 space-y-0.5">
+                    <span className="text-[10px] text-cream-300/80 block uppercase tracking-wider font-bold">Protein Target</span>
+                    <span className="text-base font-black text-white font-mono">{metrics.proteinG}g</span>
+                  </div>
                 </div>
               </div>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border shrink-0 ${metrics.bmiColor}`}>
-                {metrics.bmiCategory}
-              </span>
             </div>
           </div>
         )}
