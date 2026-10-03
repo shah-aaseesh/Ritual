@@ -5,7 +5,6 @@ import { SplashScreen } from './components/common/SplashScreen';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { ToastContainer } from './components/common/Toast';
-import { InstallPrompt } from './components/common/InstallPrompt';
 import { HomeDashboardView } from './components/home/HomeDashboardView';
 import { DocumentStoreAIView } from './components/documents/DocumentStoreAIView';
 import { TodayView } from './components/today/TodayView';
@@ -27,7 +26,6 @@ const MainLayout: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#FBF9F5] text-charcoal-900">
         <ToastContainer />
-        <InstallPrompt />
         <OnboardingFlow />
       </div>
     );
@@ -54,7 +52,6 @@ const MainLayout: React.FC = () => {
 
       {/* Mobile-only Bottom Navigation */}
       <BottomNav />
-      <InstallPrompt />
     </div>
   );
 };

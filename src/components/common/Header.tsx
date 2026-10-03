@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { ShareCardData } from '../../types';
-import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Share2, LogOut, User } from 'lucide-react';
 import { SocialShareModal } from './SocialShareModal';
 import { supabase } from '../../services/supabase';
 
@@ -228,19 +228,6 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline">Share / Snap</span>
             </button>
 
-            {/* Install PWA App Button */}
-            <button
-              type="button"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('open-install-prompt'));
-              }}
-              className="hidden sm:flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-mint-100 hover:bg-mint-200 border border-mint-300 text-xs font-black text-forest-950 transition active:scale-95 shadow-xs"
-              title="Install Ritual App on Phone"
-            >
-              <Download className="w-3.5 h-3.5 text-forest-900 stroke-[2.5]" />
-              <span className="text-[11px] sm:text-xs font-black text-forest-950">Install</span>
-            </button>
-
             {/* Profile & Settings Trigger */}
             <button
               onClick={() => {
@@ -264,17 +251,6 @@ export const Header: React.FC = () => {
                 {profile.name || authUser?.name || 'Profile'}
               </span>
               <Settings className="w-3.5 h-3.5 text-charcoal-400" />
-            </button>
-
-            {/* Logout Button */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold transition active:scale-95 shadow-soft"
-              title={`Logged in as ${authUser?.email || profile.email || 'User'} — Click to Log Out`}
-            >
-              <LogOut className="w-3.5 h-3.5 text-rose-600" />
-              <span className="hidden sm:inline">Log Out</span>
             </button>
           </div>
         </div>
@@ -449,21 +425,10 @@ export const Header: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleLogout();
-                    setShowSettings(false);
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold transition shrink-0"
-                >
-                  Log Out
-                </button>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center gap-2">
+              <div className="pt-1 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowSettings(false)}
@@ -477,6 +442,21 @@ export const Header: React.FC = () => {
                   className="flex-1 py-3 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-extrabold text-xs shadow-soft transition active:scale-95"
                 >
                   Save & Calibrate
+                </button>
+              </div>
+
+              {/* Dedicated Log Out Button Under Profile Drawer */}
+              <div className="pt-2 border-t border-mint-200/80">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout();
+                    setShowSettings(false);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95"
+                >
+                  <LogOut className="w-4 h-4 text-rose-600" />
+                  <span>Log Out of Account</span>
                 </button>
               </div>
             </div>
