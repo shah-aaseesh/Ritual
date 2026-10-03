@@ -7,7 +7,9 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const InstallPrompt: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    return (typeof window !== 'undefined' ? (window as any).deferredInstallPrompt : null) || null;
+  });
   const [isIOS, setIsIOS] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -36,41 +38,70 @@ export const InstallPrompt: React.FC = () => {
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as any).deferredInstallPrompt = e;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
+      (window as any).deferredInstallPrompt = null;
       setDeferredPrompt(null);
       setShowInstallModal(false);
     };
 
-    const handleCustomOpen = () => {
+    const handleCustomOpen = async () => {
+      const prompt = (window as any).deferredInstallPrompt || deferredPrompt;
+      if (prompt) {
+        try {
+          await prompt.prompt();
+          const choice = await prompt.userChoice;
+          if (choice.outcome === 'accepted') {
+            setIsInstalled(true);
+            (window as any).deferredInstallPrompt = null;
+            setDeferredPrompt(null);
+          }
+          return;
+        } catch (err) {
+          console.warn('Prompt error:', err);
+        }
+      }
       setShowInstallModal(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('open-install-prompt', handleCustomOpen);
+    window.addEventListener('pwa-prompt-ready', () => {
+      if ((window as any).deferredInstallPrompt) {
+        setDeferredPrompt((window as any).deferredInstallPrompt);
+      }
+    });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('open-install-prompt', handleCustomOpen);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
+    const prompt = (window as any).deferredInstallPrompt || deferredPrompt;
+    if (prompt) {
+      try {
+        await prompt.prompt();
+        const choice = await prompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          setIsInstalled(true);
+          (window as any).deferredInstallPrompt = null;
+          setDeferredPrompt(null);
+          setShowInstallModal(false);
+        }
+        return;
+      } catch (err) {
+        console.warn('Native install prompt invocation error:', err);
       }
-      setDeferredPrompt(null);
-    } else {
-      setShowInstallModal(true);
     }
+    setShowInstallModal(true);
   };
 
   if (isInstalled) {
