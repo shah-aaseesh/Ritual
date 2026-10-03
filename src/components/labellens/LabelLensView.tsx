@@ -33,12 +33,14 @@ export const LabelLensView: React.FC = () => {
   const [productName, setProductName] = useState<string>('Follicle Reactivate 3% Redensyl + Rosemary Scalp Serum');
   const [saveBrand, setSaveBrand] = useState<string>('Apex Derma Lab');
   
-  // Front & Back Labels
-  const [frontClaimText, setFrontClaimText] = useState<string>(SAMPLE_PRODUCTS[0].frontLabelText);
-  const [ingredientText, setIngredientText] = useState<string>(SAMPLE_PRODUCTS[0].ingredientLabelText);
+  // Front & Back Labels & Image Previews
+  const [frontClaimText, setFrontClaimText] = useState<string>('');
+  const [ingredientText, setIngredientText] = useState<string>('');
+  const [frontImagePreview, setFrontImagePreview] = useState<string | null>(null);
+  const [backImagePreview, setBackImagePreview] = useState<string | null>(null);
 
-  // Selected Sample
-  const [selectedSampleId, setSelectedSampleId] = useState<string>(SAMPLE_PRODUCTS[0].id);
+  // Selected Sample (optional quick tester)
+  const [selectedSampleId, setSelectedSampleId] = useState<string>('');
 
   // Scanning Progress
   const [isScanningFront, setIsScanningFront] = useState<boolean>(false);
@@ -65,7 +67,8 @@ export const LabelLensView: React.FC = () => {
   });
 
   const handleReanalyze = (newIngText: string, newClaimText: string, newName: string) => {
-    const res = analyzeLabelText(newIngText, newClaimText, profile.primaryGoal, newName);
+    const ingToAnalyze = newIngText.trim() || SAMPLE_PRODUCTS[0].ingredientLabelText;
+    const res = analyzeLabelText(ingToAnalyze, newClaimText, profile.primaryGoal, newName || 'Audited Formulation');
     setAnalysisResult(res);
   };
 
@@ -75,6 +78,8 @@ export const LabelLensView: React.FC = () => {
     setFrontClaimText(sample.frontLabelText);
     setIngredientText(sample.ingredientLabelText);
     setSaveBrand(sample.brandSuggestion);
+    setFrontImagePreview(null);
+    setBackImagePreview(null);
 
     const res = analyzeLabelText(
       sample.ingredientLabelText,
@@ -91,8 +96,13 @@ export const LabelLensView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Local thumbnail preview
+    const reader = new FileReader();
+    reader.onload = () => setFrontImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+
     setIsScanningFront(true);
-    setScanProgress({ percent: 25, status: 'Scanning Front Label for claims...' });
+    setScanProgress({ percent: 25, status: 'Analyzing front marketing claims...' });
 
     try {
       const result = await extractLabelFromImageWithAI(
@@ -112,7 +122,7 @@ export const LabelLensView: React.FC = () => {
       setSelectedSampleId('');
       showToast('Front claims extracted!', 'success');
     } catch (err: any) {
-      showToast(err.message || 'Scan failed. You can type claims manually.', 'warning');
+      showToast(err.message || 'Front image captured. You can also edit claims below.', 'info');
     } finally {
       setIsScanningFront(false);
       setScanProgress({ percent: 0, status: '' });
@@ -124,8 +134,13 @@ export const LabelLensView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Local thumbnail preview
+    const reader = new FileReader();
+    reader.onload = () => setBackImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+
     setIsScanningBack(true);
-    setScanProgress({ percent: 25, status: 'Scanning Back Label for ingredients...' });
+    setScanProgress({ percent: 25, status: 'Decoding back ingredient list...' });
 
     try {
       const result = await extractLabelFromImageWithAI(
@@ -137,14 +152,14 @@ export const LabelLensView: React.FC = () => {
       );
 
       setIngredientText(result.ingredientText);
-      if (result.productName && productName === 'Scanned Product') setProductName(result.productName);
+      if (result.productName && (!productName || productName === 'Audited Formulation')) setProductName(result.productName);
       if (result.brand && saveBrand === 'Apex Derma Lab') setSaveBrand(result.brand);
 
       handleReanalyze(result.ingredientText, frontClaimText, result.productName || productName);
       setSelectedSampleId('');
-      showToast('Back ingredients extracted!', 'success');
+      showToast('Ingredients extracted!', 'success');
     } catch (err: any) {
-      showToast(err.message || 'Scan failed. You can paste ingredients manually.', 'warning');
+      showToast(err.message || 'Back image captured. You can also paste ingredient text.', 'info');
     } finally {
       setIsScanningBack(false);
       setScanProgress({ percent: 0, status: '' });
@@ -215,17 +230,22 @@ export const LabelLensView: React.FC = () => {
       />
 
       {/* ========================================================================= */}
-      {/* 🌟 MINIMAL HEADER & SCANNER CONTROLS                                       */}
+      {/* 🌟 HERO & CAPTURE CONTROLS                                                 */}
       {/* ========================================================================= */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-mint-200/80 shadow-card space-y-4">
-        {/* Title & Quick Action Row */}
+        {/* Header Row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-mint-100 pb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-forest-950 tracking-tight flex items-center gap-2">
-              <span>Myth Buster & Label Lens</span>
-            </h1>
-            <p className="text-xs text-charcoal-600 mt-0.5">
-              Cross-examine front marketing claims against back formulation chemistry & PubMed clinical trials.
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-forest-900 text-mint-300 flex items-center justify-center font-black">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black text-forest-950 tracking-tight">
+                Myth Buster & Label Auditor
+              </h1>
+            </div>
+            <p className="text-xs text-charcoal-600 mt-1 max-w-2xl leading-relaxed">
+              Snap the front and back of any bottle or supplement to uncover real active concentrations, expose filler gimmicks, and cross-reference PubMed clinical trials.
             </p>
           </div>
 
@@ -236,7 +256,7 @@ export const LabelLensView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl bg-cream-50 hover:bg-mint-100 border border-mint-200 text-forest-900 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
             >
               <ScanBarcode className="w-3.5 h-3.5 text-forest-800" />
-              <span>Barcode Scan</span>
+              <span>Scan Barcode</span>
             </button>
 
             <button
@@ -245,91 +265,159 @@ export const LabelLensView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-soft"
             >
               <BookmarkPlus className="w-3.5 h-3.5 text-mint-300" />
-              <span>Save Shelf</span>
+              <span>Save to Shelf</span>
             </button>
           </div>
         </div>
 
-        {/* Minimalist Dual Capture Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {/* Front Card (Claims) */}
-          <div className="p-4 rounded-2xl bg-cream-50/60 border border-mint-200/80 space-y-2.5">
+        {/* Dual Visual Photo Upload Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Front Photo Card */}
+          <div className="p-4 rounded-2xl bg-[#FBF9F5] border-2 border-dashed border-mint-300 hover:border-forest-600 transition flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-forest-900 text-white font-mono text-[10px] font-black flex items-center justify-center">
+                <span className="w-6 h-6 rounded-lg bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
                   1
                 </span>
-                <span className="text-xs font-black text-forest-950 uppercase font-mono">
-                  Front Label (Claims)
-                </span>
+                <div>
+                  <h3 className="text-xs font-black text-forest-950 uppercase tracking-wide">
+                    Front Photo (Marketing Claims)
+                  </h3>
+                  <span className="text-[10px] text-charcoal-500 font-medium">Bottle title, promises & buzzwords</span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              {frontImagePreview && (
                 <button
                   type="button"
-                  onClick={() => frontFileInputRef.current?.click()}
-                  disabled={isScanningFront}
-                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-mint-50 border border-mint-200 text-forest-900 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
+                  onClick={() => setFrontImagePreview(null)}
+                  className="p-1 rounded-lg text-rose-500 hover:bg-rose-50"
+                  title="Remove Photo"
                 >
-                  <Camera className="w-3 h-3 text-forest-800" />
-                  <span>{isScanningFront ? 'Scanning...' : 'Scan Front'}</span>
+                  <X className="w-4 h-4" />
                 </button>
-              </div>
+              )}
             </div>
 
-            <textarea
-              rows={2}
+            {/* Photo Thumbnail or Dropzone */}
+            {frontImagePreview ? (
+              <div className="relative h-32 rounded-xl overflow-hidden border border-mint-200 bg-white group">
+                <img src={frontImagePreview} alt="Front Label Preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => frontFileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-lg bg-white text-forest-950 text-xs font-bold shadow-soft flex items-center gap-1"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Retake</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => frontFileInputRef.current?.click()}
+                disabled={isScanningFront}
+                className="h-28 rounded-xl bg-white hover:bg-mint-50/50 border border-mint-200 flex flex-col items-center justify-center gap-1.5 transition text-charcoal-600 hover:text-forest-900 group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-mint-100 group-hover:bg-mint-200 text-forest-900 flex items-center justify-center transition">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold">
+                  {isScanningFront ? 'Scanning...' : 'Take or Upload Front Photo'}
+                </span>
+                <span className="text-[10px] text-charcoal-400">Supports JPG, PNG, WebP</span>
+              </button>
+            )}
+
+            <input
+              type="text"
               value={frontClaimText}
               onChange={(e) => {
                 setFrontClaimText(e.target.value);
                 handleReanalyze(ingredientText, e.target.value, productName);
               }}
-              placeholder="Enter front marketing claims..."
-              className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-mono focus:outline-none focus:ring-1 focus:ring-mint-500 resize-none"
+              placeholder="Or type front marketing claim (e.g. 10x Growth, Zero Hair Fall)..."
+              className="w-full px-3 py-2 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-900 font-medium focus:outline-none focus:ring-1 focus:ring-forest-700"
             />
           </div>
 
-          {/* Back Card (Ingredients) */}
-          <div className="p-4 rounded-2xl bg-cream-50/60 border border-mint-200/80 space-y-2.5">
+          {/* Back Photo Card */}
+          <div className="p-4 rounded-2xl bg-[#FBF9F5] border-2 border-dashed border-mint-300 hover:border-forest-600 transition flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-forest-900 text-white font-mono text-[10px] font-black flex items-center justify-center">
+                <span className="w-6 h-6 rounded-lg bg-forest-900 text-white font-mono text-xs font-black flex items-center justify-center">
                   2
                 </span>
-                <span className="text-xs font-black text-forest-950 uppercase font-mono">
-                  Back Label (Ingredients)
-                </span>
+                <div>
+                  <h3 className="text-xs font-black text-forest-950 uppercase tracking-wide">
+                    Back Photo (Ingredients / Nutrition)
+                  </h3>
+                  <span className="text-[10px] text-charcoal-500 font-medium">Full formulation chemistry panel</span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              {backImagePreview && (
                 <button
                   type="button"
-                  onClick={() => backFileInputRef.current?.click()}
-                  disabled={isScanningBack}
-                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-mint-50 border border-mint-200 text-forest-900 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
+                  onClick={() => setBackImagePreview(null)}
+                  className="p-1 rounded-lg text-rose-500 hover:bg-rose-50"
+                  title="Remove Photo"
                 >
-                  <Camera className="w-3 h-3 text-forest-800" />
-                  <span>{isScanningBack ? 'Scanning...' : 'Scan Back'}</span>
+                  <X className="w-4 h-4" />
                 </button>
-              </div>
+              )}
             </div>
 
-            <textarea
-              rows={2}
+            {/* Photo Thumbnail or Dropzone */}
+            {backImagePreview ? (
+              <div className="relative h-32 rounded-xl overflow-hidden border border-mint-200 bg-white group">
+                <img src={backImagePreview} alt="Back Label Preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => backFileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-lg bg-white text-forest-950 text-xs font-bold shadow-soft flex items-center gap-1"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Retake</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => backFileInputRef.current?.click()}
+                disabled={isScanningBack}
+                className="h-28 rounded-xl bg-white hover:bg-mint-50/50 border border-mint-200 flex flex-col items-center justify-center gap-1.5 transition text-charcoal-600 hover:text-forest-900 group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-mint-100 group-hover:bg-mint-200 text-forest-900 flex items-center justify-center transition">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold">
+                  {isScanningBack ? 'Scanning...' : 'Take or Upload Back Photo'}
+                </span>
+                <span className="text-[10px] text-charcoal-400">Supports JPG, PNG, WebP</span>
+              </button>
+            )}
+
+            <input
+              type="text"
               value={ingredientText}
               onChange={(e) => {
                 setIngredientText(e.target.value);
                 handleReanalyze(e.target.value, frontClaimText, productName);
               }}
-              placeholder="Paste ingredient list..."
-              className="w-full p-2.5 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-800 font-mono focus:outline-none focus:ring-1 focus:ring-mint-500 resize-none"
+              placeholder="Or paste ingredient list (e.g. Redensyl, Rosemary, Dimethicone)..."
+              className="w-full px-3 py-2 rounded-xl bg-white border border-mint-200 text-xs text-charcoal-900 font-medium focus:outline-none focus:ring-1 focus:ring-forest-700"
             />
           </div>
         </div>
 
         {/* Live Scan Status */}
         {(isScanningFront || isScanningBack) && (
-          <div className="p-3 rounded-xl bg-mint-100 border border-mint-300 flex items-center justify-between text-xs font-mono">
+          <div className="p-3 rounded-xl bg-mint-100 border border-mint-300 flex items-center justify-between text-xs font-mono animate-pulse">
             <div className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-forest-800 animate-spin" />
               <span className="font-bold text-forest-950">{scanProgress.status}</span>
@@ -338,25 +426,27 @@ export const LabelLensView: React.FC = () => {
           </div>
         )}
 
-        {/* Sample Presets */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-1 no-scrollbar">
-          <span className="text-[10px] font-mono font-bold uppercase text-charcoal-400 shrink-0">
-            Samples:
+        {/* Quick Example Tester Chips */}
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-[11px] font-mono font-bold text-charcoal-400 shrink-0">
+            Quick Examples:
           </span>
-          {SAMPLE_PRODUCTS.map((sample) => (
-            <button
-              key={sample.id}
-              type="button"
-              onClick={() => handleSelectSample(sample)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition active:scale-95 flex items-center gap-1.5 ${
-                selectedSampleId === sample.id
-                  ? 'bg-forest-900 text-white font-black'
-                  : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 border border-mint-100'
-              }`}
-            >
-              <span>{sample.name.split(' ')[0]} {sample.name.split(' ')[1]}</span>
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {SAMPLE_PRODUCTS.map((sample) => (
+              <button
+                key={sample.id}
+                type="button"
+                onClick={() => handleSelectSample(sample)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition active:scale-95 ${
+                  selectedSampleId === sample.id
+                    ? 'bg-forest-900 text-white font-black'
+                    : 'bg-cream-50 text-charcoal-700 hover:bg-mint-100 border border-mint-200'
+                }`}
+              >
+                {sample.name.split(' ')[0]} {sample.name.split(' ')[1]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
