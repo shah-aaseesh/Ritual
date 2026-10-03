@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { ShareCardData } from '../../types';
-import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2, LogIn, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2, LogOut, User } from 'lucide-react';
 import { SocialShareModal } from './SocialShareModal';
-import { AuthModal } from '../auth/AuthModal';
 import { supabase } from '../../services/supabase';
 
 export const Header: React.FC = () => {
   const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory, logout } = useApp();
   const [showSettings, setShowSettings] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authUser, setAuthUser] = useState<{ email: string; name?: string } | null>(() => {
     const saved = localStorage.getItem('ritual_auth_user');
     if (saved) {
@@ -268,28 +266,16 @@ export const Header: React.FC = () => {
               <Settings className="w-3.5 h-3.5 text-charcoal-400" />
             </button>
 
-            {/* Authentication Buttons: Login / Logout */}
-            {authUser ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold transition active:scale-95 shadow-soft"
-                title={`Logged in as ${authUser.email} - Click to Log Out`}
-              >
-                <LogOut className="w-3.5 h-3.5 text-rose-600" />
-                <span className="hidden sm:inline">Log Out</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-forest-900 hover:bg-forest-800 text-white text-xs font-black transition active:scale-95 shadow-soft"
-                title="Sign in with Supabase"
-              >
-                <LogIn className="w-3.5 h-3.5 text-mint-300" />
-                <span>Log In</span>
-              </button>
-            )}
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold transition active:scale-95 shadow-soft"
+              title={`Logged in as ${authUser?.email || profile.email || 'User'} — Click to Log Out`}
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden sm:inline">Log Out</span>
+            </button>
           </div>
         </div>
       </header>
@@ -497,12 +483,6 @@ export const Header: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Supabase Authentication Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
 
       {/* Strava-Style Social Share Modal */}
       {shareModalData && (
