@@ -14,9 +14,18 @@ import { useApp } from '../../context/AppContext';
 export const DocumentStoreAIView: React.FC = () => {
   const { healthDocuments, addHealthDocument, removeHealthDocument, showToast } = useApp();
 
-  const [selectedDoc, setSelectedDoc] = useState<HealthDocument | null>(healthDocuments[0] || null);
+  const [selectedDoc, setSelectedDoc] = useState<HealthDocument | null>(() => healthDocuments[0] || null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+
+  // Sync selectedDoc if documents list changes
+  React.useEffect(() => {
+    if (!selectedDoc && healthDocuments.length > 0) {
+      setSelectedDoc(healthDocuments[0]);
+    } else if (selectedDoc && !healthDocuments.some(d => d.id === selectedDoc.id)) {
+      setSelectedDoc(healthDocuments[0] || null);
+    }
+  }, [healthDocuments, selectedDoc]);
 
   // Upload Form state
   const [newTitle, setNewTitle] = useState<string>('');

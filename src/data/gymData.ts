@@ -1,4 +1,4 @@
-import { MuscleGroup, WorkoutSession } from '../types';
+import { MuscleGroup } from '../types';
 
 export type EquipmentType = 'Barbell' | 'Dumbbell' | 'Machine' | 'Cable' | 'Bodyweight' | 'Cardio';
 
@@ -626,52 +626,5 @@ export const PRESET_ROUTINE_TEMPLATES: WorkoutTemplate[] = [
     targetKcal: 380,
     level: 'Intermediate',
     exerciseIds: ['zone2-cardio', 'hanging-leg-raise', 'barbell-squat', 'dips']
-  }
-];
-
-export const DEMO_WORKOUT_SESSIONS: WorkoutSession[] = [
-  {
-    id: 'session-1',
-    title: 'Push Power Hypertrophy',
-    date: '2026-10-02',
-    startTime: '07:30 AM',
-    durationMinutes: 52,
-    totalVolumeKg: 6420,
-    totalSets: 14,
-    notes: 'Hit a PR on Incline Dumbbell Press (24kg x 8 reps). Strong chest contraction.',
-    exercises: [
-      {
-        id: 'ex-1',
-        exerciseId: 'bench-press',
-        exerciseName: 'Barbell Bench Press',
-        muscleGroup: 'Chest',
-        sets: [
-          { id: 's1', setNumber: 1, weightKg: 60, reps: 10, isCompleted: true },
-          { id: 's2', setNumber: 2, weightKg: 70, reps: 8, isCompleted: true },
-          { id: 's3', setNumber: 3, weightKg: 75, reps: 6, isCompleted: true, isPersonalRecord: true },
-        ]
-      },
-      {
-        id: 'ex-2',
-        exerciseId: 'incline-db-press',
-        exerciseName: 'Incline Dumbbell Press',
-        muscleGroup: 'Chest',
-        sets: [
-          { id: 's4', setNumber: 1, weightKg: 22, reps: 10, isCompleted: true },
-          { id: 's5', setNumber: 2, weightKg: 24, reps: 8, isCompleted: true, isPersonalRecord: true },
-        ]
-      },
-      {
-        id: 'ex-3',
-        exerciseId: 'lateral-raise',
-        exerciseName: 'Dumbbell Lateral Raise',
-        muscleGroup: 'Shoulders',
-        sets: [
-          { id: 's6', setNumber: 1, weightKg: 10, reps: 15, isCompleted: true },
-          { id: 's7', setNumber: 2, weightKg: 10, reps: 14, isCompleted: true },
-          { id: 's8', setNumber: 3, weightKg: 12, reps: 12, isCompleted: true },
-        ]
-      }
-    ]
   }
 ];

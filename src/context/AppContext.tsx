@@ -16,7 +16,6 @@ import {
   getDemoProgressHistory, 
   getMissedAdherenceHistory 
 } from '../data/demoState';
-import { DEMO_HEALTH_DOCUMENTS } from '../data/demoDocuments';
 import { 
   syncProfileToSupabase, 
   fetchProfileFromSupabase, 
@@ -163,9 +162,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [healthDocuments, setHealthDocuments] = useState<HealthDocument[]>(() => {
     const saved = localStorage.getItem('ritual_health_docs_v1');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+      try {
+        const parsed = JSON.parse(saved);
+        const cleaned = parsed.filter((d: HealthDocument) => d.id !== 'doc-1' && d.id !== 'doc-2');
+        return cleaned;
+      } catch (e) { /* fallback */ }
     }
-    return DEMO_HEALTH_DOCUMENTS;
+    return [];
   });
 
   const [activePillar, setActivePillarState] = useState<AppPillar>(() => {
@@ -448,10 +451,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetToCleanState = () => {
+    localStorage.removeItem(STORAGE_KEYS.PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.SHELF);
+    localStorage.removeItem(STORAGE_KEYS.ROUTINE);
+    localStorage.removeItem(STORAGE_KEYS.PROGRESS);
+    localStorage.removeItem('ritual_health_docs_v1');
+    localStorage.removeItem('ritual_food_logs');
+    localStorage.removeItem('ritual_water_ml');
+    localStorage.removeItem('ritual_workout_history');
     setProfile(INITIAL_PROFILE);
     setShelfProducts([]);
     setRoutineSteps([]);
     setProgressHistory([]);
+    setHealthDocuments([]);
     setShowRoutineRescue(false);
     setIsDemoMode(false);
     showToast('Reset to clean state. Ready for fresh onboarding.', 'info');

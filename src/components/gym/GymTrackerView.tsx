@@ -28,7 +28,6 @@ import { MuscleGroup, WorkoutSet, ExerciseLog, WorkoutSession, ShareCardData } f
 import { 
   PRESET_EXERCISES, 
   PRESET_ROUTINE_TEMPLATES, 
-  DEMO_WORKOUT_SESSIONS, 
   ExerciseDefinition,
   EquipmentType
 } from '../../data/gymData';
@@ -87,10 +86,18 @@ export const GymTrackerView: React.FC = () => {
   // Technique Cues Open Accordion Map
   const [expandedCues, setExpandedCues] = useState<Record<string, boolean>>({});
 
-  // Workout History
+  // Workout History (clean slate)
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutSession[]>(() => {
     const saved = localStorage.getItem('ritual_workout_history');
-    return saved ? JSON.parse(saved) : DEMO_WORKOUT_SESSIONS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Clear out any old demo workouts (with id session-1)
+        const cleaned = parsed.filter((s: WorkoutSession) => s.id !== 'session-1');
+        return cleaned;
+      } catch (e) {}
+    }
+    return [];
   });
 
   // Save history to localStorage

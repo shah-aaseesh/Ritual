@@ -1,4 +1,4 @@
-import { FoodItem, FoodLogEntry, DailyMacroTarget } from '../types';
+import { FoodItem, DailyMacroTarget } from '../types';
 
 export const DEFAULT_MACRO_TARGETS: DailyMacroTarget = {
   calories: 2250,
@@ -31,49 +31,4 @@ export const PRESET_FOODS: FoodItem[] = [
   { id: 'f-15', name: 'Avocado', servingSize: '1/2 medium (100g)', calories: 160, proteinG: 2, carbsG: 8.5, fatG: 14.7, category: 'Fruits' },
   { id: 'f-16', name: 'Fresh Banana', servingSize: '1 medium', calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.3, category: 'Fruits' },
   { id: 'f-17', name: 'Blueberries & Strawberries', servingSize: '1 cup (150g)', calories: 65, proteinG: 1.1, carbsG: 15, fatG: 0.4, category: 'Fruits' }
-];
-
-export const DEMO_FOOD_LOGS: FoodLogEntry[] = [
-  {
-    id: 'log-1',
-    date: '2026-10-02',
-    meal: 'breakfast',
-    food: PRESET_FOODS[8], // Rolled Oats
-    quantity: 1
-  },
-  {
-    id: 'log-2',
-    date: '2026-10-02',
-    meal: 'breakfast',
-    food: PRESET_FOODS[1], // Whey Shake
-    quantity: 1
-  },
-  {
-    id: 'log-3',
-    date: '2026-10-02',
-    meal: 'lunch',
-    food: PRESET_FOODS[0], // Grilled Chicken
-    quantity: 1.2
-  },
-  {
-    id: 'log-4',
-    date: '2026-10-02',
-    meal: 'lunch',
-    food: PRESET_FOODS[7], // Brown Rice
-    quantity: 1
-  },
-  {
-    id: 'log-5',
-    date: '2026-10-02',
-    meal: 'dinner',
-    food: PRESET_FOODS[6], // Salmon
-    quantity: 1
-  },
-  {
-    id: 'log-6',
-    date: '2026-10-02',
-    meal: 'dinner',
-    food: PRESET_FOODS[9], // Sweet Potato
-    quantity: 1
-  }
 ];

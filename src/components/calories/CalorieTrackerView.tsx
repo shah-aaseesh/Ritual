@@ -15,7 +15,7 @@ import {
   Share2
 } from 'lucide-react';
 import { FoodItem, FoodLogEntry, MealCategory, DailyMacroTarget, ShareCardData } from '../../types';
-import { PRESET_FOODS, DEFAULT_MACRO_TARGETS, DEMO_FOOD_LOGS } from '../../data/calorieData';
+import { PRESET_FOODS, DEFAULT_MACRO_TARGETS } from '../../data/calorieData';
 import { useApp } from '../../context/AppContext';
 import { FoodCameraModal } from './FoodCameraModal';
 import { SocialShareModal } from '../common/SocialShareModal';
@@ -54,16 +54,24 @@ export const CalorieTrackerView: React.FC = () => {
     return DEFAULT_MACRO_TARGETS;
   });
 
-  // Food logs for today
+  // Food logs for today (clean slate)
   const [foodLogs, setFoodLogs] = useState<FoodLogEntry[]>(() => {
     const saved = localStorage.getItem('ritual_food_logs');
-    return saved ? JSON.parse(saved) : DEMO_FOOD_LOGS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Clear out any old demo logs (with id starting with log-)
+        const cleaned = parsed.filter((entry: FoodLogEntry) => !entry.id.startsWith('log-'));
+        return cleaned;
+      } catch (e) {}
+    }
+    return [];
   });
 
   // Water intake in ml
   const [waterMl, setWaterMl] = useState<number>(() => {
     const saved = localStorage.getItem('ritual_water_ml');
-    return saved ? parseInt(saved) : 1750;
+    return saved ? parseInt(saved) : 0;
   });
 
   // Search & Filter in Food Library
