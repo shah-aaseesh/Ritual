@@ -194,3 +194,56 @@ export async function saveNutritionLogToSupabase(date: string, foodItems: any[],
     return false;
   }
 }
+
+/**
+ * Supabase Authentication Helpers
+ */
+export async function signUpUser(email: string, password: string, name?: string) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name || ''
+        }
+      }
+    });
+    if (error) throw error;
+    return { data, error: null };
+  } catch (err: any) {
+    return { data: null, error: err.message || 'Failed to sign up' };
+  }
+}
+
+export async function signInUser(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) throw error;
+    return { data, error: null };
+  } catch (err: any) {
+    return { data: null, error: err.message || 'Failed to sign in' };
+  }
+}
+
+export async function signOutUser() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to sign out' };
+  }
+}
+
+export async function getAuthSession() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
+  } catch (err) {
+    return null;
+  }
+}

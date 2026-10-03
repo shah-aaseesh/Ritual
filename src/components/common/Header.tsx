@@ -1,12 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { ShareCardData } from '../../types';
-import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2 } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, ScanLine, FileText, Settings, X, Download, Share2, LogIn, LogOut, User } from 'lucide-react';
 import { SocialShareModal } from './SocialShareModal';
+import { AuthModal } from '../auth/AuthModal';
+import { signOutUser, supabase } from '../../services/supabase';
 
 export const Header: React.FC = () => {
-  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory } = useApp();
+  const { profile, updateProfile, activeTab, setActiveTab, healthDocuments, activePillar, routineSteps, progressHistory, showToast } = useApp();
   const [showSettings, setShowSettings] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authUser, setAuthUser] = useState<{ email: string; name?: string } | null>(() => {
+    const saved = localStorage.getItem('ritual_auth_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return profile.email ? { email: profile.email, name: profile.name } : null;
+  });
+
+  useEffect(() => {
+    // Listen to Supabase auth state changes
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        const u = {
+          email: data.session.user.email || '',
+          name: data.session.user.user_metadata?.full_name || data.session.user.email?.split('@')[0]
+        };
+        setAuthUser(u);
+        localStorage.setItem('ritual_auth_user', JSON.stringify(u));
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = {
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0]
+        };
+        setAuthUser(u);
+        localStorage.setItem('ritual_auth_user', JSON.stringify(u));
+      } else {
+        setAuthUser(null);
+        localStorage.removeItem('ritual_auth_user');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await signOutUser();
+    setAuthUser(null);
+    localStorage.removeItem('ritual_auth_user');
+    showToast('Logged out successfully', 'info');
+  };
   const [shareModalData, setShareModalData] = useState<ShareCardData | null>(null);
   const [tempName, setTempName] = useState(profile.name || 'Alex');
   const [tempEmail, setTempEmail] = useState(profile.email || '');
@@ -199,8 +248,8 @@ export const Header: React.FC = () => {
             {/* Profile & Settings Trigger */}
             <button
               onClick={() => {
-                setTempName(profile.name || 'Alex');
-                setTempEmail(profile.email || '');
+                setTempName(profile.name || authUser?.name || 'Alex');
+                setTempEmail(profile.email || authUser?.email || '');
                 setTempGender((profile.gender as 'male' | 'female') || 'male');
                 setTempAge(profile.age || 24);
                 setTempHeightFeet(profile.heightFeet || 5);
@@ -213,13 +262,36 @@ export const Header: React.FC = () => {
               title="Profile & Body Stats"
             >
               <div className="w-5 h-5 rounded-full bg-forest-900 text-white flex items-center justify-center text-[10px] font-black">
-                {(profile.name || 'A').charAt(0).toUpperCase()}
+                {(profile.name || authUser?.name || 'A').charAt(0).toUpperCase()}
               </div>
-              <span className="font-bold text-forest-900 max-w-[90px] truncate">
-                {profile.name || 'Profile'}
+              <span className="font-bold text-forest-900 max-w-[90px] truncate hidden sm:inline">
+                {profile.name || authUser?.name || 'Profile'}
               </span>
               <Settings className="w-3.5 h-3.5 text-charcoal-400" />
             </button>
+
+            {/* Authentication Buttons: Login / Logout */}
+            {authUser ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold transition active:scale-95 shadow-soft"
+                title={`Logged in as ${authUser.email} - Click to Log Out`}
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-forest-900 hover:bg-forest-800 text-white text-xs font-black transition active:scale-95 shadow-soft"
+                title="Sign in with Supabase"
+              >
+                <LogIn className="w-3.5 h-3.5 text-mint-300" />
+                <span>Log In</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -378,6 +450,47 @@ export const Header: React.FC = () => {
                 </div>
               </div>
 
+              {/* Cloud Account Status Section */}
+              <div className="p-3.5 rounded-2xl bg-cream-50 border border-mint-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${authUser ? 'bg-forest-900 text-mint-300' : 'bg-charcoal-200 text-charcoal-600'}`}>
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono uppercase font-bold text-charcoal-500 block">
+                      Supabase Cloud Sync
+                    </span>
+                    <span className="text-xs font-bold text-forest-950 truncate block">
+                      {authUser ? authUser.email : 'Guest Mode (Local Only)'}
+                    </span>
+                  </div>
+                </div>
+
+                {authUser ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleLogout();
+                      setShowSettings(false);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold transition shrink-0"
+                  >
+                    Log Out
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettings(false);
+                      setShowAuthModal(true);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white text-[11px] font-black transition shrink-0"
+                  >
+                    Log In
+                  </button>
+                )}
+              </div>
+
               {/* Action Buttons */}
               <div className="pt-2 flex items-center gap-2">
                 <button
@@ -399,6 +512,12 @@ export const Header: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Supabase Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
 
       {/* Strava-Style Social Share Modal */}
       {shareModalData && (
